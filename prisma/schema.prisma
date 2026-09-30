@@ -1,0 +1,75 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  googleId  String   @unique
+  email     String   @unique
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+
+  memberships ThreadMembership[]
+  posts       Post[]
+}
+
+model AllowedEmail {
+  email   String   @id
+  addedAt DateTime @default(now())
+}
+
+model Book {
+  id        String   @id @default(cuid())
+  title     String
+  author    String
+  coverUrl  String?
+  status    String   @default("current")
+  createdAt DateTime @default(now())
+
+  sections Section[]
+}
+
+model Section {
+  id        String   @id @default(cuid())
+  bookId    String
+  label     String
+  order     Int
+  createdAt DateTime @default(now())
+
+  book        Book               @relation(fields: [bookId], references: [id])
+  memberships ThreadMembership[]
+  posts       Post[]
+
+  @@unique([bookId, order])
+}
+
+model ThreadMembership {
+  userId    String
+  sectionId String
+  joinedAt  DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  section Section @relation(fields: [sectionId], references: [id])
+
+  @@id([userId, sectionId])
+}
+
+model Post {
+  id           String   @id @default(cuid())
+  sectionId    String
+  userId       String
+  body         String
+  parentPostId String?
+  createdAt    DateTime @default(now())
+
+  section    Section @relation(fields: [sectionId], references: [id])
+  user       User    @relation(fields: [userId], references: [id])
+  parentPost Post?   @relation("Replies", fields: [parentPostId], references: [id])
+  replies    Post[]  @relation("Replies")
+}

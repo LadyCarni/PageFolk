@@ -11,26 +11,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  pages: { signIn: '/sign-in' },
+  pages: { signIn: '/sign-in', error: '/sign-in' },
   session: { strategy: 'jwt' },
+  trustHost: true,
   callbacks: {
     async signIn({ user }) {
       if (!user.email) return false
       return isEmailAllowed(user.email)
     },
-    async jwt({ token }) {
-      if (token.email) {
+    async jwt({ token, user }) {
+      if (user) {
         const dbUser = await prisma.user.upsert({
-          where: { email: token.email },
+          where: { email: token.email! },
           update: {
             name: token.name ?? undefined,
             avatarUrl: (token.picture as string | undefined) ?? undefined,
           },
           create: {
-            email: token.email,
+            email: token.email!,
             name: token.name ?? undefined,
             avatarUrl: (token.picture as string | undefined) ?? undefined,
-            googleId: (token.sub as string) ?? token.email,
+            googleId: (token.sub as string) ?? token.email!,
           },
         })
         token.userId = dbUser.id

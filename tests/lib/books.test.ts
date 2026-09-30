@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { listBooks, createBook, addSection, setBookStatus, updateSectionLabel, deleteSection } from '@/lib/books'
+import { listBooks, createBook, addSection, setBookStatus, updateSectionLabel, deleteSection, deleteBook } from '@/lib/books'
 
 describe('books', () => {
   beforeEach(async () => {
@@ -88,5 +88,30 @@ describe('books', () => {
     expect(await prisma.section.findUnique({ where: { id: section.id } })).toBeNull()
     expect(await prisma.post.count({ where: { sectionId: section.id } })).toBe(0)
     expect(await prisma.threadMembership.count({ where: { sectionId: section.id } })).toBe(0)
+  })
+
+  it('deletes a book along with its sections, posts and memberships, leaving other books alone', async () => {
+    const doomed = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    const kept = await createBook({ title: 'Emma', author: 'Jane Austen' })
+    const doomedSection = await addSection(doomed.id, 'Chapters 1-5')
+    const keptSection = await addSection(kept.id, 'Chapters 1-5')
+    const user = await prisma.user.create({ data: { googleId: 'g-books-del', email: 'booksdel@example.com' } })
+    await prisma.threadMembership.create({ data: { userId: user.id, sectionId: doomedSection.id } })
+    const top = await prisma.post.create({ data: { sectionId: doomedSection.id, userId: user.id, body: 'Hi' } })
+    await prisma.post.create({ data: { sectionId: doomedSection.id, userId: user.id, body: 'Re', parentPostId: top.id } })
+    await prisma.post.create({ data: { sectionId: keptSection.id, userId: user.id, body: 'Keep me' } })
+
+    await deleteBook(doomed.id)
+
+    expect((await prisma.book.findMany()).map((b) => b.id)).toEqual([kept.id])
+    expect((await prisma.section.findMany()).map((s) => s.id)).toEqual([keptSection.id])
+    expect(await prisma.post.count()).toBe(1)
+    expect(await prisma.threadMembership.count()).toBe(0)
+  })
+
+  it('deletes a book that has no sections', async () => {
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    await deleteBook(book.id)
+    expect(await prisma.book.count()).toBe(0)
   })
 })

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus, updateSectionLabel, deleteSection } from '@/lib/books'
+import { createBook, addSection, setBookStatus, updateSectionLabel, deleteSection, deleteBook } from '@/lib/books'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 
 export async function createBookAction(formData: FormData) {
@@ -51,6 +51,14 @@ export async function deleteSectionAction(sectionId: string) {
   await deleteSection(sectionId)
   revalidatePath('/admin')
   revalidatePath('/')
+}
+
+export async function deleteBookAction(bookId: string) {
+  await requireAdmin()
+  await deleteBook(bookId)
+  revalidatePath('/admin')
+  revalidatePath('/')
+  revalidatePath('/past-books')
 }
 
 export async function addAllowedEmailAction(formData: FormData) {

@@ -5,7 +5,7 @@ const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, updateSectionLabelAction, deleteSectionAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, updateSectionLabelAction, deleteSectionAction, deleteBookAction } from '@/app/admin/actions'
 import { createBook, addSection } from '@/lib/books'
 
 describe('admin actions', () => {
@@ -96,5 +96,23 @@ describe('admin actions', () => {
     await deleteSectionAction(section.id)
 
     expect(await prisma.section.findUnique({ where: { id: section.id } })).toBeNull()
+  })
+
+  it('rejects deleteBookAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+
+    await expect(deleteBookAction(book.id)).rejects.toThrow('Forbidden')
+    expect(await prisma.book.count()).toBe(1)
+  })
+
+  it('deletes a book for an admin', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    await addSection(book.id, 'Chapters 1-5')
+
+    await deleteBookAction(book.id)
+
+    expect(await prisma.book.findUnique({ where: { id: book.id } })).toBeNull()
   })
 })

@@ -41,3 +41,13 @@ export async function deleteSection(sectionId: string): Promise<void> {
     prisma.section.delete({ where: { id: sectionId } }),
   ])
 }
+
+export async function deleteBook(bookId: string): Promise<void> {
+  const sectionIds = (await prisma.section.findMany({ where: { bookId }, select: { id: true } })).map((s) => s.id)
+  await prisma.$transaction([
+    prisma.post.deleteMany({ where: { sectionId: { in: sectionIds } } }),
+    prisma.threadMembership.deleteMany({ where: { sectionId: { in: sectionIds } } }),
+    prisma.section.deleteMany({ where: { bookId } }),
+    prisma.book.delete({ where: { id: bookId } }),
+  ])
+}

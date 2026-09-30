@@ -6,7 +6,7 @@
 
 **Architecture:** A single Next.js (App Router, TypeScript) application serves both the UI and all mutations (via Server Actions — no separate REST API). Google sign-in is handled by NextAuth v5 with JWT sessions; a custom allow-list check gates who can complete login. All data lives in SQLite via Prisma. The whole app runs as one Node process, reverse-proxied by nginx on a subdomain.
 
-**Tech Stack:** Next.js 14 (App Router) + TypeScript, Prisma + SQLite, NextAuth v5 (Auth.js) with the Google provider, Tailwind CSS, Vitest.
+**Tech Stack:** Next.js 14 (App Router) + TypeScript, Prisma + SQLite, NextAuth v5 (Auth.js) with the Google provider, Chakra UI, Vitest.
 
 **Spec:** `docs/superpowers/specs/2026-09-30-bookclub-app-design.md`
 
@@ -18,7 +18,8 @@
 - No real-time/websocket features — posts are simple threaded/forum-style, loaded on page request.
 - SQLite via Prisma, self-hosted as a single Node process (no serverless/edge-only APIs).
 - No multi-club support — one book club, one set of books/sections.
-- UI color palette (dark → light): `#241626`, `#542949`, `#7b3f5d`, `#b86f71`, `#e7b7a6` — configured as Tailwind's `brand` scale in Task 1 and used for buttons, links, and headings; exact usage can be refined later.
+- UI color palette (dark → light): `#241626`, `#542949`, `#7b3f5d`, `#b86f71`, `#e7b7a6` — configured as a Chakra UI custom theme in Task 1 and used for buttons, links, and headings; exact usage can be refined later.
+- No Tailwind — UI is built with Chakra UI components.
 
 ## Review Focus
 
@@ -38,18 +39,17 @@ This task has no business logic to drive with TDD, so its "test" is the project 
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `next.config.mjs`
-- Create: `tailwind.config.ts`
-- Create: `postcss.config.mjs`
 - Create: `vitest.config.ts`
+- Create: `src/theme.ts`
+- Create: `src/app/providers.tsx`
 - Create: `src/app/layout.tsx`
-- Create: `src/app/globals.css`
 - Create: `src/app/page.tsx`
 - Create: `.env.example`
 - Create: `.env.test`
 - Create: `.gitignore`
 
 **Interfaces:**
-- Produces: the `@/*` → `./src/*` path alias (used by every later task's imports and test mocks), the `npm test` script (runs Vitest against `.env.test`'s SQLite file), the `npm run build`/`npm run dev` scripts.
+- Produces: the `@/*` → `./src/*` path alias (used by every later task's imports and test mocks), the `npm test` script (runs Vitest against `.env.test`'s SQLite file), the `npm run build`/`npm run dev` scripts, the `brand` color scale (`brand.900`…`brand.100`) available to every component via the Chakra theme from `@/theme`.
 
 - [ ] **Step 1: Write `package.json`**
 
@@ -74,7 +74,12 @@ This task has no business logic to drive with TDD, so its "test" is the project 
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "@prisma/client": "^5.20.0",
-    "next-auth": "5.0.0-beta.22"
+    "next-auth": "5.0.0-beta.22",
+    "@chakra-ui/react": "^2.8.0",
+    "@chakra-ui/next-js": "^2.2.0",
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "framer-motion": "^11.5.0"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
@@ -84,9 +89,6 @@ This task has no business logic to drive with TDD, so its "test" is the project 
     "prisma": "^5.20.0",
     "vitest": "^2.1.0",
     "dotenv-cli": "^7.4.0",
-    "tailwindcss": "^3.4.0",
-    "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.2.0"
   }
@@ -119,43 +121,12 @@ This task has no business logic to drive with TDD, so its "test" is the project 
 }
 ```
 
-- [ ] **Step 3: Write `next.config.mjs`, `tailwind.config.ts`, `postcss.config.mjs`**
+- [ ] **Step 3: Write `next.config.mjs`**
 
-`next.config.mjs`:
 ```js
 /** @type {import('next').NextConfig} */
 const nextConfig = {}
 export default nextConfig
-```
-
-`tailwind.config.ts`:
-```ts
-import type { Config } from 'tailwindcss'
-
-export default {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
-  theme: {
-    extend: {
-      colors: {
-        brand: {
-          900: '#241626',
-          700: '#542949',
-          500: '#7b3f5d',
-          300: '#b86f71',
-          100: '#e7b7a6',
-        },
-      },
-    },
-  },
-  plugins: [],
-} satisfies Config
-```
-
-`postcss.config.mjs`:
-```js
-export default {
-  plugins: { tailwindcss: {}, autoprefixer: {} },
-}
 ```
 
 - [ ] **Step 4: Write `vitest.config.ts` with the `@/` alias**
@@ -177,26 +148,63 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 5: Write the base app shell**
+- [ ] **Step 5: Write the Chakra theme**
 
-`src/app/globals.css`:
-```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+`src/theme.ts`:
+```ts
+import { extendTheme } from '@chakra-ui/react'
+
+const theme = extendTheme({
+  colors: {
+    brand: {
+      900: '#241626',
+      700: '#542949',
+      500: '#7b3f5d',
+      300: '#b86f71',
+      100: '#e7b7a6',
+    },
+  },
+})
+
+export default theme
 ```
+
+This is the single source of truth for the palette — every later task references these tokens (`brand.900`, `brand.700`, etc.) instead of hardcoding hex values.
+
+- [ ] **Step 6: Write the Chakra providers wrapper**
+
+`src/app/providers.tsx` — `ChakraProvider` must run in a Client Component, and in the App Router its emotion styles need `@chakra-ui/next-js`'s `CacheProvider` to stream correctly during SSR:
+```tsx
+'use client'
+
+import { CacheProvider } from '@chakra-ui/next-js'
+import { ChakraProvider } from '@chakra-ui/react'
+import theme from '@/theme'
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  return (
+    <CacheProvider>
+      <ChakraProvider theme={theme}>{children}</ChakraProvider>
+    </CacheProvider>
+  )
+}
+```
+
+- [ ] **Step 7: Write the root layout and placeholder home page**
 
 `src/app/layout.tsx`:
 ```tsx
-import './globals.css'
 import type { ReactNode } from 'react'
+import { Providers } from './providers'
 
 export const metadata = { title: 'Book Club' }
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-brand-900">{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }
@@ -204,12 +212,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
 `src/app/page.tsx` (placeholder — replaced in Task 5):
 ```tsx
+import { Box, Text } from '@chakra-ui/react'
+
 export default function HomePage() {
-  return <main className="p-8">Book Club — coming soon.</main>
+  return (
+    <Box p={8}>
+      <Text>Book Club — coming soon.</Text>
+    </Box>
+  )
 }
 ```
 
-- [ ] **Step 6: Write env files and `.gitignore`**
+- [ ] **Step 8: Write env files and `.gitignore`**
 
 `.env.example`:
 ```
@@ -241,21 +255,21 @@ node_modules
 .env.local
 ```
 
-- [ ] **Step 7: Install dependencies**
+- [ ] **Step 9: Install dependencies**
 
 Run: `npm install`
 Expected: installs without error, creates `package-lock.json`.
 
-- [ ] **Step 8: Verify the scaffold builds**
+- [ ] **Step 10: Verify the scaffold builds**
 
 Run: `npm run build`
 Expected: build succeeds (it's fine that the site is just the placeholder page).
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 11: Commit**
 
 ```bash
-git add package.json package-lock.json tsconfig.json next.config.mjs tailwind.config.ts postcss.config.mjs vitest.config.ts src .env.example .env.test .gitignore
-git commit -m "chore: scaffold Next.js app with TypeScript, Tailwind, and Vitest"
+git add package.json package-lock.json tsconfig.json next.config.mjs vitest.config.ts src .env.example .env.test .gitignore
+git commit -m "chore: scaffold Next.js app with TypeScript, Chakra UI, and Vitest"
 ```
 
 ---
@@ -721,24 +735,27 @@ export const config = {
 
 `src/app/sign-in/page.tsx`:
 ```tsx
+import { Button, Heading, Text, VStack } from '@chakra-ui/react'
 import { signIn } from '@/auth'
 
 export default function SignInPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-xl font-semibold text-brand-900">Book Club</h1>
-      <p className="text-gray-600">Sign in with the Google account you were invited with.</p>
+    <VStack minH="100vh" justify="center" spacing={4} p={8}>
+      <Heading size="lg" color="brand.900">
+        Book Club
+      </Heading>
+      <Text color="gray.600">Sign in with the Google account you were invited with.</Text>
       <form
         action={async () => {
           'use server'
           await signIn('google')
         }}
       >
-        <button type="submit" className="rounded bg-brand-700 px-4 py-2 text-white hover:bg-brand-900">
+        <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
           Sign in with Google
-        </button>
+        </Button>
       </form>
-    </main>
+    </VStack>
   )
 }
 ```
@@ -1052,6 +1069,7 @@ Expected: PASS (4 tests).
 
 `src/app/admin/page.tsx`:
 ```tsx
+import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { createBookAction, addSectionAction, setBookStatusAction } from './actions'
@@ -1061,69 +1079,72 @@ export default async function AdminPage() {
   const books = await listBooks()
 
   return (
-    <main className="mx-auto max-w-2xl p-8 space-y-8">
-      <h1 className="text-xl font-semibold text-brand-900">Admin</h1>
+    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={8}>
+      <Heading size="lg" color="brand.900">
+        Admin
+      </Heading>
 
-      <section>
-        <h2 className="font-medium mb-2">New book</h2>
-        <form action={createBookAction} className="flex gap-2">
-          <input name="title" placeholder="Title" className="border px-2 py-1" required />
-          <input name="author" placeholder="Author" className="border px-2 py-1" required />
-          <button type="submit" className="bg-brand-700 text-white px-3 py-1 rounded hover:bg-brand-900">
-            Add book
-          </button>
+      <Box>
+        <Heading size="md" mb={2}>
+          New book
+        </Heading>
+        <form action={createBookAction}>
+          <HStack>
+            <Input name="title" placeholder="Title" required />
+            <Input name="author" placeholder="Author" required />
+            <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+              Add book
+            </Button>
+          </HStack>
         </form>
-      </section>
+      </Box>
 
-      <section className="space-y-6">
+      <VStack align="stretch" spacing={6}>
         {books.map((book) => (
-          <div key={book.id} className="border rounded p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-medium">
+          <Box key={book.id} borderWidth="1px" borderRadius="md" p={4}>
+            <HStack justify="space-between">
+              <Heading size="sm">
                 {book.title} — {book.author} ({book.status})
-              </h3>
+              </Heading>
               <form
                 action={async () => {
                   'use server'
                   await setBookStatusAction(book.id, book.status === 'current' ? 'past' : 'current')
                 }}
               >
-                <button type="submit" className="text-sm underline">
+                <Button type="submit" size="sm" variant="link" color="brand.700">
                   Mark as {book.status === 'current' ? 'past' : 'current'}
-                </button>
+                </Button>
               </form>
-            </div>
-            <ul className="mt-2 text-sm text-gray-600">
+            </HStack>
+            <Stack as="ul" mt={2} fontSize="sm" color="gray.600" spacing={0}>
               {book.sections.map((s) => (
-                <li key={s.id}>
+                <Text as="li" key={s.id}>
                   {s.order}. {s.label}
-                </li>
+                </Text>
               ))}
-            </ul>
-            <form action={addSectionAction} className="mt-2 flex gap-2">
+            </Stack>
+            <form action={addSectionAction}>
               <input type="hidden" name="bookId" value={book.id} />
-              <input name="label" placeholder="e.g. Chapters 6-10" className="border px-2 py-1" required />
-              <input
-                name="order"
-                type="number"
-                defaultValue={book.sections.length + 1}
-                className="border px-2 py-1 w-20"
-                required
-              />
-              <button type="submit" className="bg-brand-700 text-white px-3 py-1 rounded hover:bg-brand-900">
-                Add section
-              </button>
+              <HStack mt={2}>
+                <Input name="label" placeholder="e.g. Chapters 6-10" required />
+                <Input name="order" type="number" defaultValue={book.sections.length + 1} w="20" required />
+                <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+                  Add section
+                </Button>
+              </HStack>
             </form>
-          </div>
+          </Box>
         ))}
-      </section>
-    </main>
+      </VStack>
+    </VStack>
   )
 }
 ```
 
 `src/app/admin/allowed-emails/page.tsx`:
 ```tsx
+import { Button, Heading, HStack, Input, Text, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listAllowedEmails } from '@/lib/allowlist'
 import { addAllowedEmailAction, removeAllowedEmailAction } from '../actions'
@@ -1133,32 +1154,36 @@ export default async function AllowedEmailsPage() {
   const emails = await listAllowedEmails()
 
   return (
-    <main className="mx-auto max-w-2xl p-8 space-y-4">
-      <h1 className="text-xl font-semibold text-brand-900">Allowed members</h1>
-      <form action={addAllowedEmailAction} className="flex gap-2">
-        <input name="email" type="email" placeholder="member@example.com" className="border px-2 py-1" required />
-        <button type="submit" className="bg-brand-700 text-white px-3 py-1 rounded hover:bg-brand-900">
-          Add
-        </button>
+    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={4}>
+      <Heading size="lg" color="brand.900">
+        Allowed members
+      </Heading>
+      <form action={addAllowedEmailAction}>
+        <HStack>
+          <Input name="email" type="email" placeholder="member@example.com" required />
+          <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+            Add
+          </Button>
+        </HStack>
       </form>
-      <ul className="space-y-1">
+      <VStack as="ul" align="stretch" spacing={1}>
         {emails.map((email) => (
-          <li key={email} className="flex items-center justify-between border-b py-1">
-            <span>{email}</span>
+          <HStack as="li" key={email} justify="space-between" borderBottomWidth="1px" py={1}>
+            <Text>{email}</Text>
             <form
               action={async () => {
                 'use server'
                 await removeAllowedEmailAction(email)
               }}
             >
-              <button type="submit" className="text-sm text-red-600 underline">
+              <Button type="submit" size="sm" variant="link" color="red.600">
                 Remove
-              </button>
+              </Button>
             </form>
-          </li>
+          </HStack>
         ))}
-      </ul>
-    </main>
+      </VStack>
+    </VStack>
   )
 }
 ```
@@ -1309,7 +1334,8 @@ Expected: PASS (3 tests).
 
 `src/app/page.tsx`:
 ```tsx
-import Link from 'next/link'
+import NextLink from 'next/link'
+import { Box, Heading, Link, List, ListItem, Text } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
@@ -1319,30 +1345,45 @@ export default async function HomePage() {
   const [book] = await listBooks('current')
 
   if (!book) {
-    return <main className="p-8">No current book yet — check back soon.</main>
+    return (
+      <Box p={8}>
+        <Text>No current book yet — check back soon.</Text>
+      </Box>
+    )
   }
 
   const sections = await getSectionsForViewer(book.id, user.id)
 
   return (
-    <main className="mx-auto max-w-2xl p-8 space-y-4">
-      <h1 className="text-xl font-semibold text-brand-900">
-        {book.title} <span className="text-brand-500">by {book.author}</span>
-      </h1>
-      <ul className="space-y-2">
+    <Box maxW="2xl" mx="auto" p={8}>
+      <Heading size="lg" color="brand.900" mb={4}>
+        {book.title}{' '}
+        <Text as="span" color="gray.500" fontWeight="normal">
+          by {book.author}
+        </Text>
+      </Heading>
+      <List spacing={2}>
         {sections.map((section) => (
-          <li key={section.id} className="border rounded p-3 flex items-center justify-between">
+          <ListItem
+            key={section.id}
+            borderWidth="1px"
+            borderRadius="md"
+            p={3}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+          >
             {section.status === 'locked' ? (
-              <span className="text-brand-500">🔒 {section.label}</span>
+              <Text color="brand.500">🔒 {section.label}</Text>
             ) : (
-              <Link href={`/sections/${section.id}`} className="text-brand-700 underline">
+              <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
                 {section.label} ({section.postCount} posts)
               </Link>
             )}
-          </li>
+          </ListItem>
         ))}
-      </ul>
-    </main>
+      </List>
+    </Box>
   )
 }
 ```
@@ -1368,12 +1409,13 @@ git commit -m "feat: add home page with locked/unlocked section list"
 **Files:**
 - Modify: `src/lib/sections.ts`
 - Create: `src/app/sections/actions.ts`
+- Create: `src/components/JoinSectionButton.tsx`
 - Modify: `src/app/page.tsx`
 - Test: `tests/lib/sections.test.ts` (extended)
 
 **Interfaces:**
 - Consumes: `requireUser` from `@/lib/session` (Task 3); `SectionSummary` type from `@/lib/sections` (Task 5).
-- Produces: `joinSection(userId: string, sectionId: string): Promise<void>` (idempotent) from `@/lib/sections`, consumed by Task 7; Server Action `joinSectionAction(sectionId: string)` from `@/app/sections/actions`.
+- Produces: `joinSection(userId: string, sectionId: string): Promise<void>` (idempotent) from `@/lib/sections`, consumed by Task 7; Server Action `joinSectionAction(sectionId: string)` from `@/app/sections/actions`; `JoinSectionButton` component from `@/components/JoinSectionButton`, reused by Task 8.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -1464,42 +1506,15 @@ export async function joinSectionAction(sectionId: string) {
 }
 ```
 
-- [ ] **Step 6: Wire the join confirmation into the home page**
+- [ ] **Step 6: Build the join confirmation button**
 
-Modify `src/app/page.tsx` — replace the locked `<span>` branch with a confirm form:
-```tsx
-import { joinSectionAction } from './sections/actions'
-```
-(add this import near the top, alongside the existing ones)
+Confirming before joining requires `window.confirm()`, which only runs in a Client Component — so this is a small dedicated component rather than inline JSX in the (Server Component) home page.
 
-```tsx
-{section.status === 'locked' ? (
-  <form
-    action={async () => {
-      'use server'
-      await joinSectionAction(section.id)
-    }}
-    onSubmit={(e) => {
-      if (!confirm(`This may contain spoilers past "${section.label}" — join?`)) {
-        e.preventDefault()
-      }
-    }}
-  >
-    <button type="submit" className="text-brand-500">
-      🔒 {section.label}
-    </button>
-  </form>
-) : (
-  <Link href={`/sections/${section.id}`} className="text-brand-700 underline">
-    {section.label} ({section.postCount} posts)
-  </Link>
-)}
-```
-
-Note: `onSubmit` with `confirm()` requires this button to live in a Client Component, since `confirm()` is browser-only and event handlers can't be attached from a Server Component. Extract it as `src/components/JoinSectionButton.tsx`:
-
+`src/components/JoinSectionButton.tsx`:
 ```tsx
 'use client'
+
+import { Button } from '@chakra-ui/react'
 
 export function JoinSectionButton({
   label,
@@ -1517,18 +1532,23 @@ export function JoinSectionButton({
         }
       }}
     >
-      <button type="submit" className="text-brand-500">
+      <Button type="submit" variant="link" color="brand.500">
         🔒 {label}
-      </button>
+      </Button>
     </form>
   )
 }
 ```
 
-And in `src/app/page.tsx`, use it instead of the inline form:
+- [ ] **Step 7: Wire the join button into the home page**
+
+In `src/app/page.tsx`, add the imports:
 ```tsx
 import { JoinSectionButton } from '@/components/JoinSectionButton'
+import { joinSectionAction } from './sections/actions'
 ```
+
+Replace the locked branch's `<Text color="brand.500">🔒 {section.label}</Text>` with:
 ```tsx
 {section.status === 'locked' ? (
   <JoinSectionButton
@@ -1539,17 +1559,17 @@ import { JoinSectionButton } from '@/components/JoinSectionButton'
     }}
   />
 ) : (
-  <Link href={`/sections/${section.id}`} className="text-brand-700 underline">
+  <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
     {section.label} ({section.postCount} posts)
   </Link>
 )}
 ```
 
-- [ ] **Step 7: Manually verify**
+- [ ] **Step 8: Manually verify**
 
 Run: `npm run dev`, sign in, click a locked section, confirm the browser dialog, verify the section switches to unlocked and links to `/sections/[id]` (which doesn't exist until Task 7 — a 404 there is expected for now).
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 ```bash
 git add src/lib/sections.ts src/app/sections/actions.ts src/app/page.tsx src/components/JoinSectionButton.tsx tests/lib/sections.test.ts
@@ -1782,13 +1802,14 @@ export async function createPostAction(sectionId: string, formData: FormData) {
 }
 ```
 
-- [ ] **Step 10: Build the post form and thread page**
+- [ ] **Step 10: Build the post form**
 
 `src/components/PostForm.tsx`:
 ```tsx
 'use client'
 
 import { useRef } from 'react'
+import { Button, HStack, Textarea } from '@chakra-ui/react'
 
 export function PostForm({
   action,
@@ -1808,21 +1829,25 @@ export function PostForm({
         await action(formData)
         formRef.current?.reset()
       }}
-      className="flex gap-2"
     >
       {parentPostId && <input type="hidden" name="parentPostId" value={parentPostId} />}
-      <textarea name="body" placeholder={placeholder} className="flex-1 border px-2 py-1" required />
-      <button type="submit" className="bg-brand-700 text-white px-3 py-1 rounded hover:bg-brand-900 self-start">
-        Post
-      </button>
+      <HStack align="start">
+        <Textarea name="body" placeholder={placeholder} required />
+        <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+          Post
+        </Button>
+      </HStack>
     </form>
   )
 }
 ```
 
+- [ ] **Step 11: Build the thread page**
+
 `src/app/sections/[sectionId]/page.tsx`:
 ```tsx
 import { notFound } from 'next/navigation'
+import { Box, Heading, List, ListItem, Text, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { getSectionThread } from '@/lib/sections'
 import { PostForm } from '@/components/PostForm'
@@ -1840,47 +1865,53 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
   const repliesTo = (postId: string) => thread.posts.filter((p) => p.parentPostId === postId)
 
   return (
-    <main className="mx-auto max-w-2xl p-8 space-y-6">
-      <h1 className="text-xl font-semibold text-brand-900">{thread.label}</h1>
+    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={6}>
+      <Heading size="lg" color="brand.900">
+        {thread.label}
+      </Heading>
 
       <PostForm action={createPostAction.bind(null, params.sectionId)} />
 
-      <ul className="space-y-4">
+      <List spacing={4}>
         {topLevel.map((post) => (
-          <li key={post.id} className="border rounded p-3">
-            <p className="text-sm text-brand-500">{post.user.name ?? 'Member'}</p>
-            <p>{post.body}</p>
-            <ul className="mt-2 ml-4 space-y-2 border-l pl-4">
+          <ListItem key={post.id} borderWidth="1px" borderRadius="md" p={3}>
+            <Text fontSize="sm" color="brand.500">
+              {post.user.name ?? 'Member'}
+            </Text>
+            <Text>{post.body}</Text>
+            <List mt={2} ml={4} spacing={2} borderLeftWidth="2px" borderColor="brand.100" pl={4}>
               {repliesTo(post.id).map((reply) => (
-                <li key={reply.id}>
-                  <p className="text-sm text-brand-500">{reply.user.name ?? 'Member'}</p>
-                  <p>{reply.body}</p>
-                </li>
+                <ListItem key={reply.id}>
+                  <Text fontSize="sm" color="brand.500">
+                    {reply.user.name ?? 'Member'}
+                  </Text>
+                  <Text>{reply.body}</Text>
+                </ListItem>
               ))}
-            </ul>
-            <div className="mt-2 ml-4">
+            </List>
+            <Box mt={2} ml={4}>
               <PostForm
                 action={createPostAction.bind(null, params.sectionId)}
                 parentPostId={post.id}
                 placeholder="Reply…"
               />
-            </div>
-          </li>
+            </Box>
+          </ListItem>
         ))}
-      </ul>
-    </main>
+      </List>
+    </VStack>
   )
 }
 ```
 
 A locked section resolves to Next.js's built-in 404 page (`notFound()`) rather than a custom message — visiting the URL for a section you haven't joined must not reveal the section exists or leak anything about it, so a generic not-found response is the correct behavior, not an accident.
 
-- [ ] **Step 11: Manually verify end-to-end**
+- [ ] **Step 12: Manually verify end-to-end**
 
 Run: `npm run dev`, sign in, join a section from the home page, post a message, reply to it, confirm both appear correctly ordered. Then, as a second (or logged-out/different) allow-listed account that hasn't joined that section, try visiting `/sections/[that-id]` directly.
 Expected: the second account gets a 404, not the thread content.
 
-- [ ] **Step 12: Commit**
+- [ ] **Step 13: Commit**
 
 ```bash
 git add src/lib/sections.ts src/lib/posts.ts src/app/sections/[sectionId] src/app/sections/actions.ts src/components/PostForm.tsx tests/lib/sections.test.ts tests/lib/posts.test.ts
@@ -1897,13 +1928,14 @@ This task composes already-tested lib functions (`listBooks`, `getSectionsForVie
 - Create: `src/app/past-books/page.tsx`
 
 **Interfaces:**
-- Consumes: `listBooks` from `@/lib/books` (Task 4), `getSectionsForViewer` from `@/lib/sections` (Task 5), `requireUser` from `@/lib/session` (Task 3).
+- Consumes: `listBooks` from `@/lib/books` (Task 4), `getSectionsForViewer` from `@/lib/sections` (Task 5), `requireUser` from `@/lib/session` (Task 3), `JoinSectionButton` from `@/components/JoinSectionButton` (Task 6), `joinSectionAction` from `@/app/sections/actions` (Task 6).
 
 - [ ] **Step 1: Build the page**
 
 `src/app/past-books/page.tsx`:
 ```tsx
-import Link from 'next/link'
+import NextLink from 'next/link'
+import { Box, Heading, Link, List, ListItem, Text, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
@@ -1915,20 +1947,33 @@ export default async function PastBooksPage() {
   const books = await listBooks('past')
 
   return (
-    <main className="mx-auto max-w-2xl p-8 space-y-8">
-      <h1 className="text-xl font-semibold text-brand-900">Past books</h1>
-      {books.length === 0 && <p className="text-brand-500">No past books yet.</p>}
+    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={8}>
+      <Heading size="lg" color="brand.900">
+        Past books
+      </Heading>
+      {books.length === 0 && <Text color="gray.500">No past books yet.</Text>}
       {await Promise.all(
         books.map(async (book) => {
           const sections = await getSectionsForViewer(book.id, user.id)
           return (
-            <section key={book.id}>
-              <h2 className="font-medium">
-                {book.title} <span className="text-brand-500">by {book.author}</span>
-              </h2>
-              <ul className="space-y-2 mt-2">
+            <Box key={book.id}>
+              <Heading size="md">
+                {book.title}{' '}
+                <Text as="span" color="gray.500" fontWeight="normal">
+                  by {book.author}
+                </Text>
+              </Heading>
+              <List spacing={2} mt={2}>
                 {sections.map((section) => (
-                  <li key={section.id} className="border rounded p-3 flex items-center justify-between">
+                  <ListItem
+                    key={section.id}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    p={3}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     {section.status === 'locked' ? (
                       <JoinSectionButton
                         label={section.label}
@@ -1938,18 +1983,18 @@ export default async function PastBooksPage() {
                         }}
                       />
                     ) : (
-                      <Link href={`/sections/${section.id}`} className="text-brand-700 underline">
+                      <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
                         {section.label} ({section.postCount} posts)
                       </Link>
                     )}
-                  </li>
+                  </ListItem>
                 ))}
-              </ul>
-            </section>
+              </List>
+            </Box>
           )
         })
       )}
-    </main>
+    </VStack>
   )
 }
 ```

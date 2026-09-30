@@ -2,7 +2,7 @@ import { prisma } from '@/lib/db'
 
 export type SectionSummary =
   | { id: string; label: string; order: number; status: 'locked' }
-  | { id: string; label: string; order: number; status: 'unlocked'; postCount: number }
+  | { id: string; label: string; order: number; status: 'unlocked'; postCount: number; lastPostAt: Date | null }
 
 export type PostWithAuthor = {
   id: string
@@ -23,6 +23,7 @@ export async function getSectionsForViewer(bookId: string, userId: string): Prom
     include: {
       memberships: { where: { userId } },
       _count: { select: { posts: true } },
+      posts: { select: { createdAt: true }, orderBy: { createdAt: 'desc' }, take: 1 },
     },
   })
 
@@ -37,6 +38,7 @@ export async function getSectionsForViewer(bookId: string, userId: string): Prom
       order: section.order,
       status: 'unlocked' as const,
       postCount: section._count.posts,
+      lastPostAt: section.posts[0]?.createdAt ?? null,
     }
   })
 }

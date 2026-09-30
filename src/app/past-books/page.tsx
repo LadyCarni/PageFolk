@@ -3,6 +3,7 @@ import { Box, Heading, Link, List, ListItem, Text, VStack } from '@chakra-ui/rea
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
+import { SectionActivity } from '@/components/SectionActivity'
 import { JoinSectionButton } from '@/components/JoinSectionButton'
 import { joinSectionAction } from '@/app/sections/actions'
 
@@ -38,20 +39,33 @@ export default async function PastBooksPage() {
                     justifyContent="space-between"
                     alignItems="center"
                   >
-                    {section.status === 'locked' ? (
-                      <>
-                        <Text color="brand.700">{section.label}</Text>
-                        <JoinSectionButton
-                          action={async () => {
-                            'use server'
-                            await joinSectionAction(section.id)
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
-                        {section.label} ({section.postCount} posts)
-                      </Link>
+                    <Box>
+                      {section.status === 'locked' ? (
+                        <Text color="brand.700" fontWeight={500} fontSize="lg">
+                          Discuss {section.label}
+                        </Text>
+                      ) : (
+                        <Link
+                          as={NextLink}
+                          href={`/sections/${section.id}`}
+                          color="brand.700"
+                          fontWeight={500}
+                          fontSize="lg"
+                        >
+                          Discuss {section.label}
+                        </Link>
+                      )}
+                      {section.status === 'unlocked' && (
+                        <SectionActivity postCount={section.postCount} lastPostAt={section.lastPostAt} />
+                      )}
+                    </Box>
+                    {section.status === 'locked' && (
+                      <JoinSectionButton
+                        action={async () => {
+                          'use server'
+                          await joinSectionAction(section.id)
+                        }}
+                      />
                     )}
                   </ListItem>
                 ))}

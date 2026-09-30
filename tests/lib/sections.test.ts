@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { getSectionsForViewer } from '@/lib/sections'
+import { getSectionsForViewer, joinSection } from '@/lib/sections'
 
 describe('getSectionsForViewer', () => {
   beforeEach(async () => {
@@ -59,5 +59,44 @@ describe('getSectionsForViewer', () => {
     const summaries = await getSectionsForViewer(book.id, viewer.id)
 
     expect(summaries.map((s) => s.label)).toEqual(['Ch 1-5', 'Ch 6-10'])
+  })
+})
+
+describe('joinSection', () => {
+  beforeEach(async () => {
+    await prisma.post.deleteMany()
+    await prisma.threadMembership.deleteMany()
+    await prisma.section.deleteMany()
+    await prisma.book.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  it('creates a membership that unlocks the section', async () => {
+    const book = await prisma.book.create({
+      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      include: { sections: true },
+    })
+    const user = await prisma.user.create({ data: { googleId: 'g-5', email: 'joiner@example.com' } })
+
+    await joinSection(user.id, book.sections[0].id)
+
+    const summaries = await getSectionsForViewer(book.id, user.id)
+    expect(summaries[0].status).toBe('unlocked')
+  })
+
+  it('is idempotent — joining twice does not throw or duplicate the membership', async () => {
+    const book = await prisma.book.create({
+      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      include: { sections: true },
+    })
+    const user = await prisma.user.create({ data: { googleId: 'g-6', email: 'joiner2@example.com' } })
+
+    await joinSection(user.id, book.sections[0].id)
+    await joinSection(user.id, book.sections[0].id)
+
+    const count = await prisma.threadMembership.count({
+      where: { userId: user.id, sectionId: book.sections[0].id },
+    })
+    expect(count).toBe(1)
   })
 })

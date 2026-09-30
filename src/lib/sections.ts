@@ -28,3 +28,11 @@ export async function getSectionsForViewer(bookId: string, userId: string): Prom
     }
   })
 }
+
+export async function joinSection(userId: string, sectionId: string): Promise<void> {
+  await prisma.threadMembership.upsert({
+    where: { userId_sectionId: { userId, sectionId } },
+    update: {},
+    create: { userId, sectionId },
+  })
+}

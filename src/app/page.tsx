@@ -3,6 +3,8 @@ import { Box, Heading, Link, List, ListItem, Text } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
+import { JoinSectionButton } from '@/components/JoinSectionButton'
+import { joinSectionAction } from './sections/actions'
 
 export default async function HomePage() {
   const user = await requireUser()
@@ -38,7 +40,13 @@ export default async function HomePage() {
             alignItems="center"
           >
             {section.status === 'locked' ? (
-              <Text color="brand.500">🔒 {section.label}</Text>
+              <JoinSectionButton
+                label={section.label}
+                action={async () => {
+                  'use server'
+                  await joinSectionAction(section.id)
+                }}
+              />
             ) : (
               <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
                 {section.label} ({section.postCount} posts)

@@ -100,7 +100,7 @@ export default async function AdminPage() {
             </Stack>
             <form action={addSectionAction}>
               <input type="hidden" name="bookId" value={book.id} />
-              <HStack mt="1em">
+              <HStack mt="2em">
                 <Input name="label" placeholder="e.g. Chapters 6-10" required flex="1" />
                 <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }} flexShrink={0}>
                   Add section

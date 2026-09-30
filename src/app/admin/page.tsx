@@ -65,26 +65,28 @@ export default async function AdminPage() {
                 </Button>
               </form>
             </HStack>
-            <Stack spacing={2} mt={2}>
+            <Stack spacing="1em" mt="1em">
               {book.sections.map((s) => (
-                <HStack key={s.id} justify="space-between">
+                <HStack key={s.id} spacing={2}>
                   <Text fontSize="sm" color="gray.600" flexShrink={0}>
                     {s.order}.
                   </Text>
-                  <form
-                    action={async (formData: FormData) => {
-                      'use server'
-                      await updateSectionLabelAction(formData)
-                    }}
-                  >
-                    <input type="hidden" name="sectionId" value={s.id} />
-                    <HStack>
-                      <Input name="label" defaultValue={s.label} size="sm" required />
-                      <Button type="submit" size="sm" variant="link" color="brand.700">
-                        Rename
-                      </Button>
-                    </HStack>
-                  </form>
+                  <Box flex="1">
+                    <form
+                      action={async (formData: FormData) => {
+                        'use server'
+                        await updateSectionLabelAction(formData)
+                      }}
+                    >
+                      <input type="hidden" name="sectionId" value={s.id} />
+                      <HStack>
+                        <Input name="label" defaultValue={s.label} size="sm" required flex="1" />
+                        <Button type="submit" size="sm" variant="link" color="brand.700" flexShrink={0}>
+                          Rename
+                        </Button>
+                      </HStack>
+                    </form>
+                  </Box>
                   <DeleteSectionButton
                     label={s.label}
                     postCount={s._count.posts}
@@ -98,10 +100,9 @@ export default async function AdminPage() {
             </Stack>
             <form action={addSectionAction}>
               <input type="hidden" name="bookId" value={book.id} />
-              <HStack mt={2}>
-                <Input name="label" placeholder="e.g. Chapters 6-10" required />
-                <Input name="order" type="number" defaultValue={book.sections.length + 1} w="20" required />
-                <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+              <HStack mt="1em">
+                <Input name="label" placeholder="e.g. Chapters 6-10" required flex="1" />
+                <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }} flexShrink={0}>
                   Add section
                 </Button>
               </HStack>

@@ -61,7 +61,7 @@ describe('admin actions', () => {
   it('renames a section for an admin', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
 
     const fd = new FormData()
     fd.set('sectionId', section.id)
@@ -75,7 +75,7 @@ describe('admin actions', () => {
   it('rejects a label-less rename', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
 
     const fd = new FormData()
     fd.set('sectionId', section.id)
@@ -91,7 +91,7 @@ describe('admin actions', () => {
   it('deletes a section for an admin', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
 
     await deleteSectionAction(section.id)
 

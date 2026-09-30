@@ -15,13 +15,25 @@ describe('books', () => {
     expect(book.status).toBe('current')
   })
 
-  it('adds sections to a book', async () => {
+  it('adds sections to a book in creation order', async () => {
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    await addSection(book.id, 'Chapters 1-5', 1)
-    await addSection(book.id, 'Chapters 6-10', 2)
+    await addSection(book.id, 'Chapters 1-5')
+    await addSection(book.id, 'Chapters 6-10')
 
     const [found] = await listBooks('current')
     expect(found.sections.map((s) => s.label)).toEqual(['Chapters 1-5', 'Chapters 6-10'])
+    expect(found.sections.map((s) => s.order)).toEqual([1, 2])
+  })
+
+  it('keeps assigning the next order after a section in the middle is deleted', async () => {
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    const first = await addSection(book.id, 'Chapters 1-5')
+    await addSection(book.id, 'Chapters 6-10')
+    await deleteSection(first.id)
+
+    const third = await addSection(book.id, 'Chapters 11-15')
+
+    expect(third.order).toBe(3)
   })
 
   it('filters by status', async () => {
@@ -35,7 +47,7 @@ describe('books', () => {
 
   it('includes each section\'s post count', async () => {
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
     const user = await prisma.user.create({ data: { googleId: 'g-books-1', email: 'books1@example.com' } })
     await prisma.post.create({ data: { sectionId: section.id, userId: user.id, body: 'Hi' } })
     await prisma.post.create({ data: { sectionId: section.id, userId: user.id, body: 'Hi again' } })
@@ -46,7 +58,7 @@ describe('books', () => {
 
   it('updates a section label', async () => {
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
 
     await updateSectionLabel(section.id, 'Chapters 1-6')
 
@@ -56,7 +68,7 @@ describe('books', () => {
 
   it('deletes an empty section', async () => {
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
 
     await deleteSection(section.id)
 
@@ -66,7 +78,7 @@ describe('books', () => {
 
   it('deletes a section along with its posts and memberships', async () => {
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
-    const section = await addSection(book.id, 'Chapters 1-5', 1)
+    const section = await addSection(book.id, 'Chapters 1-5')
     const user = await prisma.user.create({ data: { googleId: 'g-books-2', email: 'books2@example.com' } })
     await prisma.threadMembership.create({ data: { userId: user.id, sectionId: section.id } })
     await prisma.post.create({ data: { sectionId: section.id, userId: user.id, body: 'Spoilers!' } })

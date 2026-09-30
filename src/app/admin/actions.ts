@@ -21,11 +21,10 @@ export async function addSectionAction(formData: FormData) {
   await requireAdmin()
   const bookId = String(formData.get('bookId') ?? '')
   const label = String(formData.get('label') ?? '').trim()
-  const order = Number(formData.get('order') ?? 0)
   if (!bookId || !label) {
     throw new Error('bookId and label are required')
   }
-  await addSection(bookId, label, order)
+  await addSection(bookId, label)
   revalidatePath('/admin')
 }
 

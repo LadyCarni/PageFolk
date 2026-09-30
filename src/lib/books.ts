@@ -17,7 +17,12 @@ export async function createBook(input: { title: string; author: string; coverUr
   return prisma.book.create({ data: { ...input, status: 'current' } })
 }
 
-export async function addSection(bookId: string, label: string, order: number) {
+export async function addSection(bookId: string, label: string) {
+  const { _max } = await prisma.section.aggregate({
+    where: { bookId },
+    _max: { order: true },
+  })
+  const order = (_max.order ?? 0) + 1
   return prisma.section.create({ data: { bookId, label, order } })
 }
 

@@ -24,7 +24,7 @@ export default async function HomePage() {
     <Box p={8}>
       <Heading size="lg" color="brand.900" mb={4}>
         {book.title}{' '}
-        <Text as="span" color="gray.500" fontWeight="normal">
+        <Text as="span" color="brand.300" fontWeight="normal">
           by {book.author}
         </Text>
       </Heading>
@@ -33,6 +33,8 @@ export default async function HomePage() {
           <ListItem
             key={section.id}
             borderWidth="1px"
+            borderColor="brand.500"
+            bg="brand.50"
             borderRadius="md"
             p={3}
             display="flex"

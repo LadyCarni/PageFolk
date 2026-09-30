@@ -7,7 +7,13 @@ import { createPostAction } from '../actions'
 
 export default async function SectionThreadPage({ params }: { params: { sectionId: string } }) {
   const user = await requireUser()
-  const thread = await getSectionThread(params.sectionId, user.id)
+
+  let thread
+  try {
+    thread = await getSectionThread(params.sectionId, user.id)
+  } catch {
+    notFound()
+  }
 
   if (thread.status === 'locked') {
     notFound()

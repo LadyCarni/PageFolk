@@ -17,7 +17,12 @@ export default async function AdminPage() {
         <Heading size="md" mb={2}>
           New book
         </Heading>
-        <form action={createBookAction}>
+        <form
+          action={async (formData: FormData) => {
+            'use server'
+            await createBookAction(formData)
+          }}
+        >
           <HStack>
             <Input name="title" placeholder="Title" required />
             <Input name="author" placeholder="Author" required />

@@ -1,4 +1,4 @@
-import { Button, Heading, Text, VStack } from '@chakra-ui/react'
+import { Button, Heading, Image, Text, VStack } from '@chakra-ui/react'
 import { signIn } from '@/auth'
 
 export default function SignInPage({
@@ -10,9 +10,13 @@ export default function SignInPage({
 
   return (
     <VStack minH="100vh" justify="center" spacing={4} p={8}>
+      <Image src="/pagefolk.svg" alt="" boxSize="96px" />
       <Heading size="lg" color="brand.900">
         PageFolk
       </Heading>
+      <Text color="brand.500" fontSize="lg" fontStyle="italic">
+        Every page, together.
+      </Text>
       {isAccessDenied ? (
         <Text color="brand.700" fontWeight="bold">
           You&apos;re not on the list — contact the admin to get access.

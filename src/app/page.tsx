@@ -28,6 +28,11 @@ export default async function HomePage() {
           by {book.author}
         </Text>
       </Heading>
+      <Text color="brand.700" mb={4}>
+        {sections.length === 0
+          ? "Discussion threads for this book will open up soon. Start reading, and check back shortly to join the conversation!"
+          : "No spoilers here! Every discussion thread starts locked. When you finish a set of chapters, join its thread and jump into the conversation. We've been waiting to hear what you think!"}
+      </Text>
       <List spacing={2}>
         {sections.map((section) => (
           <ListItem
@@ -42,16 +47,18 @@ export default async function HomePage() {
             alignItems="center"
           >
             {section.status === 'locked' ? (
-              <JoinSectionButton
-                label={section.label}
-                action={async () => {
-                  'use server'
-                  await joinSectionAction(section.id)
-                }}
-              />
+              <>
+                <Text color="brand.700">{section.label}</Text>
+                <JoinSectionButton
+                  action={async () => {
+                    'use server'
+                    await joinSectionAction(section.id)
+                  }}
+                />
+              </>
             ) : (
               <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
-                {section.label} ({section.postCount} posts)
+                Discuss {section.label} ({section.postCount} {section.postCount === 1 ? 'post' : 'posts'})
               </Link>
             )}
           </ListItem>

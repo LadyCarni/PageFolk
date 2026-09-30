@@ -39,13 +39,15 @@ export default async function PastBooksPage() {
                     alignItems="center"
                   >
                     {section.status === 'locked' ? (
-                      <JoinSectionButton
-                        label={section.label}
-                        action={async () => {
-                          'use server'
-                          await joinSectionAction(section.id)
-                        }}
-                      />
+                      <>
+                        <Text color="brand.700">{section.label}</Text>
+                        <JoinSectionButton
+                          action={async () => {
+                            'use server'
+                            await joinSectionAction(section.id)
+                          }}
+                        />
+                      </>
                     ) : (
                       <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700">
                         {section.label} ({section.postCount} posts)

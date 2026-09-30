@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/session'
 import { createBook, addSection, setBookStatus, updateSectionLabel, deleteSection, deleteBook } from '@/lib/books'
+import { setBookCover, removeBookCover } from '@/lib/covers'
+import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 
 export async function createBookAction(formData: FormData) {
@@ -56,6 +58,29 @@ export async function deleteSectionAction(sectionId: string) {
 export async function deleteBookAction(bookId: string) {
   await requireAdmin()
   await deleteBook(bookId)
+  revalidatePath('/admin')
+  revalidatePath('/')
+  revalidatePath('/past-books')
+}
+
+export async function uploadCoverAction(formData: FormData) {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  const file = formData.get('cover')
+  if (!bookId) throw new Error('bookId is required')
+  if (!(file instanceof File) || file.size === 0) throw new Error('Choose an image file to upload')
+  if (file.size > MAX_COVER_BYTES) {
+    throw new Error(`Cover image must be ${MAX_COVER_BYTES / 1024} KB or smaller`)
+  }
+  await setBookCover(bookId, new Uint8Array(await file.arrayBuffer()))
+  revalidatePath('/admin')
+  revalidatePath('/')
+  revalidatePath('/past-books')
+}
+
+export async function removeCoverAction(bookId: string) {
+  await requireAdmin()
+  await removeBookCover(bookId)
   revalidatePath('/admin')
   revalidatePath('/')
   revalidatePath('/past-books')

@@ -33,6 +33,16 @@ model Book {
   createdAt DateTime @default(now())
 
   sections Section[]
+  cover    BookCover?
+}
+
+model BookCover {
+  bookId      String   @id
+  data        Bytes
+  contentType String
+  updatedAt   DateTime @updatedAt
+
+  book Book @relation(fields: [bookId], references: [id])
 }
 
 model Section {

@@ -1,6 +1,7 @@
 import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
+import { CoverUpload } from '@/components/CoverUpload'
 import { DeleteBookButton } from '@/components/DeleteBookButton'
 import { DeleteSectionButton } from '@/components/DeleteSectionButton'
 import {
@@ -10,6 +11,8 @@ import {
   updateSectionLabelAction,
   deleteSectionAction,
   deleteBookAction,
+  uploadCoverAction,
+  removeCoverAction,
 } from './actions'
 
 export default async function AdminPage() {
@@ -78,6 +81,16 @@ export default async function AdminPage() {
                 />
               </HStack>
             </HStack>
+            <CoverUpload
+              bookId={book.id}
+              title={book.title}
+              coverVersion={book.cover?.updatedAt.getTime() ?? null}
+              uploadAction={uploadCoverAction}
+              removeAction={async () => {
+                'use server'
+                await removeCoverAction(book.id)
+              }}
+            />
             <Stack spacing="1em" mt="1em">
               {book.sections.map((s) => (
                 <HStack key={s.id} spacing={2}>

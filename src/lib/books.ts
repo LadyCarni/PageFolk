@@ -9,6 +9,8 @@ export async function listBooks(status?: 'current' | 'past') {
         orderBy: { order: 'asc' },
         include: { _count: { select: { posts: true } } },
       },
+      // Only the timestamp, never the image bytes; it doubles as a cache-busting version.
+      cover: { select: { updatedAt: true } },
     },
   })
 }
@@ -45,6 +47,7 @@ export async function deleteSection(sectionId: string): Promise<void> {
 export async function deleteBook(bookId: string): Promise<void> {
   const sectionIds = (await prisma.section.findMany({ where: { bookId }, select: { id: true } })).map((s) => s.id)
   await prisma.$transaction([
+    prisma.bookCover.deleteMany({ where: { bookId } }),
     prisma.post.deleteMany({ where: { sectionId: { in: sectionIds } } }),
     prisma.threadMembership.deleteMany({ where: { sectionId: { in: sectionIds } } }),
     prisma.section.deleteMany({ where: { bookId } }),

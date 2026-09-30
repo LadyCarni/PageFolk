@@ -5,12 +5,13 @@ const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, updateSectionLabelAction, deleteSectionAction, deleteBookAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, updateSectionLabelAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction } from '@/app/admin/actions'
 import { createBook, addSection } from '@/lib/books'
 
 describe('admin actions', () => {
   beforeEach(async () => {
     mockRequireAdmin.mockReset()
+    await prisma.bookCover.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.allowedEmail.deleteMany()
@@ -114,5 +115,64 @@ describe('admin actions', () => {
     await deleteBookAction(book.id)
 
     expect(await prisma.book.findUnique({ where: { id: book.id } })).toBeNull()
+  })
+
+  describe('book covers', () => {
+    const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
+
+    function coverForm(bookId: string, bytes: Uint8Array | null, name = 'cover.png') {
+      const fd = new FormData()
+      fd.set('bookId', bookId)
+      if (bytes) fd.set('cover', new File([new Uint8Array(bytes)], name))
+      return fd
+    }
+
+    it('rejects uploadCoverAction for a non-admin', async () => {
+      mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+      const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+
+      await expect(uploadCoverAction(coverForm(book.id, PNG))).rejects.toThrow('Forbidden')
+      expect(await prisma.bookCover.count()).toBe(0)
+    })
+
+    it('stores an uploaded cover for an admin', async () => {
+      mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+      const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+
+      await uploadCoverAction(coverForm(book.id, PNG))
+
+      expect((await prisma.bookCover.findUnique({ where: { bookId: book.id } }))?.contentType).toBe('image/png')
+    })
+
+    it('requires a file', async () => {
+      mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+      const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+
+      await expect(uploadCoverAction(coverForm(book.id, null))).rejects.toThrow('Choose')
+      await expect(uploadCoverAction(coverForm(book.id, new Uint8Array(0)))).rejects.toThrow('Choose')
+    })
+
+    it('rejects a non-image file', async () => {
+      mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+      const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+
+      await expect(
+        uploadCoverAction(coverForm(book.id, new TextEncoder().encode('not an image'), 'cover.png'))
+      ).rejects.toThrow('PNG, JPEG, or WebP')
+    })
+
+    it('rejects removeCoverAction for a non-admin, and removes for an admin', async () => {
+      const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+      mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+      await uploadCoverAction(coverForm(book.id, PNG))
+
+      mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+      await expect(removeCoverAction(book.id)).rejects.toThrow('Forbidden')
+      expect(await prisma.bookCover.count()).toBe(1)
+
+      mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+      await removeCoverAction(book.id)
+      expect(await prisma.bookCover.count()).toBe(0)
+    })
   })
 })

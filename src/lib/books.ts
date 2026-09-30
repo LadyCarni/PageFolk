@@ -4,7 +4,12 @@ export async function listBooks(status?: 'current' | 'past') {
   return prisma.book.findMany({
     where: status ? { status } : undefined,
     orderBy: { createdAt: 'desc' },
-    include: { sections: { orderBy: { order: 'asc' } } },
+    include: {
+      sections: {
+        orderBy: { order: 'asc' },
+        include: { _count: { select: { posts: true } } },
+      },
+    },
   })
 }
 
@@ -18,4 +23,16 @@ export async function addSection(bookId: string, label: string, order: number) {
 
 export async function setBookStatus(bookId: string, status: 'current' | 'past') {
   return prisma.book.update({ where: { id: bookId }, data: { status } })
+}
+
+export async function updateSectionLabel(sectionId: string, label: string) {
+  return prisma.section.update({ where: { id: sectionId }, data: { label } })
+}
+
+export async function deleteSection(sectionId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.post.deleteMany({ where: { sectionId } }),
+    prisma.threadMembership.deleteMany({ where: { sectionId } }),
+    prisma.section.delete({ where: { id: sectionId } }),
+  ])
 }

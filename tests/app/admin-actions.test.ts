@@ -5,7 +5,8 @@ const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, updateSectionLabelAction, deleteSectionAction } from '@/app/admin/actions'
+import { createBook, addSection } from '@/lib/books'
 
 describe('admin actions', () => {
   beforeEach(async () => {
@@ -47,5 +48,53 @@ describe('admin actions', () => {
     const fd = new FormData()
     fd.set('email', 'new@example.com')
     await expect(addAllowedEmailAction(fd)).rejects.toThrow('Forbidden')
+  })
+
+  it('rejects updateSectionLabelAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    const fd = new FormData()
+    fd.set('sectionId', 'whatever')
+    fd.set('label', 'New label')
+    await expect(updateSectionLabelAction(fd)).rejects.toThrow('Forbidden')
+  })
+
+  it('renames a section for an admin', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    const section = await addSection(book.id, 'Chapters 1-5', 1)
+
+    const fd = new FormData()
+    fd.set('sectionId', section.id)
+    fd.set('label', 'Chapters 1-6')
+    await updateSectionLabelAction(fd)
+
+    const updated = await prisma.section.findUniqueOrThrow({ where: { id: section.id } })
+    expect(updated.label).toBe('Chapters 1-6')
+  })
+
+  it('rejects a label-less rename', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    const section = await addSection(book.id, 'Chapters 1-5', 1)
+
+    const fd = new FormData()
+    fd.set('sectionId', section.id)
+    fd.set('label', '   ')
+    await expect(updateSectionLabelAction(fd)).rejects.toThrow('required')
+  })
+
+  it('rejects deleteSectionAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(deleteSectionAction('whatever')).rejects.toThrow('Forbidden')
+  })
+
+  it('deletes a section for an admin', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert' })
+    const section = await addSection(book.id, 'Chapters 1-5', 1)
+
+    await deleteSectionAction(section.id)
+
+    expect(await prisma.section.findUnique({ where: { id: section.id } })).toBeNull()
   })
 })

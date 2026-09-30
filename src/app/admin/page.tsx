@@ -1,14 +1,21 @@
 import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
-import { createBookAction, addSectionAction, setBookStatusAction } from './actions'
+import { DeleteSectionButton } from '@/components/DeleteSectionButton'
+import {
+  createBookAction,
+  addSectionAction,
+  setBookStatusAction,
+  updateSectionLabelAction,
+  deleteSectionAction,
+} from './actions'
 
 export default async function AdminPage() {
   await requireAdmin()
   const books = await listBooks()
 
   return (
-    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={8}>
+    <VStack align="stretch" p={8} spacing={8}>
       <Heading size="lg" color="brand.900">
         Admin
       </Heading>
@@ -26,7 +33,14 @@ export default async function AdminPage() {
           <HStack>
             <Input name="title" placeholder="Title" required />
             <Input name="author" placeholder="Author" required />
-            <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+            <Button
+              type="submit"
+              bg="brand.700"
+              color="white"
+              _hover={{ bg: 'brand.900' }}
+              w="200px"
+              flexShrink={0}
+            >
               Add book
             </Button>
           </HStack>
@@ -51,11 +65,35 @@ export default async function AdminPage() {
                 </Button>
               </form>
             </HStack>
-            <Stack as="ul" mt={2} fontSize="sm" color="gray.600" spacing={0}>
+            <Stack spacing={2} mt={2}>
               {book.sections.map((s) => (
-                <Text as="li" key={s.id}>
-                  {s.order}. {s.label}
-                </Text>
+                <HStack key={s.id} justify="space-between">
+                  <Text fontSize="sm" color="gray.600" flexShrink={0}>
+                    {s.order}.
+                  </Text>
+                  <form
+                    action={async (formData: FormData) => {
+                      'use server'
+                      await updateSectionLabelAction(formData)
+                    }}
+                  >
+                    <input type="hidden" name="sectionId" value={s.id} />
+                    <HStack>
+                      <Input name="label" defaultValue={s.label} size="sm" required />
+                      <Button type="submit" size="sm" variant="link" color="brand.700">
+                        Rename
+                      </Button>
+                    </HStack>
+                  </form>
+                  <DeleteSectionButton
+                    label={s.label}
+                    postCount={s._count.posts}
+                    action={async () => {
+                      'use server'
+                      await deleteSectionAction(s.id)
+                    }}
+                  />
+                </HStack>
               ))}
             </Stack>
             <form action={addSectionAction}>

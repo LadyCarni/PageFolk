@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus } from '@/lib/books'
+import { createBook, addSection, setBookStatus, updateSectionLabel, deleteSection } from '@/lib/books'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 
 export async function createBookAction(formData: FormData) {
@@ -32,6 +32,24 @@ export async function addSectionAction(formData: FormData) {
 export async function setBookStatusAction(bookId: string, status: 'current' | 'past') {
   await requireAdmin()
   await setBookStatus(bookId, status)
+  revalidatePath('/admin')
+  revalidatePath('/')
+}
+
+export async function updateSectionLabelAction(formData: FormData) {
+  await requireAdmin()
+  const sectionId = String(formData.get('sectionId') ?? '')
+  const label = String(formData.get('label') ?? '').trim()
+  if (!sectionId || !label) {
+    throw new Error('sectionId and label are required')
+  }
+  await updateSectionLabel(sectionId, label)
+  revalidatePath('/admin')
+}
+
+export async function deleteSectionAction(sectionId: string) {
+  await requireAdmin()
+  await deleteSection(sectionId)
   revalidatePath('/admin')
   revalidatePath('/')
 }

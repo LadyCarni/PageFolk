@@ -1,0 +1,15 @@
+[Unit]
+Description=Book Club App
+After=network.target
+
+[Service]
+Type=simple
+User=bookclub
+WorkingDirectory=/opt/bookclub
+EnvironmentFile=/opt/bookclub/.env
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

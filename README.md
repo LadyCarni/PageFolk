@@ -26,7 +26,7 @@
 3. Copy `.env.example` to `/opt/bookclub/.env` and fill in production values
    (production `DATABASE_URL`, `NEXTAUTH_URL` set to `https://<your-subdomain>`,
    production Google OAuth credentials, `ADMIN_EMAIL`).
-4. `npx prisma migrate deploy`
+4. `npx prisma db push`
 5. `npm run build`
 6. Copy `deploy/bookclub.service` to `/etc/systemd/system/bookclub.service`,
    then `sudo systemctl enable --now bookclub`.
@@ -42,7 +42,7 @@
 ```bash
 git pull
 npm ci
-npx prisma migrate deploy
+npx prisma db push
 npm run build
 sudo systemctl restart bookclub
 ```

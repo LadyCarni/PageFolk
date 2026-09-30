@@ -5,7 +5,12 @@ import { isEmailAllowed } from '@/lib/allowlist'
 import { isAdminEmail } from '@/lib/admin'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  providers: [Google],
+  providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
   pages: { signIn: '/sign-in' },
   session: { strategy: 'jwt' },
   callbacks: {

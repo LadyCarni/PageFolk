@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { getSectionsForViewer, joinSection } from '@/lib/sections'
+import { getSectionsForViewer, joinSection, getSectionThread } from '@/lib/sections'
 
 describe('getSectionsForViewer', () => {
   beforeEach(async () => {
@@ -98,5 +98,48 @@ describe('joinSection', () => {
       where: { userId: user.id, sectionId: book.sections[0].id },
     })
     expect(count).toBe(1)
+  })
+})
+
+describe('getSectionThread', () => {
+  beforeEach(async () => {
+    await prisma.post.deleteMany()
+    await prisma.threadMembership.deleteMany()
+    await prisma.section.deleteMany()
+    await prisma.book.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  it('returns locked with no posts field when the viewer has not joined', async () => {
+    const book = await prisma.book.create({
+      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      include: { sections: true },
+    })
+    const author = await prisma.user.create({ data: { googleId: 'g-7', email: 'author2@example.com' } })
+    const viewer = await prisma.user.create({ data: { googleId: 'g-8', email: 'viewer4@example.com' } })
+    await prisma.post.create({ data: { sectionId: book.sections[0].id, userId: author.id, body: 'Spoiler!' } })
+
+    const result = await getSectionThread(book.sections[0].id, viewer.id)
+
+    expect(result).toEqual({ status: 'locked', label: 'Ch 1-5' })
+    expect(result).not.toHaveProperty('posts')
+  })
+
+  it('returns the posts once the viewer has joined', async () => {
+    const book = await prisma.book.create({
+      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      include: { sections: true },
+    })
+    const viewer = await prisma.user.create({ data: { googleId: 'g-9', email: 'viewer5@example.com' } })
+    await joinSection(viewer.id, book.sections[0].id)
+    await prisma.post.create({ data: { sectionId: book.sections[0].id, userId: viewer.id, body: 'Hi all' } })
+
+    const result = await getSectionThread(book.sections[0].id, viewer.id)
+
+    expect(result.status).toBe('unlocked')
+    if (result.status === 'unlocked') {
+      expect(result.posts).toHaveLength(1)
+      expect(result.posts[0].body).toBe('Hi all')
+    }
   })
 })

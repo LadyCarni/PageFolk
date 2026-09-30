@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
-import { Box, Heading, List, ListItem, Text, VStack } from '@chakra-ui/react'
+import { Box, Flex, Heading, List, ListItem, Text, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { getSectionThread } from '@/lib/sections'
 import { PostForm } from '@/components/PostForm'
-import { createPostAction } from '../actions'
+import { PostTimestamp } from '@/components/PostTimestamp'
+import { DeletePostButton } from '@/components/DeletePostButton'
+import { createPostAction, deletePostAction } from '../actions'
 
 export default async function SectionThreadPage({ params }: { params: { sectionId: string } }) {
   const user = await requireUser()
@@ -32,18 +34,36 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
 
       <List spacing={4}>
         {topLevel.map((post) => (
-          <ListItem key={post.id} borderWidth="1px" borderRadius="md" p={3}>
-            <Text fontSize="sm" color="brand.500">
-              {post.user.name ?? 'Member'}
-            </Text>
+          <ListItem key={post.id} borderWidth="1px" borderColor="#e7b7a6" borderRadius="md" p={3}>
+            <Flex justify="space-between" align="baseline">
+              <Text fontSize="sm" color="brand.500">
+                {post.user.name ?? 'Member'}
+              </Text>
+              <PostTimestamp createdAt={post.createdAt} />
+            </Flex>
             <Text>{post.body}</Text>
-            <List mt={2} ml={4} spacing={2} borderLeftWidth="2px" borderColor="brand.100" pl={4}>
+            {post.user.id === user.id && (
+              <DeletePostButton
+                replyCount={repliesTo(post.id).length}
+                action={deletePostAction.bind(null, params.sectionId, post.id)}
+              />
+            )}
+            <List mt={2} ml={4} spacing={2} borderLeftWidth="2px" borderColor="#e7b7a6" pl={4}>
               {repliesTo(post.id).map((reply) => (
                 <ListItem key={reply.id}>
-                  <Text fontSize="sm" color="brand.500">
-                    {reply.user.name ?? 'Member'}
-                  </Text>
+                  <Flex justify="space-between" align="baseline">
+                    <Text fontSize="sm" color="brand.500">
+                      {reply.user.name ?? 'Member'}
+                    </Text>
+                    <PostTimestamp createdAt={reply.createdAt} />
+                  </Flex>
                   <Text>{reply.body}</Text>
+                  {reply.user.id === user.id && (
+                    <DeletePostButton
+                      replyCount={0}
+                      action={deletePostAction.bind(null, params.sectionId, reply.id)}
+                    />
+                  )}
                 </ListItem>
               ))}
             </List>

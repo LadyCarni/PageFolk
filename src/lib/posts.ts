@@ -18,3 +18,24 @@ export async function createPost(sectionId: string, userId: string, body: string
     include: { user: { select: { id: true, name: true, avatarUrl: true } } },
   })
 }
+
+export async function deletePost(postId: string, userId: string): Promise<void> {
+  const post = await prisma.post.findUniqueOrThrow({ where: { id: postId } })
+  if (post.userId !== userId) {
+    throw new Error('You can only delete your own posts')
+  }
+
+  // Collect the post and all of its descendants, level by level.
+  const ids = [postId]
+  let frontier = [postId]
+  while (frontier.length > 0) {
+    const children = await prisma.post.findMany({
+      where: { parentPostId: { in: frontier } },
+      select: { id: true },
+    })
+    frontier = children.map((c) => c.id)
+    ids.push(...frontier)
+  }
+
+  await prisma.post.deleteMany({ where: { id: { in: ids } } })
+}

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/session'
 import { joinSection } from '@/lib/sections'
-import { createPost } from '@/lib/posts'
+import { createPost, deletePost } from '@/lib/posts'
 
 export async function joinSectionAction(sectionId: string) {
   const user = await requireUser()
@@ -18,4 +18,11 @@ export async function createPostAction(sectionId: string, formData: FormData) {
   const parentPostId = formData.get('parentPostId')
   await createPost(sectionId, user.id, body, parentPostId ? String(parentPostId) : undefined)
   revalidatePath(`/sections/${sectionId}`)
+}
+
+export async function deletePostAction(sectionId: string, postId: string) {
+  const user = await requireUser()
+  await deletePost(postId, user.id)
+  revalidatePath(`/sections/${sectionId}`)
+  revalidatePath('/')
 }

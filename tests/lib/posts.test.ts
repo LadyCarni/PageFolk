@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
 import { joinSection } from '@/lib/sections'
-import { createPost } from '@/lib/posts'
+import { createPost, deletePost } from '@/lib/posts'
 
 describe('createPost', () => {
   beforeEach(async () => {
@@ -51,5 +51,69 @@ describe('createPost', () => {
     const reply = await createPost(sectionId, userId, 'Agreed!', parent.id)
 
     expect(reply.parentPostId).toBe(parent.id)
+  })
+})
+
+describe('deletePost', () => {
+  beforeEach(async () => {
+    await prisma.post.deleteMany()
+    await prisma.threadMembership.deleteMany()
+    await prisma.section.deleteMany()
+    await prisma.book.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  async function setup() {
+    const book = await prisma.book.create({
+      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      include: { sections: true },
+    })
+    const author = await prisma.user.create({ data: { googleId: 'g-20', email: 'author@example.com' } })
+    const other = await prisma.user.create({ data: { googleId: 'g-21', email: 'other@example.com' } })
+    const sectionId = book.sections[0].id
+    await joinSection(author.id, sectionId)
+    await joinSection(other.id, sectionId)
+    return { sectionId, authorId: author.id, otherId: other.id }
+  }
+
+  it('deletes the author\'s own post', async () => {
+    const { sectionId, authorId } = await setup()
+    const post = await createPost(sectionId, authorId, 'Oops')
+
+    await deletePost(post.id, authorId)
+
+    expect(await prisma.post.count()).toBe(0)
+  })
+
+  it('deletes the whole thread of replies, including other users\' replies', async () => {
+    const { sectionId, authorId, otherId } = await setup()
+    const top = await createPost(sectionId, authorId, 'Top')
+    const reply = await createPost(sectionId, otherId, 'Reply', top.id)
+    await createPost(sectionId, authorId, 'Nested', reply.id)
+    const unrelated = await createPost(sectionId, otherId, 'Unrelated')
+
+    await deletePost(top.id, authorId)
+
+    const remaining = await prisma.post.findMany()
+    expect(remaining.map((p) => p.id)).toEqual([unrelated.id])
+  })
+
+  it('deletes only a reply, leaving its parent', async () => {
+    const { sectionId, authorId, otherId } = await setup()
+    const top = await createPost(sectionId, otherId, 'Top')
+    const reply = await createPost(sectionId, authorId, 'Reply', top.id)
+
+    await deletePost(reply.id, authorId)
+
+    const remaining = await prisma.post.findMany()
+    expect(remaining.map((p) => p.id)).toEqual([top.id])
+  })
+
+  it('rejects deleting someone else\'s post', async () => {
+    const { sectionId, authorId, otherId } = await setup()
+    const post = await createPost(sectionId, authorId, 'Mine')
+
+    await expect(deletePost(post.id, otherId)).rejects.toThrow('your own')
+    expect(await prisma.post.count()).toBe(1)
   })
 })

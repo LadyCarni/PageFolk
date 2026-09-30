@@ -8,7 +8,7 @@ export default async function AllowedEmailsPage() {
   const emails = await listAllowedEmails()
 
   return (
-    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={4}>
+    <VStack align="stretch" p={8} spacing={4}>
       <Heading size="lg" color="brand.900">
         Allowed members
       </Heading>

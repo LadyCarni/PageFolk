@@ -10,6 +10,13 @@ const theme = extendTheme({
       100: '#e7b7a6',
     },
   },
+  styles: {
+    global: {
+      body: {
+        bg: '#ffeae3',
+      },
+    },
+  },
 })
 
 export default theme

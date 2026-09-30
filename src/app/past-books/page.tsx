@@ -11,7 +11,7 @@ export default async function PastBooksPage() {
   const books = await listBooks('past')
 
   return (
-    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={8}>
+    <VStack align="stretch" p={8} spacing={8}>
       <Heading size="lg" color="brand.900">
         Past books
       </Heading>

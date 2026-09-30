@@ -21,7 +21,7 @@ export default async function HomePage() {
   const sections = await getSectionsForViewer(book.id, user.id)
 
   return (
-    <Box maxW="2xl" mx="auto" p={8}>
+    <Box p={8}>
       <Heading size="lg" color="brand.900" mb={4}>
         {book.title}{' '}
         <Text as="span" color="gray.500" fontWeight="normal">

@@ -23,7 +23,7 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
   const repliesTo = (postId: string) => thread.posts.filter((p) => p.parentPostId === postId)
 
   return (
-    <VStack align="stretch" maxW="2xl" mx="auto" p={8} spacing={6}>
+    <VStack align="stretch" p={8} spacing={6}>
       <Heading size="lg" color="brand.900">
         {thread.label}
       </Heading>

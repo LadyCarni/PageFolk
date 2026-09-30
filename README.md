@@ -1,4 +1,4 @@
-# Book Club App
+# PageFolk
 
 ## Local development
 

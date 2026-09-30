@@ -1,5 +1,5 @@
 [Unit]
-Description=Book Club App
+Description=PageFolk
 After=network.target
 
 [Service]

@@ -3,7 +3,7 @@ import { Providers } from './providers'
 import { auth } from '@/auth'
 import { NavBar } from '@/components/NavBar'
 
-export const metadata = { title: 'Book Club' }
+export const metadata = { title: 'PageFolk' }
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const session = await auth()

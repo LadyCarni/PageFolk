@@ -11,7 +11,7 @@ export default function SignInPage({
   return (
     <VStack minH="100vh" justify="center" spacing={4} p={8}>
       <Heading size="lg" color="brand.900">
-        Book Club
+        PageFolk
       </Heading>
       {isAccessDenied ? (
         <Text color="brand.700" fontWeight="bold">

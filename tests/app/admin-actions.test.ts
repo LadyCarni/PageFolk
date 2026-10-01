@@ -34,9 +34,9 @@ describe('admin actions', () => {
     fd.set('title', 'Dune')
     fd.set('author', 'Frank Herbert')
     fd.set('totalChapters', '30')
-    const book = await createBookAction(fd)
-    expect(book.title).toBe('Dune')
-    expect(book.totalChapters).toBe(30)
+    expect(await createBookAction(fd)).toEqual({})
+    const [book] = await prisma.book.findMany()
+    expect(book).toMatchObject({ title: 'Dune', totalChapters: 30 })
   })
 
   it('rejects a title-less book', async () => {
@@ -44,7 +44,9 @@ describe('admin actions', () => {
     const fd = new FormData()
     fd.set('title', '  ')
     fd.set('author', 'Frank Herbert')
-    await expect(createBookAction(fd)).rejects.toThrow('required')
+    fd.set('totalChapters', '30')
+    expect(await createBookAction(fd)).toEqual({ error: 'Title and author are required' })
+    expect(await prisma.book.count()).toBe(0)
   })
 
   it('rejects addAllowedEmailAction for a non-admin', async () => {
@@ -61,7 +63,9 @@ describe('admin actions', () => {
       fd.set('title', 'Dune')
       fd.set('author', 'Frank Herbert')
       fd.set('totalChapters', bad)
-      await expect(createBookAction(fd)).rejects.toThrow('Total chapters')
+      expect(await createBookAction(fd)).toEqual({
+        error: 'Total chapters must be a whole number of at least 1',
+      })
     }
     expect(await prisma.book.count()).toBe(0)
   })
@@ -97,16 +101,61 @@ describe('admin actions', () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
 
-    await expect(
-      addSectionAction(sectionForm({ bookId: book.id, startChapter: '', endChapter: '5' }))
-    ).rejects.toThrow('Start chapter')
-    await expect(
-      addSectionAction(sectionForm({ bookId: book.id, startChapter: '10', endChapter: '6' }))
-    ).rejects.toThrow('before the start')
-    await expect(
-      addSectionAction(sectionForm({ bookId: book.id, startChapter: '28', endChapter: '31' }))
-    ).rejects.toThrow('past the book')
+    const missing = await addSectionAction(sectionForm({ bookId: book.id, startChapter: '', endChapter: '5' }))
+    const backwards = await addSectionAction(sectionForm({ bookId: book.id, startChapter: '10', endChapter: '6' }))
+    const pastTotal = await addSectionAction(sectionForm({ bookId: book.id, startChapter: '28', endChapter: '31' }))
+
+    expect(missing.error).toContain('Start chapter')
+    expect(backwards.error).toContain('before the start')
+    expect(pastTotal.error).toContain('past the book')
     expect(await prisma.section.count()).toBe(0)
+  })
+
+  it('returns an error, and saves nothing, when a new section overlaps another', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+    await addSection(book.id, { startChapter: 11, endChapter: 20 })
+
+    const result = await addSectionAction(sectionForm({ bookId: book.id, startChapter: '1', endChapter: '12' }))
+
+    expect(result.error).toContain('overlaps')
+    expect(await prisma.section.count()).toBe(1)
+  })
+
+  it('returns an error and leaves the section alone when an edit goes past the total or into a neighbour', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+    const first = await addSection(book.id, { startChapter: 1, endChapter: 10 })
+    await addSection(book.id, { startChapter: 11, endChapter: 20 })
+
+    const pastTotal = await updateSectionAction(
+      sectionForm({ sectionId: first.id, startChapter: '1', endChapter: '31' })
+    )
+    const overlap = await updateSectionAction(
+      sectionForm({ sectionId: first.id, startChapter: '1', endChapter: '12' })
+    )
+
+    expect(pastTotal.error).toContain('past the book')
+    expect(overlap.error).toContain('overlaps')
+    expect((await prisma.section.findUniqueOrThrow({ where: { id: first.id } })).endChapter).toBe(10)
+  })
+
+  it('returns an error and keeps the total when it would drop below where the last thread ends', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+    await addSection(book.id, { startChapter: 21, endChapter: 30 })
+
+    const result = await updateTotalChaptersAction(sectionForm({ bookId: book.id, totalChapters: '25' }))
+
+    expect(result.error).toContain('cannot be less than 30')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).totalChapters).toBe(30)
+  })
+
+  it('returns an empty result on success, so forms show no error', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+
+    expect(await addSectionAction(sectionForm({ bookId: book.id, startChapter: '1', endChapter: '5' }))).toEqual({})
   })
 
   it('rejects updateSectionAction for a non-admin', async () => {

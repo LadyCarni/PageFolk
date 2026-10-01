@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
-import { validateChapterRange, validateTotalChapters } from '@/lib/chapters'
+import { validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
+import { ValidationError } from '@/lib/errors'
 import { syncUnlocksForBook } from '@/lib/progress'
 
 // The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
@@ -29,7 +30,7 @@ export async function listBooks(status?: 'current' | 'past') {
 
 export async function createBook(input: { title: string; author: string; totalChapters: number; coverUrl?: string }) {
   const problem = validateTotalChapters(input.totalChapters)
-  if (problem) throw new Error(problem)
+  if (problem) throw new ValidationError(problem)
   return prisma.book.create({ data: { ...input, status: 'current' } })
 }
 
@@ -40,10 +41,17 @@ export async function addSection(bookId: string, input: SectionInput) {
     endChapter: input.endChapter,
     totalChapters: book.totalChapters,
   })
-  if (problem) throw new Error(problem)
+  if (problem) throw new ValidationError(problem)
 
   return prisma.$transaction(
     async (tx) => {
+      const others = await tx.section.findMany({
+        where: { bookId },
+        select: { id: true, startChapter: true, endChapter: true, title: true },
+      })
+      const overlap = validateNoOverlap(others, input)
+      if (overlap) throw new ValidationError(overlap)
+
       const { _max } = await tx.section.aggregate({
         where: { bookId },
         _max: { order: true },
@@ -76,10 +84,17 @@ export async function updateSection(sectionId: string, input: SectionInput) {
     endChapter: input.endChapter,
     totalChapters: existing.book.totalChapters,
   })
-  if (problem) throw new Error(problem)
+  if (problem) throw new ValidationError(problem)
 
   return prisma.$transaction(
     async (tx) => {
+      const others = await tx.section.findMany({
+        where: { bookId: existing.bookId },
+        select: { id: true, startChapter: true, endChapter: true, title: true },
+      })
+      const overlap = validateNoOverlap(others, input, sectionId)
+      if (overlap) throw new ValidationError(overlap)
+
       const section = await tx.section.update({
         where: { id: sectionId },
         data: {
@@ -97,11 +112,11 @@ export async function updateSection(sectionId: string, input: SectionInput) {
 
 export async function updateTotalChapters(bookId: string, totalChapters: number) {
   const problem = validateTotalChapters(totalChapters)
-  if (problem) throw new Error(problem)
+  if (problem) throw new ValidationError(problem)
 
   const { _max } = await prisma.section.aggregate({ where: { bookId }, _max: { endChapter: true } })
   if (_max.endChapter !== null && totalChapters < _max.endChapter) {
-    throw new Error(`Total chapters cannot be less than ${_max.endChapter}, where the last thread ends`)
+    throw new ValidationError(`Total chapters cannot be less than ${_max.endChapter}, where the last thread ends`)
   }
   return prisma.book.update({ where: { id: bookId }, data: { totalChapters } })
 }

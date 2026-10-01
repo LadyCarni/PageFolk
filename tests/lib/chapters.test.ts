@@ -4,6 +4,7 @@ import {
   sectionDisplayName,
   validateChapterRange,
   validateTotalChapters,
+  validateNoOverlap,
   clampProgress,
   segmentStates,
 } from '@/lib/chapters'
@@ -125,5 +126,34 @@ describe('segmentStates', () => {
     const single = [{ startChapter: 7, endChapter: 7 }]
     expect(segmentStates(single, 6)).toEqual(['todo'])
     expect(segmentStates(single, 7)).toEqual(['done'])
+  })
+})
+
+describe('validateNoOverlap', () => {
+  const existing = [
+    { id: 'a', startChapter: 1, endChapter: 10, title: null },
+    { id: 'b', startChapter: 11, endChapter: 20, title: 'Lowood' },
+  ]
+
+  it('accepts a range that sits in a gap or is adjacent to others', () => {
+    expect(validateNoOverlap(existing, { startChapter: 21, endChapter: 25 })).toBeNull()
+    expect(validateNoOverlap([existing[0]], { startChapter: 11, endChapter: 20 })).toBeNull()
+  })
+
+  it('rejects a range that shares a chapter with another thread, naming it', () => {
+    expect(validateNoOverlap(existing, { startChapter: 1, endChapter: 12 }, 'a')).toBe(
+      'Chapters 1 to 12 overlaps Chapters 11 to 20 · Lowood'
+    )
+    expect(validateNoOverlap(existing, { startChapter: 9, endChapter: 11 })).toContain('overlaps')
+  })
+
+  it('rejects a single chapter inside another thread, and a range that swallows one', () => {
+    expect(validateNoOverlap(existing, { startChapter: 5, endChapter: 5 })).toContain('overlaps')
+    expect(validateNoOverlap(existing, { startChapter: 3, endChapter: 25 })).toContain('overlaps')
+  })
+
+  it('ignores the thread being edited', () => {
+    expect(validateNoOverlap(existing, { startChapter: 1, endChapter: 10 }, 'a')).toBeNull()
+    expect(validateNoOverlap(existing, { startChapter: 2, endChapter: 9 }, 'a')).toBeNull()
   })
 })

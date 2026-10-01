@@ -11,6 +11,7 @@ import {
   deleteBook,
 } from '@/lib/books'
 import { setProgress } from '@/lib/progress'
+import { ValidationError } from '@/lib/errors'
 
 async function newBook(totalChapters = 30) {
   return createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters })
@@ -62,6 +63,43 @@ describe('books', () => {
     await expect(addSection(book.id, { startChapter: 0, endChapter: 6 })).rejects.toThrow('Start chapter')
     await expect(addSection(book.id, { startChapter: 28, endChapter: 31 })).rejects.toThrow('past the book')
     expect(await prisma.section.count()).toBe(0)
+  })
+
+  it('throws a ValidationError, not a plain Error, for bad input', async () => {
+    const book = await newBook(30)
+    const section = await addSection(book.id, { startChapter: 1, endChapter: 5 })
+
+    await expect(newBook(0)).rejects.toBeInstanceOf(ValidationError)
+    await expect(addSection(book.id, { startChapter: 28, endChapter: 31 })).rejects.toBeInstanceOf(ValidationError)
+    await expect(updateSection(section.id, { startChapter: 9, endChapter: 2 })).rejects.toBeInstanceOf(ValidationError)
+    await expect(updateTotalChapters(book.id, 3)).rejects.toBeInstanceOf(ValidationError)
+  })
+
+  it('rejects a new section that overlaps an existing thread, and saves nothing', async () => {
+    const book = await newBook(30)
+    await addSection(book.id, { startChapter: 11, endChapter: 20 })
+
+    await expect(addSection(book.id, { startChapter: 1, endChapter: 12 })).rejects.toThrow('overlaps')
+    expect(await prisma.section.count()).toBe(1)
+  })
+
+  it('allows threads that touch end to start, and a gap between threads', async () => {
+    const book = await newBook(30)
+    await addSection(book.id, { startChapter: 1, endChapter: 10 })
+    await addSection(book.id, { startChapter: 11, endChapter: 20 })
+    await addSection(book.id, { startChapter: 25, endChapter: 30 })
+    expect(await prisma.section.count()).toBe(3)
+  })
+
+  it('rejects editing a section into its neighbour, but allows resizing within its own space', async () => {
+    const book = await newBook(30)
+    const first = await addSection(book.id, { startChapter: 1, endChapter: 10 })
+    await addSection(book.id, { startChapter: 11, endChapter: 20 })
+
+    await expect(updateSection(first.id, { startChapter: 1, endChapter: 12 })).rejects.toThrow('overlaps')
+    await updateSection(first.id, { startChapter: 1, endChapter: 9 })
+
+    expect((await prisma.section.findUniqueOrThrow({ where: { id: first.id } })).endChapter).toBe(9)
   })
 
   it('accepts a single-chapter section', async () => {

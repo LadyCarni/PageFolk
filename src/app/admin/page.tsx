@@ -2,6 +2,7 @@ import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakr
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { sectionDisplayName } from '@/lib/chapters'
+import { AdminForm } from '@/components/AdminForm'
 import { CoverUpload } from '@/components/CoverUpload'
 import { DeleteBookButton } from '@/components/DeleteBookButton'
 import { DeleteSectionButton } from '@/components/DeleteSectionButton'
@@ -31,12 +32,7 @@ export default async function AdminPage() {
         <Heading size="md" mb={2}>
           New book
         </Heading>
-        <form
-          action={async (formData: FormData) => {
-            'use server'
-            await createBookAction(formData)
-          }}
-        >
+        <AdminForm action={createBookAction}>
           <HStack>
             <Input name="title" placeholder="Title" required />
             <Input name="author" placeholder="Author" required />
@@ -61,7 +57,7 @@ export default async function AdminPage() {
               Add book
             </Button>
           </HStack>
-        </form>
+        </AdminForm>
       </Box>
 
       <VStack align="stretch" spacing={6}>
@@ -93,12 +89,7 @@ export default async function AdminPage() {
                 />
               </HStack>
             </HStack>
-            <form
-              action={async (formData: FormData) => {
-                'use server'
-                await updateTotalChaptersAction(formData)
-              }}
-            >
+            <AdminForm action={updateTotalChaptersAction}>
               <input type="hidden" name="bookId" value={book.id} />
               <HStack mt={3}>
                 <Text fontSize="sm" color="gray.600">
@@ -118,7 +109,7 @@ export default async function AdminPage() {
                   Save
                 </Button>
               </HStack>
-            </form>
+            </AdminForm>
             <CoverUpload
               bookId={book.id}
               title={book.title}
@@ -136,12 +127,7 @@ export default async function AdminPage() {
                     {s.order}.
                   </Text>
                   <Box flex="1">
-                    <form
-                      action={async (formData: FormData) => {
-                        'use server'
-                        await updateSectionAction(formData)
-                      }}
-                    >
+                    <AdminForm action={updateSectionAction}>
                       <input type="hidden" name="sectionId" value={s.id} />
                       <HStack>
                         <Input
@@ -178,7 +164,7 @@ export default async function AdminPage() {
                           Save
                         </Button>
                       </HStack>
-                    </form>
+                    </AdminForm>
                   </Box>
                   <DeleteSectionButton
                     label={sectionDisplayName(s)}
@@ -191,7 +177,7 @@ export default async function AdminPage() {
                 </HStack>
               ))}
             </Stack>
-            <form action={addSectionAction}>
+            <AdminForm action={addSectionAction}>
               <input type="hidden" name="bookId" value={book.id} />
               <HStack mt="2em">
                 <Input
@@ -220,7 +206,7 @@ export default async function AdminPage() {
                   Add section
                 </Button>
               </HStack>
-            </form>
+            </AdminForm>
           </Box>
         ))}
       </VStack>

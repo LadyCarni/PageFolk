@@ -33,6 +33,18 @@ export function validateChapterRange(input: {
   return null
 }
 
+export function validateNoOverlap(
+  existing: { id: string; startChapter: number; endChapter: number; title: string | null }[],
+  range: { startChapter: number; endChapter: number },
+  ignoreId?: string
+): string | null {
+  const clash = existing.find(
+    (s) => s.id !== ignoreId && range.startChapter <= s.endChapter && s.startChapter <= range.endChapter
+  )
+  if (!clash) return null
+  return `${chapterRangeName(range.startChapter, range.endChapter)} overlaps ${sectionDisplayName(clash)}`
+}
+
 export function validateTotalChapters(total: number): string | null {
   return Number.isInteger(total) && total >= 1 ? null : 'Total chapters must be a whole number of at least 1'
 }

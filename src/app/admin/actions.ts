@@ -6,11 +6,26 @@ import { createBook, addSection, setBookStatus, updateSection, updateTotalChapte
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
+import { ValidationError } from '@/lib/errors'
 
 // An empty or non-numeric field becomes NaN, which the lib validators reject with a message.
 function parseWholeNumber(raw: FormDataEntryValue | null): number {
   const text = String(raw ?? '').trim()
   return text === '' ? NaN : Number(text)
+}
+
+export type FormResult = { error?: string }
+
+// Turns the user-fixable ValidationError into a message the form can show.
+// Everything else (e.g. "Forbidden: admin only") still throws.
+async function reportingValidation(work: () => Promise<void>): Promise<FormResult> {
+  try {
+    await work()
+    return {}
+  } catch (error) {
+    if (error instanceof ValidationError) return { error: error.message }
+    throw error
+  }
 }
 
 function revalidateBookPages() {
@@ -19,30 +34,33 @@ function revalidateBookPages() {
   revalidatePath('/past-books')
 }
 
-export async function createBookAction(formData: FormData) {
+export async function createBookAction(formData: FormData): Promise<FormResult> {
   await requireAdmin()
   const title = String(formData.get('title') ?? '').trim()
   const author = String(formData.get('author') ?? '').trim()
-  if (!title || !author) {
-    throw new Error('Title and author are required')
-  }
-  const book = await createBook({ title, author, totalChapters: parseWholeNumber(formData.get('totalChapters')) })
-  revalidatePath('/admin')
-  return book
+  return reportingValidation(async () => {
+    if (!title || !author) {
+      throw new ValidationError('Title and author are required')
+    }
+    await createBook({ title, author, totalChapters: parseWholeNumber(formData.get('totalChapters')) })
+    revalidatePath('/admin')
+  })
 }
 
-export async function addSectionAction(formData: FormData) {
+export async function addSectionAction(formData: FormData): Promise<FormResult> {
   await requireAdmin()
   const bookId = String(formData.get('bookId') ?? '')
   if (!bookId) {
     throw new Error('bookId is required')
   }
-  await addSection(bookId, {
-    startChapter: parseWholeNumber(formData.get('startChapter')),
-    endChapter: parseWholeNumber(formData.get('endChapter')),
-    title: String(formData.get('title') ?? ''),
+  return reportingValidation(async () => {
+    await addSection(bookId, {
+      startChapter: parseWholeNumber(formData.get('startChapter')),
+      endChapter: parseWholeNumber(formData.get('endChapter')),
+      title: String(formData.get('title') ?? ''),
+    })
+    revalidateBookPages()
   })
-  revalidateBookPages()
 }
 
 export async function setBookStatusAction(bookId: string, status: 'current' | 'past') {
@@ -52,28 +70,32 @@ export async function setBookStatusAction(bookId: string, status: 'current' | 'p
   revalidatePath('/')
 }
 
-export async function updateSectionAction(formData: FormData) {
+export async function updateSectionAction(formData: FormData): Promise<FormResult> {
   await requireAdmin()
   const sectionId = String(formData.get('sectionId') ?? '')
   if (!sectionId) {
     throw new Error('sectionId is required')
   }
-  await updateSection(sectionId, {
-    startChapter: parseWholeNumber(formData.get('startChapter')),
-    endChapter: parseWholeNumber(formData.get('endChapter')),
-    title: String(formData.get('title') ?? ''),
+  return reportingValidation(async () => {
+    await updateSection(sectionId, {
+      startChapter: parseWholeNumber(formData.get('startChapter')),
+      endChapter: parseWholeNumber(formData.get('endChapter')),
+      title: String(formData.get('title') ?? ''),
+    })
+    revalidateBookPages()
   })
-  revalidateBookPages()
 }
 
-export async function updateTotalChaptersAction(formData: FormData) {
+export async function updateTotalChaptersAction(formData: FormData): Promise<FormResult> {
   await requireAdmin()
   const bookId = String(formData.get('bookId') ?? '')
   if (!bookId) {
     throw new Error('bookId is required')
   }
-  await updateTotalChapters(bookId, parseWholeNumber(formData.get('totalChapters')))
-  revalidateBookPages()
+  return reportingValidation(async () => {
+    await updateTotalChapters(bookId, parseWholeNumber(formData.get('totalChapters')))
+    revalidateBookPages()
+  })
 }
 
 export async function deleteSectionAction(sectionId: string) {

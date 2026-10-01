@@ -1,9 +1,6 @@
 import NextLink from 'next/link'
-import { Charis_SIL } from 'next/font/google'
 import { Box, Button, HStack, Image, Link } from '@chakra-ui/react'
 import { signOut } from '@/auth'
-
-const charisSIL = Charis_SIL({ subsets: ['latin'], weight: ['400', '700'] })
 
 export function NavBar({ isAdmin }: { isAdmin: boolean }) {
   return (
@@ -16,7 +13,7 @@ export function NavBar({ isAdmin }: { isAdmin: boolean }) {
             color="white"
             fontWeight="bold"
             fontSize="1.25em"
-            className={charisSIL.className}
+            fontFamily="heading"
             display="flex"
             alignItems="center"
             gap={2}
@@ -24,6 +21,7 @@ export function NavBar({ isAdmin }: { isAdmin: boolean }) {
             <Image src="/pagefolk.svg" alt="" boxSize="1.75em" />
             PageFolk
           </Link>
+          <Box aria-hidden boxSize="0.5em" bg="#d4b06a" transform="rotate(45deg)" />
           <Link as={NextLink} href="/past-books" color="brand.100">
             Past books
           </Link>

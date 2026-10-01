@@ -6,7 +6,7 @@ const AVATAR_COLORS = ['#d5b0c0', '#f3dde9', '#f6f1e8', '#b6c4cf', '#9a9cad']
 
 export function UserAvatar({
   user,
-  size = 32,
+  size = 40,
 }: {
   user: { id: string; name: string | null }
   size?: number
@@ -21,9 +21,8 @@ export function UserAvatar({
       borderRadius="full"
       bg={AVATAR_COLORS[avatarColorIndex(user.id, AVATAR_COLORS.length)]}
       color="brand.900"
-      borderWidth="1px"
-      borderColor="blackAlpha.200"
-      fontSize={`${Math.round(size * 0.4)}px`}
+      fontSize={`${Math.round(size * 0.55)}px`}
+      fontFamily="heading"
       fontWeight="bold"
       lineHeight="1"
     >

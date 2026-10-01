@@ -8,7 +8,9 @@ export function SectionActivity({ postCount, lastPostAt }: { postCount: number; 
     <HStack spacing={3} fontSize="sm" color="brand.500">
       <HStack spacing={1}>
         <FontAwesomeIcon icon={faCommentDots} color="#c25a5d" aria-hidden />
-        <Text as="span">{postCount}</Text>
+        <Text as="span" fontFamily="heading" fontWeight="bold">
+          {postCount}
+        </Text>
         <VisuallyHidden>{postCount === 1 ? 'post' : 'posts'}</VisuallyHidden>
       </HStack>
       {lastPostAt && (

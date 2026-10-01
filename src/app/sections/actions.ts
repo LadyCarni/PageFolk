@@ -2,14 +2,15 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireUser } from '@/lib/session'
-import { joinSection } from '@/lib/sections'
+import { setProgress } from '@/lib/progress'
 import { createPost, deletePost } from '@/lib/posts'
 
-export async function joinSectionAction(sectionId: string) {
+export async function setProgressAction(bookId: string, chaptersFinished: number): Promise<number> {
   const user = await requireUser()
-  await joinSection(user.id, sectionId)
+  const saved = await setProgress(user.id, bookId, chaptersFinished)
   revalidatePath('/')
-  revalidatePath(`/sections/${sectionId}`)
+  revalidatePath('/past-books')
+  return saved
 }
 
 export async function createPostAction(sectionId: string, formData: FormData) {

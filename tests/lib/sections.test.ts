@@ -1,19 +1,31 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { getSectionsForViewer, joinSection, getSectionThread } from '@/lib/sections'
+import { getSectionsForViewer, getSectionThread } from '@/lib/sections'
+
+async function resetDb() {
+  await prisma.readingProgress.deleteMany()
+  await prisma.post.deleteMany()
+  await prisma.threadMembership.deleteMany()
+  await prisma.section.deleteMany()
+  await prisma.book.deleteMany()
+  await prisma.user.deleteMany()
+}
+
+async function unlock(userId: string, sectionId: string) {
+  await prisma.threadMembership.create({ data: { userId, sectionId } })
+}
 
 describe('getSectionsForViewer', () => {
-  beforeEach(async () => {
-    await prisma.post.deleteMany()
-    await prisma.threadMembership.deleteMany()
-    await prisma.section.deleteMany()
-    await prisma.book.deleteMany()
-    await prisma.user.deleteMany()
-  })
+  beforeEach(resetDb)
 
-  it('marks a section the viewer has not joined as locked, with no postCount or lastPostAt', async () => {
+  it('returns a sealed section as only its range and chapters to go, with no title, posts or label', async () => {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      data: {
+        title: 'Dune',
+        author: 'Herbert',
+        totalChapters: 30,
+        sections: { create: [{ startChapter: 11, endChapter: 15, title: 'Lowood', order: 1 }] },
+      },
       include: { sections: true },
     })
     const author = await prisma.user.create({ data: { googleId: 'g-1', email: 'author@example.com' } })
@@ -22,23 +34,50 @@ describe('getSectionsForViewer', () => {
 
     const summaries = await getSectionsForViewer(book.id, viewer.id)
 
-    expect(summaries).toEqual([{ id: book.sections[0].id, label: 'Ch 1-5', order: 1, status: 'locked' }])
-    expect(summaries[0]).not.toHaveProperty('postCount')
-    expect(summaries[0]).not.toHaveProperty('lastPostAt')
+    expect(summaries).toEqual([
+      { id: book.sections[0].id, order: 1, status: 'locked', startChapter: 11, endChapter: 15, chaptersToGo: 15 },
+    ])
+    for (const leaked of ['title', 'label', 'name', 'posts', 'postCount', 'lastPostAt']) {
+      expect(summaries[0]).not.toHaveProperty(leaked)
+    }
+    expect(JSON.stringify(summaries)).not.toContain('Lowood')
   })
 
-  it('reports the newest post time as lastPostAt for joined sections, and null when there are no posts', async () => {
+  it("counts chapters to go from the viewer's progress", async () => {
     const book = await prisma.book.create({
       data: {
         title: 'Dune',
         author: 'Herbert',
-        sections: { create: [{ label: 'Ch 1-5', order: 1 }, { label: 'Ch 6-10', order: 2 }] },
+        totalChapters: 30,
+        sections: { create: [{ startChapter: 21, endChapter: 25, order: 1 }] },
+      },
+    })
+    const viewer = await prisma.user.create({ data: { googleId: 'g-go', email: 'go@example.com' } })
+    await prisma.readingProgress.create({ data: { userId: viewer.id, bookId: book.id, chaptersFinished: 12 } })
+
+    const [summary] = await getSectionsForViewer(book.id, viewer.id)
+
+    expect(summary).toMatchObject({ status: 'locked', chaptersToGo: 13 })
+  })
+
+  it('reports the newest post time as lastPostAt for unlocked sections, and null when there are no posts', async () => {
+    const book = await prisma.book.create({
+      data: {
+        title: 'Dune',
+        author: 'Herbert',
+        totalChapters: 30,
+        sections: {
+          create: [
+            { startChapter: 1, endChapter: 5, order: 1 },
+            { startChapter: 6, endChapter: 10, order: 2 },
+          ],
+        },
       },
       include: { sections: { orderBy: { order: 'asc' } } },
     })
     const viewer = await prisma.user.create({ data: { googleId: 'g-last', email: 'last@example.com' } })
     for (const section of book.sections) {
-      await prisma.threadMembership.create({ data: { userId: viewer.id, sectionId: section.id } })
+      await unlock(viewer.id, section.id)
     }
     const older = new Date('2026-01-01T00:00:00Z')
     const newer = new Date('2026-02-01T00:00:00Z')
@@ -51,22 +90,29 @@ describe('getSectionsForViewer', () => {
     expect(empty).toMatchObject({ postCount: 0, lastPostAt: null })
   })
 
-  it('marks a joined section as unlocked with its post count', async () => {
+  it('returns an unlocked section with its title and post count', async () => {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      data: {
+        title: 'Dune',
+        author: 'Herbert',
+        totalChapters: 30,
+        sections: { create: [{ startChapter: 1, endChapter: 5, title: 'Gateshead', order: 1 }] },
+      },
       include: { sections: true },
     })
     const viewer = await prisma.user.create({ data: { googleId: 'g-3', email: 'viewer2@example.com' } })
-    await prisma.threadMembership.create({ data: { userId: viewer.id, sectionId: book.sections[0].id } })
+    await unlock(viewer.id, book.sections[0].id)
     const post = await prisma.post.create({ data: { sectionId: book.sections[0].id, userId: viewer.id, body: 'Hi' } })
 
     const summaries = await getSectionsForViewer(book.id, viewer.id)
 
     expect(summaries[0]).toEqual({
       id: book.sections[0].id,
-      label: 'Ch 1-5',
       order: 1,
       status: 'unlocked',
+      startChapter: 1,
+      endChapter: 5,
+      title: 'Gateshead',
       postCount: 1,
       lastPostAt: post.createdAt,
     })
@@ -77,93 +123,62 @@ describe('getSectionsForViewer', () => {
       data: {
         title: 'Dune',
         author: 'Herbert',
-        sections: { create: [{ label: 'Ch 6-10', order: 2 }, { label: 'Ch 1-5', order: 1 }] },
+        totalChapters: 30,
+        sections: {
+          create: [
+            { startChapter: 6, endChapter: 10, order: 2 },
+            { startChapter: 1, endChapter: 5, order: 1 },
+          ],
+        },
       },
     })
     const viewer = await prisma.user.create({ data: { googleId: 'g-4', email: 'viewer3@example.com' } })
 
     const summaries = await getSectionsForViewer(book.id, viewer.id)
 
-    expect(summaries.map((s) => s.label)).toEqual(['Ch 1-5', 'Ch 6-10'])
-  })
-})
-
-describe('joinSection', () => {
-  beforeEach(async () => {
-    await prisma.post.deleteMany()
-    await prisma.threadMembership.deleteMany()
-    await prisma.section.deleteMany()
-    await prisma.book.deleteMany()
-    await prisma.user.deleteMany()
-  })
-
-  it('creates a membership that unlocks the section', async () => {
-    const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
-      include: { sections: true },
-    })
-    const user = await prisma.user.create({ data: { googleId: 'g-5', email: 'joiner@example.com' } })
-
-    await joinSection(user.id, book.sections[0].id)
-
-    const summaries = await getSectionsForViewer(book.id, user.id)
-    expect(summaries[0].status).toBe('unlocked')
-  })
-
-  it('is idempotent — joining twice does not throw or duplicate the membership', async () => {
-    const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
-      include: { sections: true },
-    })
-    const user = await prisma.user.create({ data: { googleId: 'g-6', email: 'joiner2@example.com' } })
-
-    await joinSection(user.id, book.sections[0].id)
-    await joinSection(user.id, book.sections[0].id)
-
-    const count = await prisma.threadMembership.count({
-      where: { userId: user.id, sectionId: book.sections[0].id },
-    })
-    expect(count).toBe(1)
+    expect(summaries.map((s) => s.startChapter)).toEqual([1, 6])
   })
 })
 
 describe('getSectionThread', () => {
-  beforeEach(async () => {
-    await prisma.post.deleteMany()
-    await prisma.threadMembership.deleteMany()
-    await prisma.section.deleteMany()
-    await prisma.book.deleteMany()
-    await prisma.user.deleteMany()
-  })
+  beforeEach(resetDb)
 
-  it('returns locked with no posts field when the viewer has not joined', async () => {
+  async function setup() {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      data: {
+        title: 'Dune',
+        author: 'Herbert',
+        totalChapters: 30,
+        sections: { create: [{ startChapter: 6, endChapter: 10, title: 'Lowood', order: 1 }] },
+      },
       include: { sections: true },
     })
+    return book.sections[0].id
+  }
+
+  it('returns only the status when the viewer has not unlocked the thread', async () => {
+    const sectionId = await setup()
     const author = await prisma.user.create({ data: { googleId: 'g-7', email: 'author2@example.com' } })
     const viewer = await prisma.user.create({ data: { googleId: 'g-8', email: 'viewer4@example.com' } })
-    await prisma.post.create({ data: { sectionId: book.sections[0].id, userId: author.id, body: 'Spoiler!' } })
+    await prisma.post.create({ data: { sectionId, userId: author.id, body: 'Spoiler!' } })
 
-    const result = await getSectionThread(book.sections[0].id, viewer.id)
+    const result = await getSectionThread(sectionId, viewer.id)
 
-    expect(result).toEqual({ status: 'locked', label: 'Ch 1-5' })
-    expect(result).not.toHaveProperty('posts')
+    expect(result).toEqual({ status: 'locked' })
+    expect(JSON.stringify(result)).not.toContain('Lowood')
   })
 
-  it('returns the posts once the viewer has joined', async () => {
-    const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
-      include: { sections: true },
-    })
+  it('returns the display name and posts once the thread is unlocked', async () => {
+    const sectionId = await setup()
     const viewer = await prisma.user.create({ data: { googleId: 'g-9', email: 'viewer5@example.com' } })
-    await joinSection(viewer.id, book.sections[0].id)
-    await prisma.post.create({ data: { sectionId: book.sections[0].id, userId: viewer.id, body: 'Hi all' } })
+    await unlock(viewer.id, sectionId)
+    await prisma.post.create({ data: { sectionId, userId: viewer.id, body: 'Hi all' } })
 
-    const result = await getSectionThread(book.sections[0].id, viewer.id)
+    const result = await getSectionThread(sectionId, viewer.id)
 
     expect(result.status).toBe('unlocked')
     if (result.status === 'unlocked') {
+      expect(result.name).toBe('Chapters 6 to 10 · Lowood')
       expect(result.posts).toHaveLength(1)
       expect(result.posts[0].body).toBe('Hi all')
     }

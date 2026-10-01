@@ -1,10 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { joinSection } from '@/lib/sections'
 import { createPost, deletePost } from '@/lib/posts'
+
+async function unlock(userId: string, sectionId: string) {
+  await prisma.threadMembership.upsert({
+    where: { userId_sectionId: { userId, sectionId } },
+    update: {},
+    create: { userId, sectionId },
+  })
+}
 
 describe('createPost', () => {
   beforeEach(async () => {
+    await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.section.deleteMany()
@@ -14,7 +22,7 @@ describe('createPost', () => {
 
   async function setup() {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      data: { title: 'Dune', author: 'Herbert', totalChapters: 30, sections: { create: [{ startChapter: 1, endChapter: 5, order: 1 }] } },
       include: { sections: true },
     })
     const user = await prisma.user.create({ data: { googleId: 'g-10', email: 'poster@example.com' } })
@@ -23,7 +31,7 @@ describe('createPost', () => {
 
   it('creates a post for a member of the section', async () => {
     const { sectionId, userId } = await setup()
-    await joinSection(userId, sectionId)
+    await unlock(userId, sectionId)
 
     const post = await createPost(sectionId, userId, 'Great chapter!')
 
@@ -32,7 +40,7 @@ describe('createPost', () => {
 
   it('rejects an empty body', async () => {
     const { sectionId, userId } = await setup()
-    await joinSection(userId, sectionId)
+    await unlock(userId, sectionId)
 
     await expect(createPost(sectionId, userId, '   ')).rejects.toThrow('empty')
   })
@@ -45,7 +53,7 @@ describe('createPost', () => {
 
   it('supports a parentPostId for threaded replies', async () => {
     const { sectionId, userId } = await setup()
-    await joinSection(userId, sectionId)
+    await unlock(userId, sectionId)
     const parent = await createPost(sectionId, userId, 'Original thought')
 
     const reply = await createPost(sectionId, userId, 'Agreed!', parent.id)
@@ -56,6 +64,7 @@ describe('createPost', () => {
 
 describe('deletePost', () => {
   beforeEach(async () => {
+    await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.section.deleteMany()
@@ -65,14 +74,14 @@ describe('deletePost', () => {
 
   async function setup() {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Herbert', sections: { create: [{ label: 'Ch 1-5', order: 1 }] } },
+      data: { title: 'Dune', author: 'Herbert', totalChapters: 30, sections: { create: [{ startChapter: 1, endChapter: 5, order: 1 }] } },
       include: { sections: true },
     })
     const author = await prisma.user.create({ data: { googleId: 'g-20', email: 'author@example.com' } })
     const other = await prisma.user.create({ data: { googleId: 'g-21', email: 'other@example.com' } })
     const sectionId = book.sections[0].id
-    await joinSection(author.id, sectionId)
-    await joinSection(other.id, sectionId)
+    await unlock(author.id, sectionId)
+    await unlock(other.id, sectionId)
     return { sectionId, authorId: author.id, otherId: other.id }
   }
 

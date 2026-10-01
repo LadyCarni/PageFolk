@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 
 describe('prisma schema', () => {
   beforeEach(async () => {
+    await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.section.deleteMany()
@@ -15,9 +16,9 @@ describe('prisma schema', () => {
     const book = await prisma.book.create({
       data: {
         title: 'Dune',
-        author: 'Frank Herbert',
+        author: 'Frank Herbert', totalChapters: 30,
         status: 'current',
-        sections: { create: [{ label: 'Chapters 1-5', order: 1 }] },
+        sections: { create: [{ startChapter: 1, endChapter: 5, order: 1 }] },
       },
       include: { sections: true },
     })
@@ -41,12 +42,12 @@ describe('prisma schema', () => {
 
     expect(found.body).toBe('What a start!')
     expect(found.user.email).toBe('reader@example.com')
-    expect(found.section.label).toBe('Chapters 1-5')
+    expect(found.section).toMatchObject({ startChapter: 1, endChapter: 5 })
   })
 
   it('rejects a duplicate ThreadMembership for the same user and section', async () => {
     const book = await prisma.book.create({
-      data: { title: 'Dune', author: 'Frank Herbert', sections: { create: [{ label: 'Chapters 1-5', order: 1 }] } },
+      data: { title: 'Dune', author: 'Frank Herbert', totalChapters: 30, sections: { create: [{ startChapter: 1, endChapter: 5, order: 1 }] } },
       include: { sections: true },
     })
     const user = await prisma.user.create({ data: { googleId: 'g-2', email: 'dup@example.com' } })

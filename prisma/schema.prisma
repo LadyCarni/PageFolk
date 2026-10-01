@@ -17,6 +17,7 @@ model User {
 
   memberships ThreadMembership[]
   posts       Post[]
+  progress    ReadingProgress[]
 }
 
 model AllowedEmail {
@@ -32,8 +33,11 @@ model Book {
   status    String   @default("current")
   createdAt DateTime @default(now())
 
+  totalChapters Int
+
   sections Section[]
   cover    BookCover?
+  progress ReadingProgress[]
 }
 
 model BookCover {
@@ -46,11 +50,13 @@ model BookCover {
 }
 
 model Section {
-  id        String   @id @default(cuid())
-  bookId    String
-  label     String
-  order     Int
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  bookId       String
+  startChapter Int
+  endChapter   Int
+  title        String?
+  order        Int
+  createdAt    DateTime @default(now())
 
   book        Book               @relation(fields: [bookId], references: [id])
   memberships ThreadMembership[]
@@ -82,4 +88,16 @@ model Post {
   user       User    @relation(fields: [userId], references: [id])
   parentPost Post?   @relation("Replies", fields: [parentPostId], references: [id])
   replies    Post[]  @relation("Replies")
+}
+
+model ReadingProgress {
+  userId           String
+  bookId           String
+  chaptersFinished Int      @default(0)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@id([userId, bookId])
 }

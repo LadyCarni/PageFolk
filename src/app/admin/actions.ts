@@ -2,10 +2,22 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus, updateSectionLabel, deleteSection, deleteBook } from '@/lib/books'
+import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook } from '@/lib/books'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
+
+// An empty or non-numeric field becomes NaN, which the lib validators reject with a message.
+function parseWholeNumber(raw: FormDataEntryValue | null): number {
+  const text = String(raw ?? '').trim()
+  return text === '' ? NaN : Number(text)
+}
+
+function revalidateBookPages() {
+  revalidatePath('/admin')
+  revalidatePath('/')
+  revalidatePath('/past-books')
+}
 
 export async function createBookAction(formData: FormData) {
   await requireAdmin()
@@ -14,7 +26,7 @@ export async function createBookAction(formData: FormData) {
   if (!title || !author) {
     throw new Error('Title and author are required')
   }
-  const book = await createBook({ title, author })
+  const book = await createBook({ title, author, totalChapters: parseWholeNumber(formData.get('totalChapters')) })
   revalidatePath('/admin')
   return book
 }
@@ -22,12 +34,15 @@ export async function createBookAction(formData: FormData) {
 export async function addSectionAction(formData: FormData) {
   await requireAdmin()
   const bookId = String(formData.get('bookId') ?? '')
-  const label = String(formData.get('label') ?? '').trim()
-  if (!bookId || !label) {
-    throw new Error('bookId and label are required')
+  if (!bookId) {
+    throw new Error('bookId is required')
   }
-  await addSection(bookId, label)
-  revalidatePath('/admin')
+  await addSection(bookId, {
+    startChapter: parseWholeNumber(formData.get('startChapter')),
+    endChapter: parseWholeNumber(formData.get('endChapter')),
+    title: String(formData.get('title') ?? ''),
+  })
+  revalidateBookPages()
 }
 
 export async function setBookStatusAction(bookId: string, status: 'current' | 'past') {
@@ -37,15 +52,28 @@ export async function setBookStatusAction(bookId: string, status: 'current' | 'p
   revalidatePath('/')
 }
 
-export async function updateSectionLabelAction(formData: FormData) {
+export async function updateSectionAction(formData: FormData) {
   await requireAdmin()
   const sectionId = String(formData.get('sectionId') ?? '')
-  const label = String(formData.get('label') ?? '').trim()
-  if (!sectionId || !label) {
-    throw new Error('sectionId and label are required')
+  if (!sectionId) {
+    throw new Error('sectionId is required')
   }
-  await updateSectionLabel(sectionId, label)
-  revalidatePath('/admin')
+  await updateSection(sectionId, {
+    startChapter: parseWholeNumber(formData.get('startChapter')),
+    endChapter: parseWholeNumber(formData.get('endChapter')),
+    title: String(formData.get('title') ?? ''),
+  })
+  revalidateBookPages()
+}
+
+export async function updateTotalChaptersAction(formData: FormData) {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  if (!bookId) {
+    throw new Error('bookId is required')
+  }
+  await updateTotalChapters(bookId, parseWholeNumber(formData.get('totalChapters')))
+  revalidateBookPages()
 }
 
 export async function deleteSectionAction(sectionId: string) {

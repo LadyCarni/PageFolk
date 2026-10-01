@@ -11,6 +11,7 @@ const WEBP = Buffer.concat([Buffer.from('RIFF'), Buffer.from([4, 0, 0, 0]), Buff
 describe('book covers', () => {
   beforeEach(async () => {
     await prisma.bookCover.deleteMany()
+    await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.section.deleteMany()
@@ -18,7 +19,7 @@ describe('book covers', () => {
   })
 
   async function newBook() {
-    return createBook({ title: 'Dune', author: 'Frank Herbert' })
+    return createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
   }
 
   it.each([

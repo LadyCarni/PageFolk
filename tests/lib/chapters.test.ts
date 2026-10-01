@@ -5,6 +5,8 @@ import {
   validateChapterRange,
   validateTotalChapters,
   validateNoOverlap,
+  parseWholeNumber,
+  validateFormValues,
   clampProgress,
   segmentStates,
 } from '@/lib/chapters'
@@ -155,5 +157,92 @@ describe('validateNoOverlap', () => {
   it('ignores the thread being edited', () => {
     expect(validateNoOverlap(existing, { startChapter: 1, endChapter: 10 }, 'a')).toBeNull()
     expect(validateNoOverlap(existing, { startChapter: 2, endChapter: 9 }, 'a')).toBeNull()
+  })
+})
+
+describe('parseWholeNumber', () => {
+  it('parses digits, trimming spaces', () => {
+    expect(parseWholeNumber('12')).toBe(12)
+    expect(parseWholeNumber(' 7 ')).toBe(7)
+  })
+
+  it('turns blank, missing and non-numeric input into NaN (so validators reject it)', () => {
+    expect(parseWholeNumber('')).toBeNaN()
+    expect(parseWholeNumber('   ')).toBeNaN()
+    expect(parseWholeNumber(null)).toBeNaN()
+    expect(parseWholeNumber('abc')).toBeNaN()
+  })
+
+  it('keeps fractions so the validators can reject them', () => {
+    expect(parseWholeNumber('2.5')).toBe(2.5)
+  })
+})
+
+describe('validateFormValues', () => {
+  const others = [
+    { id: 'a', startChapter: 1, endChapter: 10, title: null },
+    { id: 'b', startChapter: 11, endChapter: 20, title: 'Lowood' },
+  ]
+
+  describe('section rule', () => {
+    const rule = { kind: 'section' as const, totalChapters: 30, others, ignoreId: 'a' }
+
+    it('accepts an edit that stays in its own space', () => {
+      expect(validateFormValues(rule, { startChapter: '1', endChapter: '9', title: 'x' })).toBeNull()
+    })
+
+    it('rejects blank, backwards and past-the-total values', () => {
+      expect(validateFormValues(rule, { startChapter: '', endChapter: '9' })).toContain('Start chapter')
+      expect(validateFormValues(rule, { startChapter: '9', endChapter: '2' })).toContain('before the start')
+      expect(validateFormValues(rule, { startChapter: '1', endChapter: '31' })).toContain('past the book')
+    })
+
+    it('rejects an edit that runs into another thread', () => {
+      expect(validateFormValues(rule, { startChapter: '1', endChapter: '12' })).toBe(
+        'Chapters 1 to 12 overlaps Chapters 11 to 20 · Lowood'
+      )
+    })
+
+    it('treats every thread as a clash when adding a new one (no ignoreId)', () => {
+      const adding = { kind: 'section' as const, totalChapters: 30, others }
+      expect(validateFormValues(adding, { startChapter: '5', endChapter: '8' })).toContain('overlaps')
+      expect(validateFormValues(adding, { startChapter: '21', endChapter: '25' })).toBeNull()
+    })
+  })
+
+  describe('total rule', () => {
+    const rule = { kind: 'total' as const, minTotal: 30 }
+
+    it('accepts a total at or above where the last thread ends', () => {
+      expect(validateFormValues(rule, { totalChapters: '30' })).toBeNull()
+      expect(validateFormValues(rule, { totalChapters: '40' })).toBeNull()
+    })
+
+    it('rejects a total below where the last thread ends, with the same message as the server', () => {
+      expect(validateFormValues(rule, { totalChapters: '25' })).toBe(
+        'Total chapters cannot be less than 30, where the last thread ends'
+      )
+    })
+
+    it('rejects blank, zero and fractional totals', () => {
+      expect(validateFormValues({ kind: 'total', minTotal: 0 }, { totalChapters: '' })).toContain('Total chapters')
+      expect(validateFormValues({ kind: 'total', minTotal: 0 }, { totalChapters: '0' })).toContain('Total chapters')
+      expect(validateFormValues({ kind: 'total', minTotal: 0 }, { totalChapters: '2.5' })).toContain('Total chapters')
+    })
+  })
+
+  describe('new book rule', () => {
+    const rule = { kind: 'newBook' as const }
+
+    it('requires a title and author, and a valid total', () => {
+      expect(validateFormValues(rule, { title: ' ', author: 'A', totalChapters: '10' })).toBe(
+        'Title and author are required'
+      )
+      expect(validateFormValues(rule, { title: 'T', author: '', totalChapters: '10' })).toBe(
+        'Title and author are required'
+      )
+      expect(validateFormValues(rule, { title: 'T', author: 'A', totalChapters: '0' })).toContain('Total chapters')
+      expect(validateFormValues(rule, { title: 'T', author: 'A', totalChapters: '10' })).toBeNull()
+    })
   })
 })

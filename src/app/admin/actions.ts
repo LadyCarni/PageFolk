@@ -7,12 +7,7 @@ import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 import { ValidationError } from '@/lib/errors'
-
-// An empty or non-numeric field becomes NaN, which the lib validators reject with a message.
-function parseWholeNumber(raw: FormDataEntryValue | null): number {
-  const text = String(raw ?? '').trim()
-  return text === '' ? NaN : Number(text)
-}
+import { parseWholeNumber } from '@/lib/chapters'
 
 export type FormResult = { error?: string }
 

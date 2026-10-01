@@ -18,6 +18,10 @@ import {
   removeCoverAction,
 } from './actions'
 
+function sectionRanges(book: { sections: { id: string; startChapter: number; endChapter: number; title: string | null }[] }) {
+  return book.sections.map(({ id, startChapter, endChapter, title }) => ({ id, startChapter, endChapter, title }))
+}
+
 export default async function AdminPage() {
   await requireAdmin()
   const books = await listBooks()
@@ -32,31 +36,26 @@ export default async function AdminPage() {
         <Heading size="md" mb={2}>
           New book
         </Heading>
-        <AdminForm action={createBookAction}>
-          <HStack>
-            <Input name="title" placeholder="Title" required />
-            <Input name="author" placeholder="Author" required />
-            <Input
-              name="totalChapters"
-              type="number"
-              min={1}
-              placeholder="Chapters"
-              aria-label="Total chapters"
-              required
-              w="120px"
-              flexShrink={0}
-            />
-            <Button
-              type="submit"
-              bg="brand.700"
-              color="white"
-              _hover={{ bg: 'brand.900' }}
-              w="200px"
-              flexShrink={0}
-            >
-              Add book
-            </Button>
-          </HStack>
+        <AdminForm
+          action={createBookAction}
+          rule={{ kind: 'newBook' }}
+          mode="create"
+          submitLabel="Add book"
+          solid
+          submitWidth="200px"
+        >
+          <Input name="title" placeholder="Title" required />
+          <Input name="author" placeholder="Author" required />
+          <Input
+            name="totalChapters"
+            type="number"
+            min={1}
+            placeholder="Chapters"
+            aria-label="Total chapters"
+            required
+            w="120px"
+            flexShrink={0}
+          />
         </AdminForm>
       </Box>
 
@@ -89,26 +88,27 @@ export default async function AdminPage() {
                 />
               </HStack>
             </HStack>
-            <AdminForm action={updateTotalChaptersAction}>
-              <input type="hidden" name="bookId" value={book.id} />
-              <HStack mt={3}>
-                <Text fontSize="sm" color="gray.600">
-                  Total chapters
-                </Text>
-                <Input
-                  name="totalChapters"
-                  type="number"
-                  min={1}
-                  defaultValue={book.totalChapters}
-                  aria-label="Total chapters"
-                  size="sm"
-                  w="90px"
-                  required
-                />
-                <Button type="submit" size="sm" variant="link" color="brand.700">
-                  Save
-                </Button>
-              </HStack>
+            <AdminForm
+              action={updateTotalChaptersAction}
+              rule={{ kind: 'total', minTotal: Math.max(0, ...book.sections.map((s) => s.endChapter)) }}
+              mode="edit"
+              submitLabel="Save"
+              hiddenFields={{ bookId: book.id }}
+              mt={3}
+            >
+              <Text fontSize="sm" color="gray.600">
+                Total chapters
+              </Text>
+              <Input
+                name="totalChapters"
+                type="number"
+                min={1}
+                defaultValue={book.totalChapters}
+                aria-label="Total chapters"
+                size="sm"
+                w="90px"
+                required
+              />
             </AdminForm>
             <CoverUpload
               bookId={book.id}
@@ -127,43 +127,43 @@ export default async function AdminPage() {
                     {s.order}.
                   </Text>
                   <Box flex="1">
-                    <AdminForm action={updateSectionAction}>
-                      <input type="hidden" name="sectionId" value={s.id} />
-                      <HStack>
-                        <Input
-                          name="startChapter"
-                          type="number"
-                          min={1}
-                          defaultValue={s.startChapter}
-                          aria-label="Start chapter"
-                          size="sm"
-                          w="80px"
-                          required
-                        />
-                        <Text fontSize="sm">to</Text>
-                        <Input
-                          name="endChapter"
-                          type="number"
-                          min={1}
-                          defaultValue={s.endChapter}
-                          aria-label="End chapter"
-                          size="sm"
-                          w="80px"
-                          required
-                        />
-                        <Input
-                          name="title"
-                          defaultValue={s.title ?? ''}
-                          placeholder="Title (optional)"
-                          aria-label="Title"
-                          size="sm"
-                          flex="1"
-                          maxW="40%"
-                        />
-                        <Button type="submit" size="sm" variant="link" color="brand.700" flexShrink={0}>
-                          Save
-                        </Button>
-                      </HStack>
+                    <AdminForm
+                      action={updateSectionAction}
+                      rule={{ kind: 'section', totalChapters: book.totalChapters, others: sectionRanges(book), ignoreId: s.id }}
+                      mode="edit"
+                      submitLabel="Save"
+                      hiddenFields={{ sectionId: s.id }}
+                    >
+                      <Input
+                        name="startChapter"
+                        type="number"
+                        min={1}
+                        defaultValue={s.startChapter}
+                        aria-label="Start chapter"
+                        size="sm"
+                        w="80px"
+                        required
+                      />
+                      <Text fontSize="sm">to</Text>
+                      <Input
+                        name="endChapter"
+                        type="number"
+                        min={1}
+                        defaultValue={s.endChapter}
+                        aria-label="End chapter"
+                        size="sm"
+                        w="80px"
+                        required
+                      />
+                      <Input
+                        name="title"
+                        defaultValue={s.title ?? ''}
+                        placeholder="Title (optional)"
+                        aria-label="Title"
+                        size="sm"
+                        flex="1"
+                        maxW="40%"
+                      />
                     </AdminForm>
                   </Box>
                   <DeleteSectionButton
@@ -177,35 +177,37 @@ export default async function AdminPage() {
                 </HStack>
               ))}
             </Stack>
-            <AdminForm action={addSectionAction}>
-              <input type="hidden" name="bookId" value={book.id} />
-              <HStack mt="2em">
-                <Input
-                  name="startChapter"
-                  type="number"
-                  min={1}
-                  placeholder="From"
-                  aria-label="Start chapter"
-                  required
-                  w="90px"
-                  flexShrink={0}
-                />
-                <Text>to</Text>
-                <Input
-                  name="endChapter"
-                  type="number"
-                  min={1}
-                  placeholder="To"
-                  aria-label="End chapter"
-                  required
-                  w="90px"
-                  flexShrink={0}
-                />
-                <Input name="title" placeholder="Title (optional), e.g. Lowood" aria-label="Title" flex="1" maxW="40%" />
-                <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }} flexShrink={0}>
-                  Add section
-                </Button>
-              </HStack>
+            <AdminForm
+              action={addSectionAction}
+              rule={{ kind: 'section', totalChapters: book.totalChapters, others: sectionRanges(book) }}
+              mode="create"
+              submitLabel="Add section"
+              solid
+              hiddenFields={{ bookId: book.id }}
+              mt="2em"
+            >
+              <Input
+                name="startChapter"
+                type="number"
+                min={1}
+                placeholder="From"
+                aria-label="Start chapter"
+                required
+                w="90px"
+                flexShrink={0}
+              />
+              <Text>to</Text>
+              <Input
+                name="endChapter"
+                type="number"
+                min={1}
+                placeholder="To"
+                aria-label="End chapter"
+                required
+                w="90px"
+                flexShrink={0}
+              />
+              <Input name="title" placeholder="Title (optional), e.g. Lowood" aria-label="Title" flex="1" maxW="40%" />
             </AdminForm>
           </Box>
         ))}

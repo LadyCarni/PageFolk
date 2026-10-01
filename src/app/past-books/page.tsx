@@ -1,11 +1,11 @@
-import NextLink from 'next/link'
-import { Box, Heading, Link, List, ListItem, Text, VStack } from '@chakra-ui/react'
+import { Box, Heading, List, Text, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
-import { SectionActivity } from '@/components/SectionActivity'
-import { JoinSectionButton } from '@/components/JoinSectionButton'
-import { joinSectionAction } from '@/app/sections/actions'
+import { getProgress } from '@/lib/progress'
+import { ProgressStepper } from '@/components/ProgressStepper'
+import { SectionRow } from '@/components/SectionRow'
+import { setProgressAction } from '@/app/sections/actions'
 
 export default async function PastBooksPage() {
   const user = await requireUser()
@@ -19,7 +19,10 @@ export default async function PastBooksPage() {
       {books.length === 0 && <Text color="gray.500">No past books yet.</Text>}
       {await Promise.all(
         books.map(async (book) => {
-          const sections = await getSectionsForViewer(book.id, user.id)
+          const [sections, finished] = await Promise.all([
+            getSectionsForViewer(book.id, user.id),
+            getProgress(user.id, book.id),
+          ])
           return (
             <Box key={book.id}>
               <Heading size="md">
@@ -28,46 +31,18 @@ export default async function PastBooksPage() {
                   by {book.author}
                 </Text>
               </Heading>
-              <List spacing={2} mt={2}>
+              <Box mt={3} maxW="22rem">
+                <ProgressStepper
+                  bookId={book.id}
+                  totalChapters={book.totalChapters}
+                  initialFinished={finished}
+                  sections={sections}
+                  saveProgress={setProgressAction}
+                />
+              </Box>
+              <List spacing={2} mt={3}>
                 {sections.map((section) => (
-                  <ListItem
-                    key={section.id}
-                    borderWidth="1px"
-                    borderRadius="md"
-                    p={3}
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="center"
-                  >
-                    <Box>
-                      {section.status === 'locked' ? (
-                        <Text color="brand.700" fontWeight={500} fontSize="lg">
-                          Discuss {section.label}
-                        </Text>
-                      ) : (
-                        <Link
-                          as={NextLink}
-                          href={`/sections/${section.id}`}
-                          color="brand.700"
-                          fontWeight={500}
-                          fontSize="lg"
-                        >
-                          Discuss {section.label}
-                        </Link>
-                      )}
-                      {section.status === 'unlocked' && (
-                        <SectionActivity postCount={section.postCount} lastPostAt={section.lastPostAt} />
-                      )}
-                    </Box>
-                    {section.status === 'locked' && (
-                      <JoinSectionButton
-                        action={async () => {
-                          'use server'
-                          await joinSectionAction(section.id)
-                        }}
-                      />
-                    )}
-                  </ListItem>
+                  <SectionRow key={section.id} section={section} />
                 ))}
               </List>
             </Box>

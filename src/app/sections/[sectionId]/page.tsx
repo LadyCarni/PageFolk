@@ -28,7 +28,7 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
   return (
     <VStack align="stretch" p={8} spacing={6}>
       <Heading size="lg" color="brand.900">
-        {thread.label}
+        {thread.name}
       </Heading>
 
       <PostForm action={createPostAction.bind(null, params.sectionId)} />

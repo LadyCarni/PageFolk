@@ -1,12 +1,12 @@
-import NextLink from 'next/link'
-import { Box, Flex, Heading, Image, Link, List, ListItem, Text } from '@chakra-ui/react'
+import { Box, Flex, Heading, Image, List, Text } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getSectionsForViewer } from '@/lib/sections'
+import { getProgress } from '@/lib/progress'
 import { DiscussionPromptCard } from '@/components/DiscussionPromptCard'
-import { SectionActivity } from '@/components/SectionActivity'
-import { JoinSectionButton } from '@/components/JoinSectionButton'
-import { joinSectionAction } from './sections/actions'
+import { ProgressStepper } from '@/components/ProgressStepper'
+import { SectionRow } from '@/components/SectionRow'
+import { setProgressAction } from './sections/actions'
 
 export default async function HomePage() {
   const user = await requireUser()
@@ -20,7 +20,10 @@ export default async function HomePage() {
     )
   }
 
-  const sections = await getSectionsForViewer(book.id, user.id)
+  const [sections, finished] = await Promise.all([
+    getSectionsForViewer(book.id, user.id),
+    getProgress(user.id, book.id),
+  ])
 
   return (
     <Flex p={8} gap={8} direction={{ base: 'column', lg: 'row' }} align="flex-start">
@@ -46,56 +49,26 @@ export default async function HomePage() {
               <Text color="brand.700">
                 {sections.length === 0
                   ? "Discussion threads for this book will open up soon. Start reading, and check back shortly to join the conversation!"
-                  : "No spoilers here! Every discussion thread starts locked. When you finish a set of chapters, join its thread and jump into the conversation. We've been waiting to hear what you think!"}
+                  : "No spoilers here! Every discussion thread starts sealed. As you read, move your place in the book forward, and each thread opens once you finish its last chapter. We've been waiting to hear what you think!"}
               </Text>
             </Box>
           </Flex>
           <List spacing={2}>
             {sections.map((section) => (
-              <ListItem
-                key={section.id}
-                borderWidth="1px"
-                borderColor="brand.500"
-                bg="brand.50"
-                borderRadius="md"
-                p={3}
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Box>
-                  {section.status === 'locked' ? (
-                    <Text color="brand.700" fontWeight={500} fontSize="lg">
-                      Discuss {section.label}
-                    </Text>
-                  ) : (
-                    <Link
-                      as={NextLink}
-                      href={`/sections/${section.id}`}
-                      color="brand.700"
-                      fontWeight={500}
-                      fontSize="lg"
-                    >
-                      Discuss {section.label}
-                    </Link>
-                  )}
-                  {section.status === 'unlocked' && (
-                    <SectionActivity postCount={section.postCount} lastPostAt={section.lastPostAt} />
-                  )}
-                </Box>
-                {section.status === 'locked' && (
-                  <JoinSectionButton
-                    action={async () => {
-                      'use server'
-                      await joinSectionAction(section.id)
-                    }}
-                  />
-                )}
-              </ListItem>
+              <SectionRow key={section.id} section={section} />
             ))}
           </List>
       </Box>
       <Box w={{ base: '100%', lg: '22rem' }} flexShrink={0}>
+        <Box mb={4}>
+          <ProgressStepper
+            bookId={book.id}
+            totalChapters={book.totalChapters}
+            initialFinished={finished}
+            sections={sections}
+            saveProgress={setProgressAction}
+          />
+        </Box>
         <DiscussionPromptCard />
       </Box>
     </Flex>

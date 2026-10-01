@@ -2,6 +2,9 @@ import { prisma } from '@/lib/db'
 import { validateChapterRange, validateTotalChapters } from '@/lib/chapters'
 import { syncUnlocksForBook } from '@/lib/progress'
 
+// The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
+const SYNC_TIMEOUT_MS = 15_000
+
 type SectionInput = { startChapter: number; endChapter: number; title?: string | null }
 
 function cleanTitle(title: string | null | undefined): string | null {
@@ -39,22 +42,27 @@ export async function addSection(bookId: string, input: SectionInput) {
   })
   if (problem) throw new Error(problem)
 
-  const { _max } = await prisma.section.aggregate({
-    where: { bookId },
-    _max: { order: true },
-  })
-  const order = (_max.order ?? 0) + 1
-  const section = await prisma.section.create({
-    data: {
-      bookId,
-      startChapter: input.startChapter,
-      endChapter: input.endChapter,
-      title: cleanTitle(input.title),
-      order,
+  return prisma.$transaction(
+    async (tx) => {
+      const { _max } = await tx.section.aggregate({
+        where: { bookId },
+        _max: { order: true },
+      })
+      const order = (_max.order ?? 0) + 1
+      const section = await tx.section.create({
+        data: {
+          bookId,
+          startChapter: input.startChapter,
+          endChapter: input.endChapter,
+          title: cleanTitle(input.title),
+          order,
+        },
+      })
+      await syncUnlocksForBook(bookId, tx)
+      return section
     },
-  })
-  await syncUnlocksForBook(bookId)
-  return section
+    { timeout: SYNC_TIMEOUT_MS }
+  )
 }
 
 export async function setBookStatus(bookId: string, status: 'current' | 'past') {
@@ -70,16 +78,21 @@ export async function updateSection(sectionId: string, input: SectionInput) {
   })
   if (problem) throw new Error(problem)
 
-  const section = await prisma.section.update({
-    where: { id: sectionId },
-    data: {
-      startChapter: input.startChapter,
-      endChapter: input.endChapter,
-      title: cleanTitle(input.title),
+  return prisma.$transaction(
+    async (tx) => {
+      const section = await tx.section.update({
+        where: { id: sectionId },
+        data: {
+          startChapter: input.startChapter,
+          endChapter: input.endChapter,
+          title: cleanTitle(input.title),
+        },
+      })
+      await syncUnlocksForBook(existing.bookId, tx)
+      return section
     },
-  })
-  await syncUnlocksForBook(existing.bookId)
-  return section
+    { timeout: SYNC_TIMEOUT_MS }
+  )
 }
 
 export async function updateTotalChapters(bookId: string, totalChapters: number) {

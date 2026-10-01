@@ -11,7 +11,8 @@
     "test": "dotenv -e .env.test -- vitest run",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:backfill-chapters": "node scripts/migrate-sections.mjs"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.2.0",

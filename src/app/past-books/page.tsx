@@ -13,10 +13,10 @@ export default async function PastBooksPage() {
 
   return (
     <VStack align="stretch" p={8} spacing={8}>
-      <Heading size="lg" color="brand.900">
+      <Heading size="lg">
         Past books
       </Heading>
-      {books.length === 0 && <Text color="gray.500">No past books yet.</Text>}
+      {books.length === 0 && <Text color="mist">No past books yet.</Text>}
       {await Promise.all(
         books.map(async (book) => {
           const [sections, finished] = await Promise.all([
@@ -27,7 +27,7 @@ export default async function PastBooksPage() {
             <Box key={book.id}>
               <Heading size="md">
                 {book.title}{' '}
-                <Text as="span" color="gray.500" fontWeight="normal">
+                <Text as="span" color="mist" fontWeight="normal" fontStyle="italic">
                   by {book.author}
                 </Text>
               </Heading>

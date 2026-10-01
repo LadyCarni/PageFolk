@@ -20,7 +20,7 @@ export function UserAvatar({
       boxSize={`${size}px`}
       borderRadius="full"
       bg={AVATAR_COLORS[avatarColorIndex(user.id, AVATAR_COLORS.length)]}
-      color="brand.900"
+      color="onGold"
       fontSize={`${Math.round(size * 0.55)}px`}
       fontFamily="heading"
       fontWeight="bold"

@@ -25,7 +25,7 @@ export function PostForm({
       {parentPostId && <input type="hidden" name="parentPostId" value={parentPostId} />}
       <HStack align="start">
         <Textarea name="body" placeholder={placeholder} required />
-        <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+        <Button type="submit">
           Post
         </Button>
       </HStack>

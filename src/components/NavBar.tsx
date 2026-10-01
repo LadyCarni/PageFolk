@@ -4,13 +4,14 @@ import { signOut } from '@/auth'
 
 export function NavBar({ isAdmin }: { isAdmin: boolean }) {
   return (
-    <Box as="nav" bg="brand.900" px={4} py={3}>
+    <Box as="nav" bg="midnightPlum" borderBottomWidth="1px" borderColor="divider" px={4} py={3}>
       <HStack justify="space-between">
         <HStack spacing={4}>
           <Link
             as={NextLink}
             href="/"
-            color="white"
+            color="antiqueGold"
+            _hover={{ textDecoration: 'none' }}
             fontWeight="bold"
             fontSize="1.25em"
             fontFamily="heading"
@@ -21,12 +22,12 @@ export function NavBar({ isAdmin }: { isAdmin: boolean }) {
             <Image src="/pagefolk.svg" alt="" boxSize="1.75em" />
             PageFolk
           </Link>
-          <Box aria-hidden boxSize="0.5em" bg="#d4b06a" transform="rotate(45deg)" />
-          <Link as={NextLink} href="/past-books" color="brand.100">
+          <Box aria-hidden boxSize="0.5em" bg="antiqueGold" transform="rotate(45deg)" />
+          <Link as={NextLink} href="/past-books" color="parchment" _hover={{ color: 'antiqueGold' }}>
             Past books
           </Link>
           {isAdmin ? (
-            <Link as={NextLink} href="/admin" color="brand.100">
+            <Link as={NextLink} href="/admin" color="parchment" _hover={{ color: 'antiqueGold' }}>
               Admin
             </Link>
           ) : null}
@@ -37,7 +38,7 @@ export function NavBar({ isAdmin }: { isAdmin: boolean }) {
             await signOut()
           }}
         >
-          <Button type="submit" size="sm" variant="link" color="brand.100">
+          <Button type="submit" size="sm" variant="link" color="mist">
             Sign out
           </Button>
         </form>

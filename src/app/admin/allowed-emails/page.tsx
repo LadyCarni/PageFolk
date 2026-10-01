@@ -9,20 +9,20 @@ export default async function AllowedEmailsPage() {
 
   return (
     <VStack align="stretch" p={8} spacing={4}>
-      <Heading size="lg" color="brand.900">
+      <Heading size="lg">
         Allowed members
       </Heading>
       <form action={addAllowedEmailAction}>
         <HStack>
           <Input name="email" type="email" placeholder="member@example.com" required />
-          <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+          <Button type="submit">
             Add
           </Button>
         </HStack>
       </form>
       <VStack as="ul" align="stretch" spacing={1}>
         {emails.map((email) => (
-          <HStack as="li" key={email} justify="space-between" borderBottomWidth="1px" py={1}>
+          <HStack as="li" key={email} justify="space-between" borderBottomWidth="1px" borderColor="divider" py={1}>
             <Text>{email}</Text>
             <form
               action={async () => {
@@ -30,7 +30,7 @@ export default async function AllowedEmailsPage() {
                 await removeAllowedEmailAction(email)
               }}
             >
-              <Button type="submit" size="sm" variant="link" color="red.600">
+              <Button type="submit" size="sm" variant="link" color="danger">
                 Remove
               </Button>
             </form>

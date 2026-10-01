@@ -8,11 +8,11 @@ export function SectionRow({ section }: { section: SectionSummary }) {
   if (section.status === 'locked') {
     const toGo = section.chaptersToGo
     return (
-      <ListItem borderWidth="1px" borderStyle="dashed" borderColor="brand.500" borderRadius="md" p={3}>
-        <Text color="brand.700" fontWeight={500} fontSize="lg">
+      <ListItem borderWidth="1px" borderStyle="dashed" borderColor="borderMuted" bg="sealed" borderRadius="lg" p={4}>
+        <Text color="mist" fontFamily="heading" fontStyle="italic" fontWeight={600} fontSize="xl">
           {chapterRangeName(section.startChapter, section.endChapter)} · Sealed
         </Text>
-        <Text fontSize="sm" color="gray.600">
+        <Text fontSize="sm" color="mist">
           Opens after chapter {section.endChapter}, {toGo} chapter{toGo === 1 ? '' : 's'} to go
         </Text>
       </ListItem>
@@ -20,8 +20,16 @@ export function SectionRow({ section }: { section: SectionSummary }) {
   }
 
   return (
-    <ListItem borderWidth="1px" borderColor="brand.500" bg="brand.50" borderRadius="md" p={3}>
-      <Link as={NextLink} href={`/sections/${section.id}`} color="brand.700" fontWeight={500} fontSize="lg">
+    <ListItem borderWidth="1px" borderColor="borderOpen" bg="mulberry" borderRadius="lg" p={4}>
+      <Link
+        as={NextLink}
+        href={`/sections/${section.id}`}
+        color="parchment"
+        fontFamily="heading"
+        fontWeight={600}
+        fontSize="xl"
+        _hover={{ color: 'antiqueGold', textDecoration: 'none' }}
+      >
         Discuss {sectionDisplayName(section)}
       </Link>
       <SectionActivity postCount={section.postCount} lastPostAt={section.lastPostAt} />

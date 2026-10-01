@@ -11,18 +11,18 @@ export default function SignInPage({
   return (
     <VStack minH="100vh" justify="center" spacing={4} p={8}>
       <Image src="/pagefolk.svg" alt="" boxSize="96px" />
-      <Heading size="lg" color="brand.900">
+      <Heading size="lg">
         PageFolk
       </Heading>
-      <Text color="brand.500" fontSize="lg" fontStyle="italic">
+      <Text color="dustyRose" fontSize="lg" fontStyle="italic">
         Every page, together.
       </Text>
       {isAccessDenied ? (
-        <Text color="brand.700" fontWeight="bold">
+        <Text color="dustyRose" fontWeight="bold">
           You&apos;re not on the list — contact the admin to get access.
         </Text>
       ) : (
-        <Text color="gray.600">Sign in with the Google account you were invited with.</Text>
+        <Text color="mist">Sign in with the Google account you were invited with.</Text>
       )}
       <form
         action={async () => {
@@ -30,7 +30,7 @@ export default function SignInPage({
           await signIn('google')
         }}
       >
-        <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }}>
+        <Button type="submit">
           Sign in with Google
         </Button>
       </form>

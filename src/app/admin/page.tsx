@@ -28,7 +28,7 @@ export default async function AdminPage() {
 
   return (
     <VStack align="stretch" p={8} spacing={8}>
-      <Heading size="lg" color="brand.900">
+      <Heading size="lg">
         Admin
       </Heading>
 
@@ -61,7 +61,7 @@ export default async function AdminPage() {
 
       <VStack align="stretch" spacing={6}>
         {books.map((book) => (
-          <Box key={book.id} borderWidth="1px" borderColor="#e7b7a6" borderRadius="md" p={4}>
+          <Box key={book.id} borderWidth="1px" borderColor="border" bg="velvet" borderRadius="lg" p={4}>
             <HStack justify="space-between">
               <Heading size="sm">
                 {book.title} — {book.author} ({book.status})
@@ -73,7 +73,7 @@ export default async function AdminPage() {
                     await setBookStatusAction(book.id, book.status === 'current' ? 'past' : 'current')
                   }}
                 >
-                  <Button type="submit" size="sm" variant="link" color="brand.700">
+                  <Button type="submit" size="sm" variant="link">
                     Mark as {book.status === 'current' ? 'past' : 'current'}
                   </Button>
                 </form>
@@ -96,7 +96,7 @@ export default async function AdminPage() {
               hiddenFields={{ bookId: book.id }}
               mt={3}
             >
-              <Text fontSize="sm" color="gray.600">
+              <Text fontSize="sm" color="mist">
                 Total chapters
               </Text>
               <Input
@@ -123,7 +123,7 @@ export default async function AdminPage() {
             <Stack spacing="1em" mt="1em">
               {book.sections.map((s) => (
                 <HStack key={s.id} spacing={2}>
-                  <Text fontSize="sm" color="gray.600" flexShrink={0}>
+                  <Text fontSize="sm" color="mist" flexShrink={0}>
                     {s.order}.
                   </Text>
                   <Box flex="1">

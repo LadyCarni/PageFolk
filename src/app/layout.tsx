@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import { Cormorant_Garamond, Lora } from 'next/font/google'
+import { ColorModeScript } from '@chakra-ui/react'
 import { Providers } from './providers'
 import { auth } from '@/auth'
 import { NavBar } from '@/components/NavBar'
@@ -22,8 +23,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const session = await auth()
 
   return (
-    <html lang="en" className={`${cormorant.variable} ${lora.variable}`}>
-      <body>
+    <html lang="en" className={`${cormorant.variable} ${lora.variable}`} suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <ColorModeScript initialColorMode="dark" />
         <Providers>
           {session?.user ? <NavBar isAdmin={Boolean(session.user.isAdmin)} /> : null}
           {children}

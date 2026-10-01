@@ -60,22 +60,22 @@ export function CoverUpload({
                 setHasFile(Boolean(file))
               }}
             />
-            <Button type="submit" size="sm" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }} isDisabled={!hasFile}>
+            <Button type="submit" size="sm" isDisabled={!hasFile}>
               {coverVersion === null ? 'Upload cover' : 'Replace cover'}
             </Button>
           </HStack>
         </form>
-        <Text fontSize="xs" color="gray.600" mt={1}>
+        <Text fontSize="xs" color="mist" mt={1}>
           PNG, JPEG, or WebP, up to {MAX_COVER_BYTES / 1024} KB.
         </Text>
         {error && (
-          <Text fontSize="sm" color="red.600" mt={1} role="alert">
+          <Text fontSize="sm" color="danger" mt={1} role="alert">
             {error}
           </Text>
         )}
         {coverVersion !== null && (
           <form action={removeAction}>
-            <Button type="submit" size="xs" variant="link" color="red.600" mt={1}>
+            <Button type="submit" size="xs" variant="link" color="danger" mt={1}>
               Remove cover
             </Button>
           </form>

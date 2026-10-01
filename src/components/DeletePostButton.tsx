@@ -23,7 +23,7 @@ export function DeletePostButton({
         }
       }}
     >
-      <Button type="submit" size="xs" variant="link" color="red.600">
+      <Button type="submit" size="xs" variant="link" color="danger">
         Delete
       </Button>
     </form>

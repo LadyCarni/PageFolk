@@ -40,13 +40,13 @@ export default async function HomePage() {
               />
             )}
             <Box>
-              <Heading size="lg" color="brand.900" mb={4}>
+              <Heading size="lg" mb={4}>
                 {book.title}{' '}
-                <Text as="span" color="brand.300" fontWeight="normal">
+                <Text as="span" color="mist" fontWeight="normal" fontStyle="italic">
                   by {book.author}
                 </Text>
               </Heading>
-              <Text color="brand.700">
+              <Text>
                 {sections.length === 0
                   ? "Discussion threads for this book will open up soon. Start reading, and check back shortly to join the conversation!"
                   : "No spoilers here! Every discussion thread starts sealed. As you read, move your place in the book forward, and each thread opens once you finish its last chapter. We've been waiting to hear what you think!"}

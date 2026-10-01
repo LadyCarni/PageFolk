@@ -27,7 +27,7 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
 
   return (
     <VStack align="stretch" p={8} spacing={6}>
-      <Heading size="lg" color="brand.900">
+      <Heading size="lg">
         {thread.name}
       </Heading>
 
@@ -35,11 +35,11 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
 
       <List spacing={4}>
         {topLevel.map((post) => (
-          <ListItem key={post.id} borderWidth="1px" borderColor="#e7b7a6" borderRadius="md" p={3}>
+          <ListItem key={post.id} borderWidth="1px" borderColor="border" bg="velvet" borderRadius="lg" p={4}>
             <Flex justify="space-between" align="center">
               <HStack spacing={2}>
                 <UserAvatar user={post.user} />
-                <Text fontSize="sm" color="brand.500">
+                <Text fontSize="sm" color="dustyRose">
                   {post.user.name ?? 'Member'}
                 </Text>
               </HStack>
@@ -52,13 +52,13 @@ export default async function SectionThreadPage({ params }: { params: { sectionI
                 action={deletePostAction.bind(null, params.sectionId, post.id)}
               />
             )}
-            <List mt={2} ml={4} spacing={2} borderLeftWidth="2px" borderColor="#e7b7a6" pl={4}>
+            <List mt={2} ml={4} spacing={2} borderLeftWidth="2px" borderColor="borderMuted" pl={4}>
               {repliesTo(post.id).map((reply) => (
                 <ListItem key={reply.id}>
                   <Flex justify="space-between" align="center">
                     <HStack spacing={2}>
                       <UserAvatar user={reply.user} size={26} />
-                      <Text fontSize="sm" color="brand.500">
+                      <Text fontSize="sm" color="dustyRose">
                         {reply.user.name ?? 'Member'}
                       </Text>
                     </HStack>

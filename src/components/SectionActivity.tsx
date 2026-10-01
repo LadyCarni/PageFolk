@@ -5,9 +5,9 @@ import { formatRelativeTime } from '@/lib/time'
 
 export function SectionActivity({ postCount, lastPostAt }: { postCount: number; lastPostAt: Date | null }) {
   return (
-    <HStack spacing={3} fontSize="sm" color="brand.500">
+    <HStack spacing={3} fontSize="sm" color="mist">
       <HStack spacing={1}>
-        <FontAwesomeIcon icon={faCommentDots} color="#c25a5d" aria-hidden />
+        <FontAwesomeIcon icon={faCommentDots} color="var(--chakra-colors-dustyRose)" aria-hidden />
         <Text as="span" fontFamily="heading" fontWeight="bold">
           {postCount}
         </Text>

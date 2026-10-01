@@ -25,7 +25,7 @@ export function DeleteSectionButton({
         }
       }}
     >
-      <Button type="submit" size="sm" variant="link" color="red.600">
+      <Button type="submit" size="sm" variant="link" color="danger">
         Delete
       </Button>
     </form>

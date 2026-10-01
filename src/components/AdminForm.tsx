@@ -22,9 +22,6 @@ function SubmitButton({
     return (
       <Button
         type="submit"
-        bg="brand.700"
-        color="white"
-        _hover={{ bg: 'brand.900' }}
         w={width}
         flexShrink={0}
         isDisabled={disabled || pending}
@@ -34,7 +31,7 @@ function SubmitButton({
     )
   }
   return (
-    <Button type="submit" size="sm" variant="link" color="brand.700" flexShrink={0} isDisabled={disabled || pending}>
+    <Button type="submit" size="sm" variant="link" flexShrink={0} isDisabled={disabled || pending}>
       {label}
     </Button>
   )
@@ -119,13 +116,13 @@ export function AdminForm({
         {children}
         <SubmitButton label={submitLabel} disabled={!canSubmit} solid={solid} width={submitWidth} />
         {mode === 'edit' && changed && (
-          <Button type="button" size="sm" variant="link" color="gray.600" flexShrink={0} onClick={cancel}>
+          <Button type="button" size="sm" variant="link" color="mist" flexShrink={0} onClick={cancel}>
             Cancel
           </Button>
         )}
       </HStack>
       {message && (
-        <Text role="alert" mt={1} fontSize="sm" color="red.600">
+        <Text role="alert" mt={1} fontSize="sm" color="danger">
           {message}
         </Text>
       )}

@@ -14,14 +14,14 @@ const PROMPTS = [
 
 export function DiscussionPromptCard() {
   return (
-    <Box borderWidth="1px" borderColor="#542949" borderRadius="md" bg="brand.50" overflow="hidden">
-      <Flex as="header" align="center" gap={2} bg="#542949" color="white" px={4} py={3}>
+    <Box borderWidth="1px" borderColor="border" borderRadius="lg" bg="velvet" overflow="hidden">
+      <Flex as="header" align="center" gap={2} bg="claret" color="parchment" px={4} py={3}>
         <FontAwesomeIcon icon={faCommentDots} />
         <Heading as="h2" size="sm">
           What do you think?
         </Heading>
       </Flex>
-      <List spacing={4} p={4} color="brand.900">
+      <List spacing={4} p={4} color="body">
         {PROMPTS.map((prompt) => (
           <ListItem key={prompt}>{prompt}</ListItem>
         ))}

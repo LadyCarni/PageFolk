@@ -6,7 +6,7 @@ import { Text } from '@chakra-ui/react'
 // so the server-rendered text may legitimately differ on hydration.
 export function PostTimestamp({ createdAt }: { createdAt: Date }) {
   return (
-    <Text fontSize="sm" color="brand.300" suppressHydrationWarning>
+    <Text fontSize="sm" color="mist" suppressHydrationWarning>
       {new Date(createdAt).toLocaleString(undefined, {
         dateStyle: 'medium',
         timeStyle: 'short',

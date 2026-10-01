@@ -52,7 +52,7 @@ export function ProgressStepper({
 
   return (
     <Box bg="velvet" color="parchment" borderWidth="1px" borderColor="border" borderRadius="xl" p={5}>
-      <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="antiqueGold">
+      <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="dustyRose" textAlign="center">
         Your place in the book
       </Text>
       <Flex align="center" justify="space-between" mt={4}>
@@ -64,7 +64,7 @@ export function ProgressStepper({
           {...buttonProps}
         />
         <Box textAlign="center">
-          <Text fontFamily="heading" fontWeight="bold" fontSize="4xl" lineHeight="1" aria-live="polite">
+          <Text fontFamily="heading" fontWeight="bold" fontSize="4xl" lineHeight="1" color="antiqueGold" aria-live="polite">
             {finished}
           </Text>
           <Text fontSize="sm" color="mist">

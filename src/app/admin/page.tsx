@@ -1,6 +1,7 @@
 import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
+import { sectionDisplayName } from '@/lib/chapters'
 import { CoverUpload } from '@/components/CoverUpload'
 import { DeleteBookButton } from '@/components/DeleteBookButton'
 import { DeleteSectionButton } from '@/components/DeleteSectionButton'
@@ -8,7 +9,8 @@ import {
   createBookAction,
   addSectionAction,
   setBookStatusAction,
-  updateSectionLabelAction,
+  updateSectionAction,
+  updateTotalChaptersAction,
   deleteSectionAction,
   deleteBookAction,
   uploadCoverAction,
@@ -38,6 +40,16 @@ export default async function AdminPage() {
           <HStack>
             <Input name="title" placeholder="Title" required />
             <Input name="author" placeholder="Author" required />
+            <Input
+              name="totalChapters"
+              type="number"
+              min={1}
+              placeholder="Chapters"
+              aria-label="Total chapters"
+              required
+              w="120px"
+              flexShrink={0}
+            />
             <Button
               type="submit"
               bg="brand.700"
@@ -81,6 +93,32 @@ export default async function AdminPage() {
                 />
               </HStack>
             </HStack>
+            <form
+              action={async (formData: FormData) => {
+                'use server'
+                await updateTotalChaptersAction(formData)
+              }}
+            >
+              <input type="hidden" name="bookId" value={book.id} />
+              <HStack mt={3}>
+                <Text fontSize="sm" color="gray.600">
+                  Total chapters
+                </Text>
+                <Input
+                  name="totalChapters"
+                  type="number"
+                  min={1}
+                  defaultValue={book.totalChapters}
+                  aria-label="Total chapters"
+                  size="sm"
+                  w="90px"
+                  required
+                />
+                <Button type="submit" size="sm" variant="link" color="brand.700">
+                  Save
+                </Button>
+              </HStack>
+            </form>
             <CoverUpload
               bookId={book.id}
               title={book.title}
@@ -101,20 +139,49 @@ export default async function AdminPage() {
                     <form
                       action={async (formData: FormData) => {
                         'use server'
-                        await updateSectionLabelAction(formData)
+                        await updateSectionAction(formData)
                       }}
                     >
                       <input type="hidden" name="sectionId" value={s.id} />
                       <HStack>
-                        <Input name="label" defaultValue={s.label} size="sm" required flex="1" maxW="40%" />
+                        <Input
+                          name="startChapter"
+                          type="number"
+                          min={1}
+                          defaultValue={s.startChapter}
+                          aria-label="Start chapter"
+                          size="sm"
+                          w="80px"
+                          required
+                        />
+                        <Text fontSize="sm">to</Text>
+                        <Input
+                          name="endChapter"
+                          type="number"
+                          min={1}
+                          defaultValue={s.endChapter}
+                          aria-label="End chapter"
+                          size="sm"
+                          w="80px"
+                          required
+                        />
+                        <Input
+                          name="title"
+                          defaultValue={s.title ?? ''}
+                          placeholder="Title (optional)"
+                          aria-label="Title"
+                          size="sm"
+                          flex="1"
+                          maxW="40%"
+                        />
                         <Button type="submit" size="sm" variant="link" color="brand.700" flexShrink={0}>
-                          Rename
+                          Save
                         </Button>
                       </HStack>
                     </form>
                   </Box>
                   <DeleteSectionButton
-                    label={s.label}
+                    label={sectionDisplayName(s)}
                     postCount={s._count.posts}
                     action={async () => {
                       'use server'
@@ -127,7 +194,28 @@ export default async function AdminPage() {
             <form action={addSectionAction}>
               <input type="hidden" name="bookId" value={book.id} />
               <HStack mt="2em">
-                <Input name="label" placeholder="e.g. Chapters 6-10" required flex="1" maxW="40%" />
+                <Input
+                  name="startChapter"
+                  type="number"
+                  min={1}
+                  placeholder="From"
+                  aria-label="Start chapter"
+                  required
+                  w="90px"
+                  flexShrink={0}
+                />
+                <Text>to</Text>
+                <Input
+                  name="endChapter"
+                  type="number"
+                  min={1}
+                  placeholder="To"
+                  aria-label="End chapter"
+                  required
+                  w="90px"
+                  flexShrink={0}
+                />
+                <Input name="title" placeholder="Title (optional), e.g. Lowood" aria-label="Title" flex="1" maxW="40%" />
                 <Button type="submit" bg="brand.700" color="white" _hover={{ bg: 'brand.900' }} flexShrink={0}>
                   Add section
                 </Button>

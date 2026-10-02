@@ -251,8 +251,8 @@ describe('validateFormValues: club name and blurb rules', () => {
   it('checks the club name', () => {
     expect(validateFormValues({ kind: 'clubName' }, { clubName: 'The Thursday Readers' })).toBeNull()
     expect(validateFormValues({ kind: 'clubName' }, { clubName: '   ' })).toBe('Club name is required')
-    expect(validateFormValues({ kind: 'clubName' }, { clubName: 'a'.repeat(61) })).toBe(
-      'Club name must be 60 characters or fewer'
+    expect(validateFormValues({ kind: 'clubName' }, { clubName: 'a'.repeat(41) })).toBe(
+      'Club name must be 40 characters or fewer'
     )
     expect(validateFormValues({ kind: 'clubName' }, {})).toBe('Club name is required')
   })

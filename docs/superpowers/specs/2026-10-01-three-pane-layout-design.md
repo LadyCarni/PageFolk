@@ -116,7 +116,7 @@ viewer's progress, the thread list (existing `getSectionsForViewer`), and the se
 ## Data changes (additive; `prisma db push`, no backfill)
 
 - `Club` (single row): `name`. Library: `getClubName(): Promise<string | null>` (null when unset),
-  `setClubName(name)` (trims; 1 to 60 characters; creates or updates the one row).
+  `setClubName(name)` (trims; 1 to 40 characters; creates or updates the one row).
 - `Book.blurb` (`String?`). Library: `setBlurb(bookId, text)` (trims; at most 1,000 characters; empty clears it to
   null).
 - `getSectionThread` unlocked result gains `title`, `startChapter` and `endChapter` (keeping `name`), for the header
@@ -140,7 +140,7 @@ of `src/app/sections/[sectionId]/page.tsx` (becomes the redirect).
 
 ## Testing
 
-- Library tests: club name (unset gives null; set trims; blank and over-60 rejected; one row only), blurb (set, trim,
+- Library tests: club name (unset gives null; set trims; blank and over-40 rejected; one row only), blurb (set, trim,
   clear, over-limit rejected), `listMembers` (sorted, no email property, unnamed users), `getSectionThread` extra
   fields (and that locked still carries nothing).
 - Pure helper tests: `pickDefaultThread`, `threadHref`, and the new `validateFormValues` rules.

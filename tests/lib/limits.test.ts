@@ -12,10 +12,10 @@ describe('validateClubName', () => {
     expect(validateClubName('   ')).toBe('Club name is required')
   })
 
-  it('accepts exactly 60 characters and rejects 61', () => {
-    expect(CLUB_NAME_MAX).toBe(60)
-    expect(validateClubName('a'.repeat(60))).toBeNull()
-    expect(validateClubName('a'.repeat(61))).toBe('Club name must be 60 characters or fewer')
+  it('accepts exactly 40 characters and rejects 41', () => {
+    expect(CLUB_NAME_MAX).toBe(40)
+    expect(validateClubName('a'.repeat(40))).toBeNull()
+    expect(validateClubName('a'.repeat(41))).toBe('Club name must be 40 characters or fewer')
   })
 })
 

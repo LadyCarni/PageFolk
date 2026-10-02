@@ -213,7 +213,7 @@ describe('admin actions', () => {
     expect(await getClubName()).toBe('The Thursday Readers')
 
     expect(await updateClubNameAction(sectionForm({ clubName: '   ' }))).toEqual({ error: 'Club name is required' })
-    expect((await updateClubNameAction(sectionForm({ clubName: 'a'.repeat(61) }))).error).toContain('60 characters')
+    expect((await updateClubNameAction(sectionForm({ clubName: 'a'.repeat(41) }))).error).toContain('40 characters')
     expect(await getClubName()).toBe('The Thursday Readers')
   })
 

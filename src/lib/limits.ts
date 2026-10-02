@@ -1,4 +1,4 @@
-export const CLUB_NAME_MAX = 60
+export const CLUB_NAME_MAX = 40
 export const BLURB_MAX = 1000
 
 export function validateClubName(name: string): string | null {

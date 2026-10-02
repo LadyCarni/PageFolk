@@ -28,12 +28,12 @@ describe('club name', () => {
     await setClubName('Keep me')
     await expect(setClubName('')).rejects.toBeInstanceOf(ValidationError)
     await expect(setClubName('   ')).rejects.toThrow('Club name is required')
-    await expect(setClubName('a'.repeat(61))).rejects.toThrow('60 characters or fewer')
+    await expect(setClubName('a'.repeat(41))).rejects.toThrow('40 characters or fewer')
     expect(await getClubName()).toBe('Keep me')
   })
 
-  it('accepts a name of exactly 60 characters', async () => {
-    await setClubName('a'.repeat(60))
-    expect(await getClubName()).toBe('a'.repeat(60))
+  it('accepts a name of exactly 40 characters', async () => {
+    await setClubName('a'.repeat(40))
+    expect(await getClubName()).toBe('a'.repeat(40))
   })
 })

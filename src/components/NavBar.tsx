@@ -22,9 +22,11 @@ export function NavBar({
       py={{ base: 3, lg: 0 }}
       h={{ lg: `${NAV_HEIGHT_PX}px` }}
     >
-      <Flex align="center" justify="space-between" wrap="wrap" gap={3} h="100%">
-        <HStack spacing={4}>
+      {/* On large screens the header is one fixed-height row, so a long club name is cut short instead of wrapping. */}
+      <Flex align="center" justify="space-between" wrap={{ base: 'wrap', lg: 'nowrap' }} gap={3} h="100%">
+        <HStack spacing={4} minW={0}>
           <Link
+            flexShrink={0}
             as={NextLink}
             href="/"
             color="antiqueGold"
@@ -47,14 +49,14 @@ export function NavBar({
               PageFolk
             </Text>
           </Link>
-          <Box aria-hidden boxSize="8px" bg="borderMuted" transform="rotate(45deg)" />
+          <Box aria-hidden flexShrink={0} boxSize="8px" bg="borderMuted" transform="rotate(45deg)" />
           {clubName && (
-            <Text fontFamily="heading" fontSize="lg" color="mist" noOfLines={1}>
+            <Text fontFamily="heading" fontSize="lg" color="mist" minW={0} isTruncated title={clubName}>
               {clubName}
             </Text>
           )}
         </HStack>
-        <HStack spacing={{ base: 4, md: 6 }}>
+        <HStack spacing={{ base: 4, md: 6 }} flexShrink={0}>
           <NavLinks isAdmin={user.isAdmin} />
           <Menu placement="bottom-end">
             <MenuButton

@@ -70,6 +70,22 @@ const theme = extendTheme({
           color: 'antiqueGold',
           _hover: { textDecoration: 'underline' },
         },
+        goldOutline: {
+          borderWidth: '1px',
+          borderColor: 'antiqueGold',
+          color: 'antiqueGold',
+          bg: 'transparent',
+          borderRadius: 'full',
+          _hover: { bg: 'mulberry', _disabled: { bg: 'transparent' } },
+        },
+        dangerOutline: {
+          borderWidth: '1px',
+          borderColor: 'danger',
+          color: 'danger',
+          bg: 'transparent',
+          borderRadius: 'full',
+          _hover: { bg: 'mulberry' },
+        },
       },
     },
     Input: {

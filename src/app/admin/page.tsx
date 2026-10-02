@@ -60,7 +60,7 @@ export default async function AdminPage() {
           rule={{ kind: 'newBook' }}
           mode="create"
           submitLabel="Add book"
-          solid
+          submitVariant="solid"
           submitWidth="200px"
         >
           <Input name="title" placeholder="Title" required />
@@ -218,7 +218,7 @@ export default async function AdminPage() {
               rule={{ kind: 'section', totalChapters: book.totalChapters, others: sectionRanges(book) }}
               mode="create"
               submitLabel="Add section"
-              solid
+              submitVariant="solid"
               hiddenFields={{ bookId: book.id }}
               mt="2em"
             >

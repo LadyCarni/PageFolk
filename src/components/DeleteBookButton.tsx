@@ -34,7 +34,7 @@ export function DeleteBookButton({
         }
       }}
     >
-      <Button type="submit" size="sm" variant="link" color="danger">
+      <Button type="submit" size="sm" variant="dangerOutline">
         Delete book
       </Button>
     </form>

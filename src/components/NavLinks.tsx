@@ -23,11 +23,11 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
             as={NextLink}
             href={href}
             aria-current={active === href ? 'page' : undefined}
-            color={active === href ? 'parchment' : 'mist'}
+            color={active === href ? 'antiqueGold' : 'body'}
             pb={1}
-            borderBottomWidth="2px"
+            borderBottomWidth="1px"
             borderColor={active === href ? 'antiqueGold' : 'transparent'}
-            _hover={{ color: 'parchment', textDecoration: 'none' }}
+            _hover={{ color: active === href ? 'antiqueGold' : 'parchment', textDecoration: 'none' }}
           >
             {label}
           </Link>

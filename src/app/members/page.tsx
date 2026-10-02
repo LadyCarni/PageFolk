@@ -2,10 +2,16 @@ import { Box, Flex, Heading, SimpleGrid, Text } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listMembers } from '@/lib/members'
 import { UserAvatar } from '@/components/UserAvatar'
+import { listAllowedEmails } from '@/lib/allowlist'
+import { AllowedEmailsPanel } from '@/components/AllowedEmailsPanel'
 
 export default async function MembersPage() {
-  await requireUser()
-  const members = await listMembers()
+  const user = await requireUser()
+  // Emails are fetched only for admins, so members never receive them.
+  const [members, allowedEmails] = await Promise.all([
+    listMembers(),
+    user.isAdmin ? listAllowedEmails() : Promise.resolve(null),
+  ])
 
   return (
     <Box p={{ base: 6, md: 10 }}>
@@ -35,6 +41,7 @@ export default async function MembersPage() {
           </Flex>
         ))}
       </SimpleGrid>
+      {allowedEmails && <AllowedEmailsPanel emails={allowedEmails} />}
     </Box>
   )
 }

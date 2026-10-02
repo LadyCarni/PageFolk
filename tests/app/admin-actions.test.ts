@@ -5,7 +5,8 @@ const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction } from '@/app/admin/actions'
+import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
 
 describe('admin actions', () => {
@@ -18,6 +19,7 @@ describe('admin actions', () => {
     await prisma.allowedEmail.deleteMany()
     await prisma.section.deleteMany()
     await prisma.book.deleteMany()
+    await prisma.club.deleteMany()
   })
 
   it('rejects createBookAction for a non-admin', async () => {
@@ -196,6 +198,48 @@ describe('admin actions', () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     await updateTotalChaptersAction(form)
     expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).totalChapters).toBe(40)
+  })
+
+  it('rejects updateClubNameAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(updateClubNameAction(sectionForm({ clubName: 'The Thursday Readers' }))).rejects.toThrow('Forbidden')
+    expect(await getClubName()).toBeNull()
+  })
+
+  it('sets the club name for an admin, and reports blank or over-long names without saving', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+
+    expect(await updateClubNameAction(sectionForm({ clubName: ' The Thursday Readers ' }))).toEqual({})
+    expect(await getClubName()).toBe('The Thursday Readers')
+
+    expect(await updateClubNameAction(sectionForm({ clubName: '   ' }))).toEqual({ error: 'Club name is required' })
+    expect((await updateClubNameAction(sectionForm({ clubName: 'a'.repeat(61) }))).error).toContain('60 characters')
+    expect(await getClubName()).toBe('The Thursday Readers')
+  })
+
+  it('rejects updateBlurbAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(updateBlurbAction(sectionForm({ bookId: 'whatever', blurb: 'x' }))).rejects.toThrow('Forbidden')
+  })
+
+  it('sets and clears a blurb for an admin, and reports an over-long one without saving', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+
+    expect(await updateBlurbAction(sectionForm({ bookId: book.id, blurb: 'A desert planet.' }))).toEqual({})
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBe('A desert planet.')
+
+    const tooLong = await updateBlurbAction(sectionForm({ bookId: book.id, blurb: 'a'.repeat(1001) }))
+    expect(tooLong.error).toContain('1000 characters')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBe('A desert planet.')
+
+    expect(await updateBlurbAction(sectionForm({ bookId: book.id, blurb: '' }))).toEqual({})
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBeNull()
+  })
+
+  it('requires a bookId to set a blurb', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    await expect(updateBlurbAction(sectionForm({ bookId: '', blurb: 'x' }))).rejects.toThrow('required')
   })
 
   it('rejects deleteSectionAction for a non-admin', async () => {

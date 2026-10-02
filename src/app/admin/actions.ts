@@ -2,7 +2,8 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook } from '@/lib/books'
+import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb } from '@/lib/books'
+import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
@@ -89,6 +90,27 @@ export async function updateTotalChaptersAction(formData: FormData): Promise<For
   }
   return reportingValidation(async () => {
     await updateTotalChapters(bookId, parseWholeNumber(formData.get('totalChapters')))
+    revalidateBookPages()
+  })
+}
+
+export async function updateClubNameAction(formData: FormData): Promise<FormResult> {
+  await requireAdmin()
+  return reportingValidation(async () => {
+    await setClubName(String(formData.get('clubName') ?? ''))
+    // The name shows in the header of every page.
+    revalidatePath('/', 'layout')
+  })
+}
+
+export async function updateBlurbAction(formData: FormData): Promise<FormResult> {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  if (!bookId) {
+    throw new Error('bookId is required')
+  }
+  return reportingValidation(async () => {
+    await setBlurb(bookId, String(formData.get('blurb') ?? ''))
     revalidateBookPages()
   })
 }

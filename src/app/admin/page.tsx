@@ -1,4 +1,4 @@
-import { Box, Button, Heading, HStack, Input, Stack, Text, VStack } from '@chakra-ui/react'
+import { Box, Button, Heading, HStack, Input, Stack, Text, Textarea, VStack } from '@chakra-ui/react'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { sectionDisplayName } from '@/lib/chapters'
@@ -16,7 +16,10 @@ import {
   deleteBookAction,
   uploadCoverAction,
   removeCoverAction,
+  updateClubNameAction,
+  updateBlurbAction,
 } from './actions'
+import { getClubName } from '@/lib/club'
 
 function sectionRanges(book: { sections: { id: string; startChapter: number; endChapter: number; title: string | null }[] }) {
   return book.sections.map(({ id, startChapter, endChapter, title }) => ({ id, startChapter, endChapter, title }))
@@ -25,12 +28,28 @@ function sectionRanges(book: { sections: { id: string; startChapter: number; end
 export default async function AdminPage() {
   await requireAdmin()
   const books = await listBooks()
+  const clubName = await getClubName()
 
   return (
     <VStack align="stretch" p={8} spacing={8}>
       <Heading size="lg">
         Admin
       </Heading>
+
+      <Box>
+        <Heading size="md" mb={2}>
+          Club
+        </Heading>
+        <AdminForm action={updateClubNameAction} rule={{ kind: 'clubName' }} mode="edit" submitLabel="Save">
+          <Input
+            name="clubName"
+            defaultValue={clubName ?? ''}
+            placeholder="Club name, e.g. The Thursday Readers"
+            aria-label="Club name"
+            maxW="md"
+          />
+        </AdminForm>
+      </Box>
 
       <Box>
         <Heading size="md" mb={2}>
@@ -108,6 +127,23 @@ export default async function AdminPage() {
                 size="sm"
                 w="90px"
                 required
+              />
+            </AdminForm>
+            <AdminForm
+              action={updateBlurbAction}
+              rule={{ kind: 'blurb' }}
+              mode="edit"
+              submitLabel="Save"
+              hiddenFields={{ bookId: book.id }}
+              mt={3}
+            >
+              <Textarea
+                name="blurb"
+                defaultValue={book.blurb ?? ''}
+                placeholder="Blurb (optional)"
+                aria-label="Blurb"
+                size="sm"
+                rows={3}
               />
             </AdminForm>
             <CoverUpload

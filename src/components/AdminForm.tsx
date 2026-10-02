@@ -77,7 +77,11 @@ export function AdminForm({
     const values: Record<string, string> = {}
     let differs = false
     for (const element of Array.from(form.elements)) {
-      if (element instanceof HTMLInputElement && element.name && element.type !== 'hidden') {
+      if (
+        (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) &&
+        element.name &&
+        element.type !== 'hidden'
+      ) {
         values[element.name] = element.value
         if (element.value !== element.defaultValue) differs = true
       }

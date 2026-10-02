@@ -7,7 +7,7 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons'
 import { AdminForm, AdminFormActions } from '@/components/AdminForm'
 import { CoverageBar } from '@/components/CoverageBar'
 import { DeleteSectionButton } from '@/components/DeleteSectionButton'
-import { CARD_PROPS, LABEL_PROPS } from '@/components/adminStyles'
+import { CARD_PROPS, LABEL_PROPS, FIELD_PROPS } from '@/components/adminStyles'
 import {
   chapterCoverage,
   chapterRangeName,
@@ -34,7 +34,7 @@ function NumberField({ label, name, defaultValue }: { label: string; name: strin
       <Text fontSize="sm" color="parchment" mb={1}>
         {label}
       </Text>
-      <Input name={name} type="number" min={1} defaultValue={defaultValue} required />
+      <Input {...FIELD_PROPS} name={name} type="number" min={1} defaultValue={defaultValue} required />
     </Box>
   )
 }
@@ -75,7 +75,7 @@ function SectionForm({
           <Text fontSize="sm" color="parchment" mb={1}>
             Title (optional)
           </Text>
-          <Input name="title" defaultValue={defaults.title} placeholder="e.g. Lowood" />
+          <Input {...FIELD_PROPS} name="title" defaultValue={defaults.title} placeholder="e.g. Lowood" />
         </Box>
         <AdminFormActions />
       </Flex>

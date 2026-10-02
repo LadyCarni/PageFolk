@@ -8,3 +8,6 @@ export const CARD_PROPS = {
 } as const
 
 export const LABEL_PROPS = { fontSize: 'xs', letterSpacing: '0.14em', textTransform: 'uppercase' } as const
+
+// Admin inputs sit on velvet cards, so they use the darker page background to stand out.
+export const FIELD_PROPS = { bg: 'midnightPlum' } as const

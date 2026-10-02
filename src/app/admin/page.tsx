@@ -10,7 +10,7 @@ import { NAV_HEIGHT_PX } from '@/lib/layout'
 import { AdminForm, AdminFormActions } from '@/components/AdminForm'
 import { AdminBookList } from '@/components/AdminBookList'
 import { BookSetup } from '@/components/BookSetup'
-import { CARD_PROPS, LABEL_PROPS } from '@/components/adminStyles'
+import { CARD_PROPS, LABEL_PROPS, FIELD_PROPS } from '@/components/adminStyles'
 import { createBookAction, updateClubNameAction } from './actions'
 
 function FieldLabel({ children }: { children: string }) {
@@ -62,7 +62,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { book
               submitVariant="goldOutline"
               showSaved
             >
-              <Input
+              <Input {...FIELD_PROPS}
                 name="clubName"
                 defaultValue={clubName ?? ''}
                 placeholder="e.g. The Thursday Readers"
@@ -91,16 +91,16 @@ export default async function AdminPage({ searchParams }: { searchParams: { book
               <VStack align="stretch" spacing={4}>
                 <Box as="label" display="block">
                   <FieldLabel>Title</FieldLabel>
-                  <Input name="title" placeholder="e.g. Rebecca" required />
+                  <Input {...FIELD_PROPS} name="title" placeholder="e.g. Rebecca" required />
                 </Box>
                 <Box as="label" display="block">
                   <FieldLabel>Author</FieldLabel>
-                  <Input name="author" placeholder="e.g. Daphne du Maurier" required />
+                  <Input {...FIELD_PROPS} name="author" placeholder="e.g. Daphne du Maurier" required />
                 </Box>
                 <Flex gap={3} align="flex-end" wrap="wrap">
                   <Box as="label" display="block" flex="1" minW="100px">
                     <FieldLabel>Number of chapters</FieldLabel>
-                    <Input name="totalChapters" type="number" min={1} required />
+                    <Input {...FIELD_PROPS} name="totalChapters" type="number" min={1} required />
                   </Box>
                   <AdminFormActions />
                 </Flex>

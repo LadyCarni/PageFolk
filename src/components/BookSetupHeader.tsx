@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Box, Button, Flex, Heading, Input, Text } from '@chakra-ui/react'
 import { AdminForm } from '@/components/AdminForm'
 import { CompletionChips, type Completion } from '@/components/CompletionChips'
-import { LABEL_PROPS } from '@/components/adminStyles'
+import { LABEL_PROPS, FIELD_PROPS } from '@/components/adminStyles'
 import { updateTotalChaptersAction } from '@/app/admin/actions'
 
 const SUBTITLE_PROPS = { fontFamily: 'heading', fontStyle: 'italic', fontSize: 'xl', color: 'mist' } as const
@@ -49,7 +49,7 @@ export function BookSetupHeader({
               onCancel={close}
             >
               <Text {...SUBTITLE_PROPS}>{author},</Text>
-              <Input
+              <Input {...FIELD_PROPS}
                 name="totalChapters"
                 type="number"
                 min={1}

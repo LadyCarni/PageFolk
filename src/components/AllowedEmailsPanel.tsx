@@ -1,5 +1,5 @@
 import { Box, Button, Flex, Heading, Input, Text, VStack } from '@chakra-ui/react'
-import { CARD_PROPS } from '@/components/adminStyles'
+import { CARD_PROPS, FIELD_PROPS } from '@/components/adminStyles'
 import { addAllowedEmailAction, removeAllowedEmailAction } from '@/app/admin/actions'
 
 // Admin only: who may sign in. The page only renders this, and only fetches emails, for admins.
@@ -14,7 +14,7 @@ export function AllowedEmailsPanel({ emails }: { emails: string[] }) {
       </Text>
       <form action={addAllowedEmailAction}>
         <Flex gap={3} mt={5} wrap="wrap">
-          <Input
+          <Input {...FIELD_PROPS}
             name="email"
             type="email"
             placeholder="member@example.com"

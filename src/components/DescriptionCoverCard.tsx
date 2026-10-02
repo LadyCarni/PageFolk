@@ -2,7 +2,7 @@ import { Box, Grid, Heading, Text, Textarea } from '@chakra-ui/react'
 import { AdminForm, AdminFormActions } from '@/components/AdminForm'
 import { CoverImage } from '@/components/CoverImage'
 import { CoverUpload } from '@/components/CoverUpload'
-import { CARD_PROPS } from '@/components/adminStyles'
+import { CARD_PROPS, FIELD_PROPS } from '@/components/adminStyles'
 import { removeCoverAction, updateBlurbAction, uploadCoverAction } from '@/app/admin/actions'
 
 export function DescriptionCoverCard({
@@ -32,7 +32,7 @@ export function DescriptionCoverCard({
           hiddenFields={{ bookId: book.id }}
           layout="custom"
         >
-          <Textarea
+          <Textarea {...FIELD_PROPS}
             name="blurb"
             defaultValue={book.blurb ?? ''}
             placeholder="A few spoiler-free lines about the book"

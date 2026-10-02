@@ -5,11 +5,16 @@ import { requireUser } from '@/lib/session'
 import { setProgress } from '@/lib/progress'
 import { createPost, deletePost } from '@/lib/posts'
 
+function revalidateBookViews() {
+  revalidatePath('/')
+  revalidatePath('/shelf')
+  revalidatePath('/shelf/[bookId]', 'page')
+}
+
 export async function setProgressAction(bookId: string, chaptersFinished: number): Promise<number> {
   const user = await requireUser()
   const saved = await setProgress(user.id, bookId, chaptersFinished)
-  revalidatePath('/')
-  revalidatePath('/past-books')
+  revalidateBookViews()
   return saved
 }
 
@@ -18,12 +23,11 @@ export async function createPostAction(sectionId: string, formData: FormData) {
   const body = String(formData.get('body') ?? '')
   const parentPostId = formData.get('parentPostId')
   await createPost(sectionId, user.id, body, parentPostId ? String(parentPostId) : undefined)
-  revalidatePath(`/sections/${sectionId}`)
+  revalidateBookViews()
 }
 
 export async function deletePostAction(sectionId: string, postId: string) {
   const user = await requireUser()
   await deletePost(postId, user.id)
-  revalidatePath(`/sections/${sectionId}`)
-  revalidatePath('/')
+  revalidateBookViews()
 }

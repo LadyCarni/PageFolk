@@ -25,7 +25,7 @@ function SafeGroundPill({ endChapter }: { endChapter: number }) {
       borderColor="borderMuted"
       borderRadius="full"
     >
-      <Box as="span" aria-hidden color="mist">
+      <Box as="span" aria-hidden color="antiqueGold">
         <FontAwesomeIcon icon={faShield} />
       </Box>
       <Text as="span" fontSize="sm" color="parchment">

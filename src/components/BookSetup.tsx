@@ -2,6 +2,7 @@ import { VStack } from '@chakra-ui/react'
 import type { AdminBook } from '@/lib/books'
 import { chapterCoverage } from '@/lib/chapters'
 import { BookSetupHeader } from '@/components/BookSetupHeader'
+import { DescriptionCoverCard } from '@/components/DescriptionCoverCard'
 
 // The right column of the admin page: everything to set up one book.
 // Client parts are keyed by the book so switching books resets any open edit.
@@ -20,6 +21,7 @@ export function BookSetup({ book }: { book: AdminBook }) {
         minTotal={Math.max(0, ...book.sections.map((s) => s.endChapter))}
         completion={{ description: Boolean(book.blurb), cover: coverVersion !== null, sections: coverage.complete }}
       />
+      <DescriptionCoverCard book={book} coverVersion={coverVersion} />
     </VStack>
   )
 }

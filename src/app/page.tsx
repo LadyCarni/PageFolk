@@ -1,14 +1,11 @@
-import { Box, Flex, Heading, Image, List, Text } from '@chakra-ui/react'
+import { notFound } from 'next/navigation'
+import { Box, Text } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
-import { getSectionsForViewer } from '@/lib/sections'
-import { getProgress } from '@/lib/progress'
-import { DiscussionPromptCard } from '@/components/DiscussionPromptCard'
-import { ProgressStepper } from '@/components/ProgressStepper'
-import { SectionRow } from '@/components/SectionRow'
-import { setProgressAction } from './sections/actions'
+import { getBookView } from '@/lib/book-view'
+import { BookView } from '@/components/BookView'
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: { thread?: string | string[] } }) {
   const user = await requireUser()
   const [book] = await listBooks('current')
 
@@ -20,57 +17,9 @@ export default async function HomePage() {
     )
   }
 
-  const [sections, finished] = await Promise.all([
-    getSectionsForViewer(book.id, user.id),
-    getProgress(user.id, book.id),
-  ])
+  const requested = typeof searchParams.thread === 'string' ? searchParams.thread : undefined
+  const data = await getBookView(book.id, user.id, requested)
+  if (!data) notFound()
 
-  return (
-    <Flex p={8} gap={8} direction={{ base: 'column', lg: 'row' }} align="flex-start">
-      <Box flex="1" minW={0} w="100%">
-          <Flex gap={5} align="flex-start" mb={4}>
-            {book.cover && (
-              <Image
-                src={`/books/${book.id}/cover?v=${book.cover.updatedAt.getTime()}`}
-                alt={`Cover of ${book.title}`}
-                w={{ base: '80px', md: '120px' }}
-                flexShrink={0}
-                borderRadius="md"
-                boxShadow="md"
-              />
-            )}
-            <Box>
-              <Heading size="lg" mb={4}>
-                {book.title}{' '}
-                <Text as="span" color="mist" fontWeight="normal" fontStyle="italic">
-                  by {book.author}
-                </Text>
-              </Heading>
-              <Text>
-                {sections.length === 0
-                  ? "Discussion threads for this book will open up soon. Start reading, and check back shortly to join the conversation!"
-                  : "No spoilers here! Every discussion thread starts sealed. As you read, move your place in the book forward, and each thread opens once you finish its last chapter. We've been waiting to hear what you think!"}
-              </Text>
-            </Box>
-          </Flex>
-          <List spacing={2}>
-            {sections.map((section) => (
-              <SectionRow key={section.id} section={section} />
-            ))}
-          </List>
-      </Box>
-      <Box w={{ base: '100%', lg: '22rem' }} flexShrink={0}>
-        <Box mb={4}>
-          <ProgressStepper
-            bookId={book.id}
-            totalChapters={book.totalChapters}
-            initialFinished={finished}
-            sections={sections}
-            saveProgress={setProgressAction}
-          />
-        </Box>
-        <DiscussionPromptCard />
-      </Box>
-    </Flex>
-  )
+  return <BookView data={data} viewerId={user.id} basePath="/" label="This month's book" />
 }

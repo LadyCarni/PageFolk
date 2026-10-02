@@ -38,6 +38,13 @@ const theme = extendTheme({
         bg: 'midnightPlum',
         color: 'parchment',
       },
+      '*': {
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#5a4050 transparent',
+      },
+      '*::-webkit-scrollbar': { width: '8px', height: '8px' },
+      '*::-webkit-scrollbar-thumb': { background: '#5a4050', borderRadius: '8px' },
+      '*::-webkit-scrollbar-track': { background: 'transparent' },
     },
   },
   components: {

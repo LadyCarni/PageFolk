@@ -27,7 +27,8 @@ async function reportingValidation(work: () => Promise<void>): Promise<FormResul
 function revalidateBookPages() {
   revalidatePath('/admin')
   revalidatePath('/')
-  revalidatePath('/past-books')
+  revalidatePath('/shelf')
+  revalidatePath('/shelf/[bookId]', 'page')
 }
 
 export async function createBookAction(formData: FormData): Promise<FormResult> {
@@ -127,7 +128,8 @@ export async function deleteBookAction(bookId: string) {
   await deleteBook(bookId)
   revalidatePath('/admin')
   revalidatePath('/')
-  revalidatePath('/past-books')
+  revalidatePath('/shelf')
+  revalidatePath('/shelf/[bookId]', 'page')
 }
 
 export async function uploadCoverAction(formData: FormData) {
@@ -142,7 +144,8 @@ export async function uploadCoverAction(formData: FormData) {
   await setBookCover(bookId, new Uint8Array(await file.arrayBuffer()))
   revalidatePath('/admin')
   revalidatePath('/')
-  revalidatePath('/past-books')
+  revalidatePath('/shelf')
+  revalidatePath('/shelf/[bookId]', 'page')
 }
 
 export async function removeCoverAction(bookId: string) {
@@ -150,7 +153,8 @@ export async function removeCoverAction(bookId: string) {
   await removeBookCover(bookId)
   revalidatePath('/admin')
   revalidatePath('/')
-  revalidatePath('/past-books')
+  revalidatePath('/shelf')
+  revalidatePath('/shelf/[bookId]', 'page')
 }
 
 export async function addAllowedEmailAction(formData: FormData) {

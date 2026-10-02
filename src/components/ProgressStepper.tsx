@@ -67,7 +67,7 @@ export function ProgressStepper({
           <Text fontFamily="heading" fontWeight="bold" fontSize="4xl" lineHeight="1" color="antiqueGold" aria-live="polite">
             {finished}
           </Text>
-          <Text fontSize="sm" color="mist">
+          <Text fontSize="sm" color="mist" mt="1em">
             chapters finished, of {totalChapters}
           </Text>
         </Box>

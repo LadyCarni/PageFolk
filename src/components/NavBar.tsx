@@ -1,5 +1,5 @@
 import NextLink from 'next/link'
-import { Box, Button, Flex, HStack, Image, Link, Text } from '@chakra-ui/react'
+import { Box, Flex, HStack, Image, Link, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
 import { signOut } from '@/auth'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
 import { NavLinks } from '@/components/NavLinks'
@@ -48,17 +48,41 @@ export function NavBar({
         </HStack>
         <HStack spacing={{ base: 4, md: 6 }}>
           <NavLinks isAdmin={user.isAdmin} />
-          <UserAvatar user={{ id: user.id, name: user.name ?? null }} size={36} />
-          <form
-            action={async () => {
-              'use server'
-              await signOut()
-            }}
-          >
-            <Button type="submit" size="sm" variant="link" color="mist">
-              Sign out
-            </Button>
-          </form>
+          <Menu placement="bottom-end">
+            <MenuButton
+              aria-label="Account menu"
+              borderRadius="full"
+              _hover={{ boxShadow: '0 0 0 2px var(--chakra-colors-antiqueGold)' }}
+              _expanded={{ boxShadow: '0 0 0 2px var(--chakra-colors-antiqueGold)' }}
+              _focusVisible={{ boxShadow: '0 0 0 2px var(--chakra-colors-antiqueGold)' }}
+            >
+              <UserAvatar user={{ id: user.id, name: user.name ?? null }} size={36} />
+            </MenuButton>
+            <MenuList bg="velvet" borderColor="border" minW="12rem" py={2}>
+              {user.name && (
+                <Text px={3} pb={2} mb={1} fontSize="sm" color="mist" borderBottomWidth="1px" borderColor="divider">
+                  {user.name}
+                </Text>
+              )}
+              <form
+                action={async () => {
+                  'use server'
+                  await signOut()
+                }}
+              >
+                <MenuItem
+                  as="button"
+                  type="submit"
+                  bg="transparent"
+                  color="parchment"
+                  _hover={{ bg: 'mulberry' }}
+                  _focus={{ bg: 'mulberry' }}
+                >
+                  Sign out
+                </MenuItem>
+              </form>
+            </MenuList>
+          </Menu>
         </HStack>
       </Flex>
     </Box>

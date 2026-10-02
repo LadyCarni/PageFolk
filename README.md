@@ -19,30 +19,30 @@
    - Production: `https://bookclub.carynfarvour.design/api/auth/callback/google`
 4. Copy the client ID and secret into `.env` (or the production `.env` on the VPS).
 
-## Deploying to your VPS
+## Production
 
-1. Clone the repo to `/opt/bookclub` on the VPS.
-2. `npm ci`
-3. Copy `.env.example` to `/opt/bookclub/.env` and fill in production values
-   (production `DATABASE_URL`, `NEXTAUTH_URL` set to `https://<your-subdomain>`,
-   production Google OAuth credentials, `ADMIN_EMAIL`).
-4. `npx prisma db push`
-5. `npm run build`
-6. Copy `deploy/bookclub.service` to `/etc/systemd/system/bookclub.service`,
-   then `sudo systemctl enable --now bookclub`.
-7. Copy `deploy/nginx.conf.example` to your nginx sites config (adjust
-   `server_name`), reload nginx, then run `certbot --nginx -d <your-subdomain>`
-   to provision TLS.
-8. Add a nightly backup cron job for the SQLite file, e.g.:
-   `0 3 * * * cp /opt/bookclub/prisma/prod.db /opt/bookclub/backups/prod-$(date +\%F).db`
-   (prune old backups periodically).
+Live at https://bookclub.carynfarvour.design on a DigitalOcean Droplet
+(Ubuntu 24.04, 1 GB RAM + 2 GB swap). Log in with `ssh bookclub` (alias in
+`~/.ssh/config`, key `~/.ssh/id_ed25519_droplet`).
+
+- App: `/opt/bookclub`, run by the `bookclub` user as the `bookclub` systemd
+  service on port 3002; nginx proxies to it, certbot handles HTTPS and renewal.
+- Config: `/opt/bookclub/.env` (readable only by `bookclub`). The Font Awesome
+  package token is in `/home/bookclub/.npmrc`.
+- Database: `/opt/bookclub/prisma/prod.db`. Backed up nightly at 3am to
+  `/opt/bookclub/backups/` (14 days kept) by `/etc/cron.d/bookclub-backup`.
+- Firewall (ufw) allows only SSH, 80 and 443.
+- Google OAuth is in Testing mode: each tester must be added under Google Auth
+  Platform → Audience → Test users, and in the app's Allowed emails panel.
 
 ## Deploying an update
 
 ```bash
-git pull
-npm ci
-npx prisma db push
-npm run build
-sudo systemctl restart bookclub
+ssh bookclub
+cd /opt/bookclub
+sudo -u bookclub git pull
+sudo -u bookclub -H npm ci
+sudo -u bookclub sh -c 'set -a; . ./.env; set +a; npx prisma db push'
+sudo -u bookclub npm run build
+systemctl restart bookclub
 ```

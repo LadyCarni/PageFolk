@@ -5,9 +5,9 @@ import { useFormState, useFormStatus } from 'react-dom'
 import { Button, HStack, Text } from '@chakra-ui/react'
 import { validateFormValues, type FormRule } from '@/lib/chapters'
 import type { FormResult } from '@/app/admin/actions'
+import { toFormState, type FormState } from '@/lib/form-state'
 
 type SubmitVariant = 'link' | 'solid' | 'goldOutline'
-type FormState = FormResult & { saved?: boolean }
 
 function SubmitButton({
   label,
@@ -75,7 +75,8 @@ export function AdminForm({
   onCancel,
   children,
 }: {
-  action: (formData: FormData) => Promise<FormResult>
+  // Resolves to undefined when the action redirects.
+  action: (formData: FormData) => Promise<FormResult | undefined>
   rule: FormRule
   mode: 'edit' | 'create'
   submitLabel: string
@@ -91,10 +92,10 @@ export function AdminForm({
   children: ReactNode
 }) {
   const formRef = useRef<HTMLFormElement>(null)
-  const [serverState, formAction] = useFormState(async (_previous: FormState, formData: FormData): Promise<FormState> => {
-    const result = await action(formData)
-    return result.error ? result : { saved: true }
-  }, {})
+  const [serverState, formAction] = useFormState(
+    async (_previous: FormState, formData: FormData): Promise<FormState> => toFormState(await action(formData)),
+    {}
+  )
   const [changed, setChanged] = useState(false)
   const [problem, setProblem] = useState<string | null>(null)
   const [editedSinceSubmit, setEditedSinceSubmit] = useState(false)

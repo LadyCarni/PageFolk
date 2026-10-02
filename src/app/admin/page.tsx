@@ -79,9 +79,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { book
             <Heading as="h2" size="lg" mb={4}>
               Add a new book
             </Heading>
-            {/* Keyed by the selected book: adding a book redirects to it, which clears this form. */}
             <AdminForm
-              key={book?.id ?? 'none'}
               action={createBookAction}
               rule={{ kind: 'newBook' }}
               mode="create"

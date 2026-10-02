@@ -55,7 +55,7 @@ export function ProgressStepper({
       <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="dustyRose" textAlign="center">
         Your place in the book
       </Text>
-      <Flex align="center" justify="space-between" mt={4}>
+      <Flex align="center" justify="space-between" mt=".25em">
         <IconButton
           aria-label="One chapter fewer"
           icon={<FontAwesomeIcon icon={faMinus} />}

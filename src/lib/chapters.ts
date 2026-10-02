@@ -1,3 +1,5 @@
+import { validateBlurb, validateClubName } from '@/lib/limits'
+
 export function chapterRangeName(start: number, end: number): string {
   return start === end ? `Chapter ${start}` : `Chapters ${start} to ${end}`
 }
@@ -62,6 +64,8 @@ export type FormRule =
   | { kind: 'section'; totalChapters: number; others: OtherSection[]; ignoreId?: string }
   | { kind: 'total'; minTotal: number }
   | { kind: 'newBook' }
+  | { kind: 'clubName' }
+  | { kind: 'blurb' }
 
 // The same checks the server runs, so a form can disable Save before a round trip.
 export function validateFormValues(rule: FormRule, values: Record<string, string>): string | null {
@@ -82,6 +86,14 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
       validateTotalChapters(total) ??
       (total < rule.minTotal ? `Total chapters cannot be less than ${rule.minTotal}, where the last thread ends` : null)
     )
+  }
+
+  if (rule.kind === 'clubName') {
+    return validateClubName(values.clubName ?? '')
+  }
+
+  if (rule.kind === 'blurb') {
+    return validateBlurb(values.blurb ?? '')
   }
 
   if (!values.title?.trim() || !values.author?.trim()) {

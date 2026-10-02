@@ -246,3 +246,22 @@ describe('validateFormValues', () => {
     })
   })
 })
+
+describe('validateFormValues: club name and blurb rules', () => {
+  it('checks the club name', () => {
+    expect(validateFormValues({ kind: 'clubName' }, { clubName: 'The Thursday Readers' })).toBeNull()
+    expect(validateFormValues({ kind: 'clubName' }, { clubName: '   ' })).toBe('Club name is required')
+    expect(validateFormValues({ kind: 'clubName' }, { clubName: 'a'.repeat(61) })).toBe(
+      'Club name must be 60 characters or fewer'
+    )
+    expect(validateFormValues({ kind: 'clubName' }, {})).toBe('Club name is required')
+  })
+
+  it('checks the blurb, allowing it to be empty', () => {
+    expect(validateFormValues({ kind: 'blurb' }, { blurb: '' })).toBeNull()
+    expect(validateFormValues({ kind: 'blurb' }, {})).toBeNull()
+    expect(validateFormValues({ kind: 'blurb' }, { blurb: 'a'.repeat(1001) })).toBe(
+      'Blurb must be 1000 characters or fewer'
+    )
+  })
+})

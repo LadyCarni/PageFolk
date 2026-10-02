@@ -115,6 +115,8 @@ export function NoteComposer({
                 borderRadius="full"
                 borderColor="antiqueGold"
                 color="antiqueGold"
+                _hover={{ bg: 'sealed' }}
+                _active={{ bg: 'sealed' }}
                 leftIcon={<FontAwesomeIcon icon={faCommentDots} />}
               >
                 Starters

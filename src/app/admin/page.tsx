@@ -1,253 +1,150 @@
-import { Box, Button, Heading, HStack, Input, Stack, Text, Textarea, VStack } from '@chakra-ui/react'
+import NextLink from 'next/link'
+import { Box, Flex, Grid, Heading, Input, Link, Text, VStack } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowLeft, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { requireAdmin } from '@/lib/session'
 import { listBooks } from '@/lib/books'
-import { sectionDisplayName } from '@/lib/chapters'
-import { AdminForm } from '@/components/AdminForm'
-import { CoverUpload } from '@/components/CoverUpload'
-import { DeleteBookButton } from '@/components/DeleteBookButton'
-import { DeleteSectionButton } from '@/components/DeleteSectionButton'
-import {
-  createBookAction,
-  addSectionAction,
-  setBookStatusAction,
-  updateSectionAction,
-  updateTotalChaptersAction,
-  deleteSectionAction,
-  deleteBookAction,
-  uploadCoverAction,
-  removeCoverAction,
-  updateClubNameAction,
-  updateBlurbAction,
-} from './actions'
 import { getClubName } from '@/lib/club'
+import { pickAdminBook } from '@/lib/admin-view'
+import { NAV_HEIGHT_PX } from '@/lib/layout'
+import { AdminForm, AdminFormActions } from '@/components/AdminForm'
+import { AdminBookList } from '@/components/AdminBookList'
+import { BookSetup } from '@/components/BookSetup'
+import { CARD_PROPS, LABEL_PROPS } from '@/components/adminStyles'
+import { createBookAction, updateClubNameAction } from './actions'
 
-function sectionRanges(book: { sections: { id: string; startChapter: number; endChapter: number; title: string | null }[] }) {
-  return book.sections.map(({ id, startChapter, endChapter, title }) => ({ id, startChapter, endChapter, title }))
+function FieldLabel({ children }: { children: string }) {
+  return (
+    <Text fontSize="sm" color="parchment" mb={1}>
+      {children}
+    </Text>
+  )
 }
 
-export default async function AdminPage() {
+// Two columns like the main page: club settings and the book list on the left, the chosen
+// book's setup on the right. The book comes from ?book=ID. On small screens one column shows
+// at a time: the left until a book is explicitly chosen, then that book's setup.
+export default async function AdminPage({ searchParams }: { searchParams: { book?: string | string[] } }) {
   await requireAdmin()
-  const books = await listBooks()
-  const clubName = await getClubName()
+  const [books, clubName] = await Promise.all([listBooks(), getClubName()])
+  const requested = typeof searchParams.book === 'string' ? searchParams.book : undefined
+  const { book, explicit } = pickAdminBook(books, requested)
+  const fullHeight = `calc(100dvh - ${NAV_HEIGHT_PX}px)`
 
   return (
-    <VStack align="stretch" p={8} spacing={8}>
-      <Heading size="lg">
-        Admin
-      </Heading>
+    <Grid templateColumns={{ base: '1fr', lg: '1fr 2fr' }} h={{ lg: fullHeight }} minH={{ base: fullHeight }}>
+      <Box
+        as="aside"
+        aria-label="Admin"
+        display={{ base: explicit ? 'none' : 'block', lg: 'block' }}
+        overflowY={{ lg: 'auto' }}
+        minH={0}
+      >
+        <VStack align="stretch" spacing={8} p={{ base: 6, md: 8 }}>
+          <Box>
+            <Heading as="h1" size="2xl">
+              Club admin
+            </Heading>
+            <Text color="mist" mt={2}>
+              Name your club, add books and shape the conversations.
+            </Text>
+          </Box>
 
-      <Box>
-        <Heading size="md" mb={2}>
-          Club
-        </Heading>
-        <AdminForm action={updateClubNameAction} rule={{ kind: 'clubName' }} mode="edit" submitLabel="Save">
-          <Input
-            name="clubName"
-            defaultValue={clubName ?? ''}
-            placeholder="Club name, e.g. The Thursday Readers"
-            aria-label="Club name"
-            maxW="md"
-          />
-        </AdminForm>
-      </Box>
-
-      <Box>
-        <Heading size="md" mb={2}>
-          New book
-        </Heading>
-        <AdminForm
-          action={createBookAction}
-          rule={{ kind: 'newBook' }}
-          mode="create"
-          submitLabel="Add book"
-          submitVariant="solid"
-          submitWidth="200px"
-        >
-          <Input name="title" placeholder="Title" required />
-          <Input name="author" placeholder="Author" required />
-          <Input
-            name="totalChapters"
-            type="number"
-            min={1}
-            placeholder="Chapters"
-            aria-label="Total chapters"
-            required
-            w="120px"
-            flexShrink={0}
-          />
-        </AdminForm>
-      </Box>
-
-      <VStack align="stretch" spacing={6}>
-        {books.map((book) => (
-          <Box key={book.id} borderWidth="1px" borderColor="border" bg="velvet" borderRadius="lg" p={4}>
-            <HStack justify="space-between">
-              <Heading size="sm">
-                {book.title} — {book.author} ({book.status})
-              </Heading>
-              <HStack spacing={4}>
-                <form
-                  action={async () => {
-                    'use server'
-                    await setBookStatusAction(book.id, book.status === 'current' ? 'past' : 'current')
-                  }}
-                >
-                  <Button type="submit" size="sm" variant="link">
-                    Mark as {book.status === 'current' ? 'past' : 'current'}
-                  </Button>
-                </form>
-                <DeleteBookButton
-                  title={book.title}
-                  sectionCount={book.sections.length}
-                  postCount={book.sections.reduce((n, s) => n + s._count.posts, 0)}
-                  action={async () => {
-                    'use server'
-                    await deleteBookAction(book.id)
-                  }}
-                />
-              </HStack>
-            </HStack>
+          <Box {...CARD_PROPS}>
+            <Text {...LABEL_PROPS} color="dustyRose" mb={3}>
+              Club name
+            </Text>
             <AdminForm
-              action={updateTotalChaptersAction}
-              rule={{ kind: 'total', minTotal: Math.max(0, ...book.sections.map((s) => s.endChapter)) }}
+              action={updateClubNameAction}
+              rule={{ kind: 'clubName' }}
               mode="edit"
               submitLabel="Save"
-              hiddenFields={{ bookId: book.id }}
-              mt={3}
+              submitVariant="goldOutline"
+              showSaved
             >
-              <Text fontSize="sm" color="mist">
-                Total chapters
-              </Text>
               <Input
-                name="totalChapters"
-                type="number"
-                min={1}
-                defaultValue={book.totalChapters}
-                aria-label="Total chapters"
-                size="sm"
-                w="90px"
-                required
+                name="clubName"
+                defaultValue={clubName ?? ''}
+                placeholder="e.g. The Thursday Readers"
+                aria-label="Club name"
+                borderRadius="full"
               />
             </AdminForm>
+            <Text fontSize="sm" color="mist" mt={3}>
+              Shown in the top bar for every member.
+            </Text>
+          </Box>
+
+          <Box {...CARD_PROPS}>
+            <Heading as="h2" size="lg" mb={4}>
+              Add a new book
+            </Heading>
+            {/* Keyed by the selected book: adding a book redirects to it, which clears this form. */}
             <AdminForm
-              action={updateBlurbAction}
-              rule={{ kind: 'blurb' }}
-              mode="edit"
-              submitLabel="Save"
-              hiddenFields={{ bookId: book.id }}
-              mt={3}
-            >
-              <Textarea
-                name="blurb"
-                defaultValue={book.blurb ?? ''}
-                placeholder="Blurb (optional)"
-                aria-label="Blurb"
-                size="sm"
-                rows={3}
-              />
-            </AdminForm>
-            <CoverUpload
-              bookId={book.id}
-              title={book.title}
-              coverVersion={book.cover?.updatedAt.getTime() ?? null}
-              uploadAction={uploadCoverAction}
-              removeAction={async () => {
-                'use server'
-                await removeCoverAction(book.id)
-              }}
-            />
-            <Stack spacing="1em" mt="1em">
-              {book.sections.map((s) => (
-                <HStack key={s.id} spacing={2}>
-                  <Text fontSize="sm" color="mist" flexShrink={0}>
-                    {s.order}.
-                  </Text>
-                  <Box flex="1">
-                    <AdminForm
-                      action={updateSectionAction}
-                      rule={{ kind: 'section', totalChapters: book.totalChapters, others: sectionRanges(book), ignoreId: s.id }}
-                      mode="edit"
-                      submitLabel="Save"
-                      hiddenFields={{ sectionId: s.id }}
-                    >
-                      <Input
-                        name="startChapter"
-                        type="number"
-                        min={1}
-                        defaultValue={s.startChapter}
-                        aria-label="Start chapter"
-                        size="sm"
-                        w="80px"
-                        required
-                      />
-                      <Text fontSize="sm">to</Text>
-                      <Input
-                        name="endChapter"
-                        type="number"
-                        min={1}
-                        defaultValue={s.endChapter}
-                        aria-label="End chapter"
-                        size="sm"
-                        w="80px"
-                        required
-                      />
-                      <Input
-                        name="title"
-                        defaultValue={s.title ?? ''}
-                        placeholder="Title (optional)"
-                        aria-label="Title"
-                        size="sm"
-                        flex="1"
-                        maxW="40%"
-                      />
-                    </AdminForm>
-                  </Box>
-                  <DeleteSectionButton
-                    label={sectionDisplayName(s)}
-                    postCount={s._count.posts}
-                    action={async () => {
-                      'use server'
-                      await deleteSectionAction(s.id)
-                    }}
-                  />
-                </HStack>
-              ))}
-            </Stack>
-            <AdminForm
-              action={addSectionAction}
-              rule={{ kind: 'section', totalChapters: book.totalChapters, others: sectionRanges(book) }}
+              key={book?.id ?? 'none'}
+              action={createBookAction}
+              rule={{ kind: 'newBook' }}
               mode="create"
-              submitLabel="Add section"
+              submitLabel="Add book"
+              submitIcon={<FontAwesomeIcon icon={faPlus} />}
               submitVariant="solid"
-              hiddenFields={{ bookId: book.id }}
-              mt="2em"
+              layout="custom"
             >
-              <Input
-                name="startChapter"
-                type="number"
-                min={1}
-                placeholder="From"
-                aria-label="Start chapter"
-                required
-                w="90px"
-                flexShrink={0}
-              />
-              <Text>to</Text>
-              <Input
-                name="endChapter"
-                type="number"
-                min={1}
-                placeholder="To"
-                aria-label="End chapter"
-                required
-                w="90px"
-                flexShrink={0}
-              />
-              <Input name="title" placeholder="Title (optional), e.g. Lowood" aria-label="Title" flex="1" maxW="40%" />
+              <VStack align="stretch" spacing={4}>
+                <Box as="label" display="block">
+                  <FieldLabel>Title</FieldLabel>
+                  <Input name="title" placeholder="e.g. Rebecca" required />
+                </Box>
+                <Box as="label" display="block">
+                  <FieldLabel>Author</FieldLabel>
+                  <Input name="author" placeholder="e.g. Daphne du Maurier" required />
+                </Box>
+                <Flex gap={3} align="flex-end" wrap="wrap">
+                  <Box as="label" display="block" flex="1" minW="100px">
+                    <FieldLabel>Number of chapters</FieldLabel>
+                    <Input name="totalChapters" type="number" min={1} required />
+                  </Box>
+                  <AdminFormActions />
+                </Flex>
+              </VStack>
             </AdminForm>
           </Box>
-        ))}
-      </VStack>
-    </VStack>
+
+          <AdminBookList books={books} selectedId={book?.id ?? null} />
+        </VStack>
+      </Box>
+
+      <Box
+        as="main"
+        display={{ base: explicit ? 'block' : 'none', lg: 'block' }}
+        bg="panel"
+        borderLeftWidth={{ lg: '1px' }}
+        borderColor="divider"
+        overflowY={{ lg: 'auto' }}
+        minH={0}
+      >
+        <Link
+          as={NextLink}
+          href="/admin"
+          display={{ base: 'inline-flex', lg: 'none' }}
+          alignItems="center"
+          gap={2}
+          px={6}
+          pt={6}
+        >
+          <FontAwesomeIcon icon={faArrowLeft} />
+          Back to books
+        </Link>
+        {book ? (
+          <BookSetup book={book} />
+        ) : (
+          <Flex h="100%" minH="50vh" align="center" justify="center" p={8}>
+            <Heading as="h2" size="lg" fontStyle="italic" color="mist" textAlign="center">
+              Add a book to start setting it up.
+            </Heading>
+          </Flex>
+        )}
+      </Box>
+    </Grid>
   )
 }

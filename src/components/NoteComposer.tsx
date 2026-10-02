@@ -169,6 +169,7 @@ export function NoteComposer({
           py={2}
           px={4}
           flex="1"
+          bg="midnightPlum"
           borderRadius={variant === 'bar' ? '2xl' : 'xl'}
         />
         <IconButton

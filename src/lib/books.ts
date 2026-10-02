@@ -29,6 +29,8 @@ export async function listBooks(status?: 'current' | 'past') {
   })
 }
 
+export type AdminBook = Awaited<ReturnType<typeof listBooks>>[number]
+
 export async function createBook(input: { title: string; author: string; totalChapters: number; coverUrl?: string }) {
   const problem = validateTotalChapters(input.totalChapters)
   if (problem) throw new ValidationError(problem)

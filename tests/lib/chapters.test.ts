@@ -9,6 +9,9 @@ import {
   validateFormValues,
   clampProgress,
   segmentStates,
+  chapterCoverage,
+  formatGaps,
+  coverageSummary,
 } from '@/lib/chapters'
 
 describe('chapterRangeName', () => {
@@ -262,6 +265,122 @@ describe('validateFormValues: club name and blurb rules', () => {
     expect(validateFormValues({ kind: 'blurb' }, {})).toBeNull()
     expect(validateFormValues({ kind: 'blurb' }, { blurb: 'a'.repeat(1001) })).toBe(
       'Blurb must be 1000 characters or fewer'
+    )
+  })
+})
+
+describe('chapterCoverage', () => {
+  it('is one uncovered segment when there are no sections', () => {
+    expect(chapterCoverage(38, [])).toEqual({
+      covered: 0,
+      total: 38,
+      complete: false,
+      gaps: [{ start: 1, end: 38 }],
+      segments: [{ start: 1, end: 38, covered: false }],
+    })
+  })
+
+  it('is complete with no gaps when sections cover every chapter', () => {
+    const c = chapterCoverage(10, [
+      { startChapter: 1, endChapter: 4 },
+      { startChapter: 5, endChapter: 10 },
+    ])
+    expect(c.complete).toBe(true)
+    expect(c.covered).toBe(10)
+    expect(c.gaps).toEqual([])
+    expect(c.segments).toEqual([
+      { start: 1, end: 4, covered: true },
+      { start: 5, end: 10, covered: true },
+    ])
+  })
+
+  it('finds a gap at the end, as in the concept', () => {
+    const c = chapterCoverage(38, [
+      { startChapter: 1, endChapter: 5 },
+      { startChapter: 6, endChapter: 10 },
+      { startChapter: 11, endChapter: 15 },
+    ])
+    expect(c.covered).toBe(15)
+    expect(c.complete).toBe(false)
+    expect(c.gaps).toEqual([{ start: 16, end: 38 }])
+    expect(c.segments.at(-1)).toEqual({ start: 16, end: 38, covered: false })
+  })
+
+  it('finds gaps at the start and in the middle, whatever order sections arrive in', () => {
+    const c = chapterCoverage(20, [
+      { startChapter: 12, endChapter: 20 },
+      { startChapter: 3, endChapter: 8 },
+    ])
+    expect(c.gaps).toEqual([
+      { start: 1, end: 2 },
+      { start: 9, end: 11 },
+    ])
+    expect(c.segments).toEqual([
+      { start: 1, end: 2, covered: false },
+      { start: 3, end: 8, covered: true },
+      { start: 9, end: 11, covered: false },
+      { start: 12, end: 20, covered: true },
+    ])
+    expect(c.covered).toBe(15)
+  })
+
+  it('counts single-chapter sections and single-chapter gaps', () => {
+    const c = chapterCoverage(3, [
+      { startChapter: 1, endChapter: 1 },
+      { startChapter: 3, endChapter: 3 },
+    ])
+    expect(c.covered).toBe(2)
+    expect(c.gaps).toEqual([{ start: 2, end: 2 }])
+  })
+})
+
+describe('formatGaps', () => {
+  it('is empty with no gaps', () => {
+    expect(formatGaps([])).toBe('')
+  })
+
+  it('names one range, or one chapter in the singular', () => {
+    expect(formatGaps([{ start: 16, end: 38 }])).toBe('chapters 16 to 38')
+    expect(formatGaps([{ start: 4, end: 4 }])).toBe('chapter 4')
+  })
+
+  it('joins two gaps with "and" and more with commas', () => {
+    expect(formatGaps([{ start: 4, end: 4 }, { start: 9, end: 12 }])).toBe('chapters 4 and 9 to 12')
+    expect(
+      formatGaps([
+        { start: 4, end: 4 },
+        { start: 9, end: 12 },
+        { start: 30, end: 38 },
+      ])
+    ).toBe('chapters 4, 9 to 12 and 30 to 38')
+  })
+})
+
+describe('coverageSummary', () => {
+  it('says there are no sections yet', () => {
+    expect(coverageSummary(chapterCoverage(38, []))).toEqual({ lead: 'No sections yet.', rest: '' })
+  })
+
+  it('counts covered chapters and lists what is missing', () => {
+    const c = chapterCoverage(38, [{ startChapter: 1, endChapter: 15 }])
+    expect(coverageSummary(c)).toEqual({
+      lead: '15 of 38 chapters are in a section.',
+      rest: 'Not yet covered: chapters 16 to 38.',
+    })
+  })
+
+  it('uses "is" for a single covered chapter', () => {
+    const c = chapterCoverage(5, [{ startChapter: 2, endChapter: 2 }])
+    expect(coverageSummary(c).lead).toBe('1 of 5 chapters is in a section.')
+  })
+
+  it('says everything is covered when complete', () => {
+    expect(coverageSummary(chapterCoverage(38, [{ startChapter: 1, endChapter: 38 }]))).toEqual({
+      lead: 'All 38 chapters are in a section.',
+      rest: '',
+    })
+    expect(coverageSummary(chapterCoverage(1, [{ startChapter: 1, endChapter: 1 }])).lead).toBe(
+      'The one chapter is in a section.'
     )
   })
 })

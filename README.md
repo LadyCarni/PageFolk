@@ -16,7 +16,7 @@
 2. Create an OAuth 2.0 Client ID of type "Web application."
 3. Add an authorized redirect URI:
    - Local: `http://localhost:3000/api/auth/callback/google`
-   - Production: `https://pagefolk.carynfarvour.design/api/auth/callback/google`
+   - Production: `https://bookclub.carynfarvour.design/api/auth/callback/google`
 4. Copy the client ID and secret into `.env` (or the production `.env` on the VPS).
 
 ## Deploying to your VPS

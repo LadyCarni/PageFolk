@@ -28,7 +28,7 @@
   - "Add a book to start setting it up."
   - "Anyone on this list can sign in with Google."
 - Chip accessible names: "Description: done" / "Description: not set", "Cover: done" / "Cover: not set", "Sections: every chapter covered" / "Sections: not all chapters covered".
-- Test command: `npm test -- <path>` (runs `pretest`, which resets `test.db`). Type check: `npx tsc --noEmit`. Lint: `npm run lint`.
+- Test command: `npm test -- <path>` (runs `pretest`, which resets `test.db`). Type check: `npx tsc --noEmit`. (`npm run lint` is not configured: it starts an interactive ESLint setup, so do not run it.)
 - Check the UI with plain `npm run dev` (port 3002), not `--turbo`.
 
 ## Review Focus
@@ -435,7 +435,7 @@ git commit -m "feat: open a new book after adding it; allowed emails refresh Mem
 
 ### Task 3: Button variants, AdminForm options, restyled delete buttons
 
-There is no component test setup (Vitest runs in `node`), so this task is checked by type check and lint, and visually in Tasks 4 to 7. The old admin page keeps working through this task because every new prop is optional. The `solid` prop is replaced by `submitVariant`, and the old page's two `solid` usages are updated.
+There is no component test setup (Vitest runs in `node`), so this task is checked by type check, and visually in Tasks 4 to 7. The old admin page keeps working through this task because every new prop is optional. The `solid` prop is replaced by `submitVariant`, and the old page's two `solid` usages are updated.
 
 **Files:**
 - Modify: `src/theme.ts` (Button variants)
@@ -712,10 +712,10 @@ In `src/components/DeleteSectionButton.tsx`, change the button to:
 
 In `src/app/admin/page.tsx`, replace both `solid` props on `AdminForm` (the "Add book" and "Add section" forms) with `submitVariant="solid"`.
 
-- [ ] **Step 6: Type check, lint, and run the full suite**
+- [ ] **Step 6: Type check and run the full suite**
 
-Run: `npx tsc --noEmit && npm run lint && npm test`
-Expected: no type errors, no lint errors, all tests PASS.
+Run: `npx tsc --noEmit && npm test`
+Expected: no type errors, all tests PASS.
 
 - [ ] **Step 7: Commit**
 
@@ -1031,9 +1031,9 @@ export default async function AdminPage({ searchParams }: { searchParams: { book
 }
 ```
 
-- [ ] **Step 4: Type check and lint**
+- [ ] **Step 4: Type check**
 
-Run: `npx tsc --noEmit && npm run lint`
+Run: `npx tsc --noEmit`
 Expected: no errors.
 
 - [ ] **Step 5: Check in the browser**
@@ -1250,9 +1250,9 @@ export function BookSetup({ book }: { book: AdminBook }) {
 }
 ```
 
-- [ ] **Step 4: Type check and lint**
+- [ ] **Step 4: Type check**
 
-Run: `npx tsc --noEmit && npm run lint`
+Run: `npx tsc --noEmit`
 Expected: no errors.
 
 - [ ] **Step 5: Check in the browser**
@@ -1466,9 +1466,9 @@ In `src/components/BookSetup.tsx`, import `DescriptionCoverCard` from `@/compone
       <DescriptionCoverCard book={book} coverVersion={coverVersion} />
 ```
 
-- [ ] **Step 4: Type check and lint**
+- [ ] **Step 4: Type check**
 
-Run: `npx tsc --noEmit && npm run lint`
+Run: `npx tsc --noEmit`
 Expected: no errors.
 
 - [ ] **Step 5: Check in the browser**
@@ -1757,9 +1757,9 @@ In `src/components/BookSetup.tsx`, import `SectionsCard` from `@/components/Sect
       />
 ```
 
-- [ ] **Step 4: Type check, lint and run the full suite**
+- [ ] **Step 4: Type check and run the full suite**
 
-Run: `npx tsc --noEmit && npm run lint && npm test`
+Run: `npx tsc --noEmit && npm test`
 Expected: no errors; all tests PASS.
 
 - [ ] **Step 5: Check in the browser**
@@ -1901,9 +1901,9 @@ export default function AllowedEmailsPage() {
 }
 ```
 
-- [ ] **Step 4: Type check, lint and run the full suite**
+- [ ] **Step 4: Type check and run the full suite**
 
-Run: `npx tsc --noEmit && npm run lint && npm test`
+Run: `npx tsc --noEmit && npm test`
 Expected: no errors; all tests PASS.
 
 - [ ] **Step 5: Check in the browser**
@@ -1931,7 +1931,7 @@ git commit -m "feat: admins manage allowed emails on the Members page"
 
 - [ ] **Step 1: Full checks**
 
-Run: `npx tsc --noEmit && npm run lint && npm test && npm run build`
+Run: `npx tsc --noEmit && npm test && npm run build`
 Expected: all succeed.
 
 - [ ] **Step 2: Compare against the concept**

@@ -1,7 +1,7 @@
 import NextLink from 'next/link'
 import { Box, Flex, Heading, HStack, Link, Text, VStack } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faShield } from '@fortawesome/free-solid-svg-icons'
+import { faShield } from '@awesome.me/kit-729f370433/icons/classic/light'
 import { chapterRangeName } from '@/lib/chapters'
 import { STARTER_PROMPTS } from '@/lib/prompts'
 import type { ThreadResult } from '@/lib/sections'

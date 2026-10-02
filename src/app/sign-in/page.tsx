@@ -1,12 +1,18 @@
 import { Button, Heading, Image, Text, VStack } from '@chakra-ui/react'
-import { signIn } from '@/auth'
+import { redirect } from 'next/navigation'
+import { auth, signIn } from '@/auth'
+import { signInRedirectPath } from '@/lib/sign-in-redirect'
 
-export default function SignInPage({
+export default async function SignInPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined }
 }) {
   const isAccessDenied = searchParams.error === 'AccessDenied'
+  const redirectTo = signInRedirectPath(searchParams.callbackUrl)
+
+  const session = await auth()
+  if (session?.user) redirect(redirectTo)
 
   return (
     <VStack minH="100vh" justify="center" spacing={4} p={8}>
@@ -27,7 +33,7 @@ export default function SignInPage({
       <form
         action={async () => {
           'use server'
-          await signIn('google')
+          await signIn('google', { redirectTo })
         }}
       >
         <Button type="submit">

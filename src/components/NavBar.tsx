@@ -35,7 +35,15 @@ export function NavBar({
           >
             <Image src="/pagefolk.svg" alt="" boxSize="35px" />
             {/* 2.125rem is 34px at the default root size. */}
-            <Text as="span" fontFamily="heading" fontStyle="italic" fontWeight={600} fontSize="2.125rem" lineHeight="1">
+            <Text
+              as="span"
+              color="antiqueGold"
+              fontFamily="heading"
+              fontStyle="italic"
+              fontWeight={600}
+              fontSize="2.125rem"
+              lineHeight="1"
+            >
               PageFolk
             </Text>
           </Link>

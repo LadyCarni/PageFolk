@@ -47,7 +47,7 @@ export function NavBar({
               PageFolk
             </Text>
           </Link>
-          <Box aria-hidden boxSize="14px" bg="borderMuted" transform="rotate(45deg)" />
+          <Box aria-hidden boxSize="8px" bg="borderMuted" transform="rotate(45deg)" />
           {clubName && (
             <Text fontFamily="heading" fontSize="lg" color="mist" noOfLines={1}>
               {clubName}

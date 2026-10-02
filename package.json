@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
-    "db:backfill-chapters": "node scripts/migrate-sections.mjs"
+    "db:backfill-chapters": "node scripts/migrate-sections.mjs",
+    "db:mock-notes": "node scripts/mock-notes.mjs"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.2.0",

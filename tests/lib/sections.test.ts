@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { getSectionsForViewer, getSectionThread } from '@/lib/sections'
+import { getSectionBookId, getSectionsForViewer, getSectionThread } from '@/lib/sections'
 
 async function resetDb() {
   await prisma.readingProgress.deleteMany()
@@ -181,6 +181,17 @@ describe('getSectionThread', () => {
       expect(result.name).toBe('Chapters 6 to 10 · Lowood')
       expect(result.posts).toHaveLength(1)
       expect(result.posts[0].body).toBe('Hi all')
+      expect(result.title).toBe('Lowood')
+      expect(result.startChapter).toBe(6)
+      expect(result.endChapter).toBe(10)
     }
+  })
+
+  it('finds the book a section belongs to, or null when it does not exist', async () => {
+    const sectionId = await setup()
+    const section = await prisma.section.findUniqueOrThrow({ where: { id: sectionId } })
+
+    expect(await getSectionBookId(sectionId)).toBe(section.bookId)
+    expect(await getSectionBookId('does-not-exist')).toBeNull()
   })
 })

@@ -27,7 +27,14 @@ export type PostWithAuthor = {
 
 export type ThreadResult =
   | { status: 'locked' }
-  | { status: 'unlocked'; name: string; posts: PostWithAuthor[] }
+  | {
+      status: 'unlocked'
+      name: string
+      title: string | null
+      startChapter: number
+      endChapter: number
+      posts: PostWithAuthor[]
+    }
 
 export async function getSectionsForViewer(bookId: string, userId: string): Promise<SectionSummary[]> {
   const finished = await getProgress(userId, bookId)
@@ -82,5 +89,17 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
     include: { user: { select: { id: true, name: true, avatarUrl: true } } },
   })
 
-  return { status: 'unlocked', name: sectionDisplayName(section), posts }
+  return {
+    status: 'unlocked',
+    name: sectionDisplayName(section),
+    title: section.title,
+    startChapter: section.startChapter,
+    endChapter: section.endChapter,
+    posts,
+  }
+}
+
+export async function getSectionBookId(sectionId: string): Promise<string | null> {
+  const section = await prisma.section.findUnique({ where: { id: sectionId }, select: { bookId: true } })
+  return section?.bookId ?? null
 }

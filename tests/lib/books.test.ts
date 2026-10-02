@@ -9,6 +9,7 @@ import {
   updateTotalChapters,
   deleteSection,
   deleteBook,
+  setBlurb,
 } from '@/lib/books'
 import { setProgress } from '@/lib/progress'
 import { ValidationError } from '@/lib/errors'
@@ -266,5 +267,24 @@ describe('books', () => {
     const book = await newBook()
     await deleteBook(book.id)
     expect(await prisma.book.count()).toBe(0)
+  })
+
+  it('sets a trimmed blurb and clears it with empty text', async () => {
+    const book = await newBook()
+
+    await setBlurb(book.id, '  An orphaned girl.  ')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBe('An orphaned girl.')
+
+    await setBlurb(book.id, '   ')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBeNull()
+  })
+
+  it('accepts a blurb of exactly 1000 characters and rejects 1001, leaving the blurb unchanged', async () => {
+    const book = await newBook()
+    await setBlurb(book.id, 'a'.repeat(1000))
+
+    await expect(setBlurb(book.id, 'b'.repeat(1001))).rejects.toBeInstanceOf(ValidationError)
+
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBe('a'.repeat(1000))
   })
 })

@@ -34,6 +34,7 @@ model Book {
   createdAt DateTime @default(now())
 
   totalChapters Int
+  blurb         String?
 
   sections Section[]
   cover    BookCover?
@@ -100,4 +101,9 @@ model ReadingProgress {
   book Book @relation(fields: [bookId], references: [id])
 
   @@id([userId, bookId])
+}
+
+model Club {
+  id   Int    @id @default(1)
+  name String
 }

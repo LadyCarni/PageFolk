@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/db'
 import { validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
 import { ValidationError } from '@/lib/errors'
+import { validateBlurb } from '@/lib/limits'
 import { syncUnlocksForBook } from '@/lib/progress'
 
 // The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
@@ -119,6 +120,13 @@ export async function updateTotalChapters(bookId: string, totalChapters: number)
     throw new ValidationError(`Total chapters cannot be less than ${_max.endChapter}, where the last thread ends`)
   }
   return prisma.book.update({ where: { id: bookId }, data: { totalChapters } })
+}
+
+export async function setBlurb(bookId: string, text: string) {
+  const problem = validateBlurb(text)
+  if (problem) throw new ValidationError(problem)
+  const trimmed = text.trim()
+  return prisma.book.update({ where: { id: bookId }, data: { blurb: trimmed === '' ? null : trimmed } })
 }
 
 export async function deleteSection(sectionId: string): Promise<void> {

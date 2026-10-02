@@ -6,9 +6,10 @@ import { NoteActions } from '@/components/NoteActions'
 import { PostTimestamp } from '@/components/PostTimestamp'
 import { UserAvatar } from '@/components/UserAvatar'
 
-function Bubble({ post, mine }: { post: PostWithAuthor; mine: boolean }) {
+function Bubble({ post, mine, reply = false }: { post: PostWithAuthor; mine: boolean; reply?: boolean }) {
+  const bg = mine ? 'bubbleMine' : reply ? 'bubbleOtherReply' : 'bubbleOther'
   return (
-    <Box bg={mine ? 'bubbleMine' : 'bubbleOther'} borderWidth="1px" borderColor="border" borderRadius="xl" px={4} py={3}>
+    <Box bg={bg} borderWidth="1px" borderColor="border" borderRadius="xl" px={4} py={3}>
       <Flex justify="space-between" align="baseline" gap={3}>
         <Text fontSize="sm" fontWeight={600} color="dustyRose">
           {post.user.name ?? 'Member'}
@@ -60,7 +61,7 @@ export function NoteItem({
               <Flex key={reply.id} gap={3} align="flex-start" mt={3} ml={{ base: 0, md: 4 }}>
                 <UserAvatar user={reply.user} size={30} />
                 <Box flex="1" minW={0}>
-                  <Bubble post={reply} mine={replyMine} />
+                  <Bubble post={reply} mine={replyMine} reply />
                   {replyMine && (
                     <Box mt={1} px={1}>
                       <DeletePostButton replyCount={0} action={deletePostAction.bind(null, sectionId, reply.id)} />

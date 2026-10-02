@@ -20,7 +20,8 @@ const theme = extendTheme({
     body: '#e2d3c4', // body paragraphs (softer than parchment)
     panel: '#1b1117', // desktop thread panel background
     sealed: '#1d131a', // sealed thread cards
-    bubbleOther: '#26181f', // other members' message bubbles
+    bubbleOther: '#26181f', // other members' top-level note bubbles
+    bubbleOtherReply: '#211820', // other members' reply bubbles
     bubbleMine: '#3a2230', // your message bubbles and the selected thread
     divider: '#3a2733', // dividers and header borders
     border: '#5a4050', // card and bubble borders

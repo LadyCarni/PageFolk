@@ -138,6 +138,9 @@ export function NoteComposer({
                       whiteSpace="normal"
                       fontWeight="normal"
                       color="body"
+                      _hover={{ bg: 'mulberry' }}
+                      _active={{ bg: 'mulberry' }}
+                      _focusVisible={{ bg: 'mulberry' }}
                       onClick={() => {
                         setText((current) => appendStarter(current, prompt))
                         starterMenu.onClose()

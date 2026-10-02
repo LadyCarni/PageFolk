@@ -29,17 +29,17 @@ export function NavBar({
             href="/"
             color="antiqueGold"
             _hover={{ textDecoration: 'none' }}
-            fontWeight="bold"
-            fontSize="1.25em"
-            fontFamily="heading"
             display="flex"
             alignItems="center"
             gap={2}
           >
-            <Image src="/pagefolk.svg" alt="" boxSize="1.75em" />
-            PageFolk
+            <Image src="/pagefolk.svg" alt="" boxSize="35px" />
+            {/* 2.125rem is 34px at the default root size. */}
+            <Text as="span" fontFamily="heading" fontStyle="italic" fontWeight={600} fontSize="2.125rem" lineHeight="1">
+              PageFolk
+            </Text>
           </Link>
-          <Box aria-hidden boxSize="0.5em" bg="antiqueGold" transform="rotate(45deg)" />
+          <Box aria-hidden boxSize="14px" bg="borderMuted" transform="rotate(45deg)" />
           {clubName && (
             <Text fontFamily="heading" fontSize="lg" color="mist" noOfLines={1}>
               {clubName}

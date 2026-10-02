@@ -4,14 +4,19 @@ import { prisma } from '@/lib/db'
 const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
+import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 
 describe('admin actions', () => {
   beforeEach(async () => {
     mockRequireAdmin.mockReset()
+    vi.mocked(redirect).mockClear()
+    vi.mocked(revalidatePath).mockClear()
     await prisma.readingProgress.deleteMany()
     await prisma.bookCover.deleteMany()
     await prisma.post.deleteMany()
@@ -30,7 +35,7 @@ describe('admin actions', () => {
     await expect(createBookAction(fd)).rejects.toThrow('Forbidden')
   })
 
-  it('creates a book for an admin', async () => {
+  it('creates a book for an admin and opens it', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     const fd = new FormData()
     fd.set('title', 'Dune')
@@ -39,6 +44,36 @@ describe('admin actions', () => {
     expect(await createBookAction(fd)).toEqual({})
     const [book] = await prisma.book.findMany()
     expect(book).toMatchObject({ title: 'Dune', totalChapters: 30 })
+    expect(redirect).toHaveBeenCalledWith(`/admin?book=${book.id}`)
+  })
+
+  it('does not redirect when a new book is rejected', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const fd = new FormData()
+    fd.set('title', 'Dune')
+    fd.set('author', 'Frank Herbert')
+    fd.set('totalChapters', '0')
+    expect(await createBookAction(fd)).toEqual({ error: 'Total chapters must be a whole number of at least 1' })
+    expect(redirect).not.toHaveBeenCalled()
+  })
+
+  it('refreshes the Members page when allowed emails change', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const fd = new FormData()
+    fd.set('email', 'New@Example.com')
+    await addAllowedEmailAction(fd)
+    expect(await prisma.allowedEmail.findMany()).toEqual([expect.objectContaining({ email: 'new@example.com' })])
+    expect(revalidatePath).toHaveBeenCalledWith('/members')
+
+    vi.mocked(revalidatePath).mockClear()
+    await removeAllowedEmailAction('new@example.com')
+    expect(await prisma.allowedEmail.count()).toBe(0)
+    expect(revalidatePath).toHaveBeenCalledWith('/members')
+  })
+
+  it('rejects removeAllowedEmailAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(removeAllowedEmailAction('a@example.com')).rejects.toThrow('Forbidden')
   })
 
   it('rejects a title-less book', async () => {

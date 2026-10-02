@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
 import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb } from '@/lib/books'
 import { setClubName } from '@/lib/club'
@@ -35,13 +36,18 @@ export async function createBookAction(formData: FormData): Promise<FormResult> 
   await requireAdmin()
   const title = String(formData.get('title') ?? '').trim()
   const author = String(formData.get('author') ?? '').trim()
-  return reportingValidation(async () => {
+  let bookId: string | null = null
+  const result = await reportingValidation(async () => {
     if (!title || !author) {
       throw new ValidationError('Title and author are required')
     }
-    await createBook({ title, author, totalChapters: parseWholeNumber(formData.get('totalChapters')) })
+    const book = await createBook({ title, author, totalChapters: parseWholeNumber(formData.get('totalChapters')) })
+    bookId = book.id
     revalidatePath('/admin')
   })
+  // Outside reportingValidation: redirect() works by throwing, and must not be caught there.
+  if (bookId) redirect(`/admin?book=${bookId}`)
+  return result
 }
 
 export async function addSectionAction(formData: FormData): Promise<FormResult> {
@@ -162,11 +168,11 @@ export async function addAllowedEmailAction(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim()
   if (!email) throw new Error('email is required')
   await addAllowedEmail(email)
-  revalidatePath('/admin/allowed-emails')
+  revalidatePath('/members')
 }
 
 export async function removeAllowedEmailAction(email: string) {
   await requireAdmin()
   await removeAllowedEmail(email)
-  revalidatePath('/admin/allowed-emails')
+  revalidatePath('/members')
 }

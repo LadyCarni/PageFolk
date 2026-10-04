@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Box, Button, Flex, Heading, Input, Select, Text } from '@chakra-ui/react'
 import { AdminForm } from '@/components/AdminForm'
 import { CompletionChips, type Completion } from '@/components/CompletionChips'
-import { LABEL_PROPS, FIELD_PROPS } from '@/components/adminStyles'
+import { LABEL_PROPS, FIELD_PROPS, SELECT_PROPS } from '@/components/adminStyles'
 import { updateReadMonthAction, updateTotalChaptersAction } from '@/app/admin/actions'
 import { MONTH_NAMES, formatReadMonth, readMonthYears, splitReadMonth } from '@/lib/read-month'
 
@@ -102,7 +102,7 @@ export function BookSetupHeader({
               onCancel={closeMonth}
             >
               <Text {...SUBTITLE_PROPS}>Read in</Text>
-              <Select {...FIELD_PROPS} name="month" aria-label="Month read" size="sm" w="150px" defaultValue={parts.month} autoFocus>
+              <Select {...SELECT_PROPS} name="month" aria-label="Month read" size="sm" w="150px" defaultValue={parts.month} autoFocus>
                 <option value="">Month</option>
                 {MONTH_NAMES.map((name, i) => (
                   <option key={name} value={String(i + 1).padStart(2, '0')}>
@@ -110,7 +110,7 @@ export function BookSetupHeader({
                   </option>
                 ))}
               </Select>
-              <Select {...FIELD_PROPS} name="year" aria-label="Year read" size="sm" w="100px" defaultValue={parts.year}>
+              <Select {...SELECT_PROPS} name="year" aria-label="Year read" size="sm" w="100px" defaultValue={parts.year}>
                 <option value="">Year</option>
                 {readMonthYears().map((year) => (
                   <option key={year} value={String(year)}>

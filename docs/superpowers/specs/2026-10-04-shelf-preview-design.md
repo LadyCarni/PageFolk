@@ -132,7 +132,11 @@ Each tile is an anchor to `/shelf/[bookId]` containing:
   name, e.g. "Rebecca, read").
 - The formatted month below the cover, when set.
 
-The grid uses `minChildWidth` so tiles wrap at any width.
+Tiles have a capped size, so a short shelf never stretches covers across the pane. The grid uses
+`templateColumns="repeat(auto-fill, minmax(150px, 200px))"` with `justifyContent="start"`, not Chakra's
+`minChildWidth`, which uses `minmax(x, 1fr)` and grows tiles to fill the row. With one or two books the covers stay at
+most 200px wide and sit at the left, with empty space after them. A full shelf wraps into as many 150–200px columns as
+fit.
 
 Click handling in `ShelfBrowser`:
 

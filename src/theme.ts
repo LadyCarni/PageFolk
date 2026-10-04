@@ -12,6 +12,9 @@ const theme = extendTheme({
     velvet: '#22161d', // cards, input fields
     mulberry: '#2d1d26', // open thread cards
     claret: '#5b2236', // book cover
+    coverForest: '#22382e', // generated book cover
+    coverNavy: '#2a2342', // generated book cover
+    coverPlum: '#3b1f2d', // generated book cover
     dustyRose: '#d99aa8', // small labels, member name
     antiqueGold: '#d4b06a', // wordmark, buttons, ornaments, progress
     parchment: '#f1e6d6', // main text

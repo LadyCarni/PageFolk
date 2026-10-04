@@ -1,6 +1,7 @@
 import { Box, Image, Text } from '@chakra-ui/react'
+import { coverColor } from '@/lib/cover-color'
 
-// The uploaded cover when there is one; otherwise a generated Claret panel with a double gold frame.
+// The uploaded cover when there is one; otherwise a generated panel in one of four cover colors with a double gold frame.
 export function CoverImage({
   book,
   coverVersion,
@@ -28,7 +29,7 @@ export function CoverImage({
       aria-label={`Cover of ${book.title}`}
       w={width}
       aspectRatio={2 / 3}
-      bg="claret"
+      bg={coverColor(book.id)}
       borderRadius="md"
       boxShadow="xl"
       p="6%"

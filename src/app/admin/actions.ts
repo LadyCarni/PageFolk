@@ -3,13 +3,14 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb } from '@/lib/books'
+import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth } from '@/lib/books'
 import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 import { ValidationError } from '@/lib/errors'
 import { parseWholeNumber } from '@/lib/chapters'
+import { readMonthFromParts } from '@/lib/read-month'
 
 export type FormResult = { error?: string }
 
@@ -118,6 +119,20 @@ export async function updateBlurbAction(formData: FormData): Promise<FormResult>
   }
   return reportingValidation(async () => {
     await setBlurb(bookId, String(formData.get('blurb') ?? ''))
+    revalidateBookPages()
+  })
+}
+
+export async function updateReadMonthAction(formData: FormData): Promise<FormResult> {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  if (!bookId) {
+    throw new Error('bookId is required')
+  }
+  const parsed = readMonthFromParts(String(formData.get('month') ?? ''), String(formData.get('year') ?? ''))
+  if ('error' in parsed) return { error: parsed.error }
+  return reportingValidation(async () => {
+    await setReadMonth(bookId, parsed.readMonth)
     revalidateBookPages()
   })
 }

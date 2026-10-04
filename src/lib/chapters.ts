@@ -1,4 +1,5 @@
 import { validateBlurb, validateClubName } from '@/lib/limits'
+import { readMonthFromParts } from '@/lib/read-month'
 
 export function chapterRangeName(start: number, end: number): string {
   return start === end ? `Chapter ${start}` : `Chapters ${start} to ${end}`
@@ -66,6 +67,7 @@ export type FormRule =
   | { kind: 'newBook' }
   | { kind: 'clubName' }
   | { kind: 'blurb' }
+  | { kind: 'readMonth' }
 
 // The same checks the server runs, so a form can disable Save before a round trip.
 export function validateFormValues(rule: FormRule, values: Record<string, string>): string | null {
@@ -94,6 +96,11 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
 
   if (rule.kind === 'blurb') {
     return validateBlurb(values.blurb ?? '')
+  }
+
+  if (rule.kind === 'readMonth') {
+    const parsed = readMonthFromParts(values.month ?? '', values.year ?? '')
+    return 'error' in parsed ? parsed.error : null
   }
 
   if (!values.title?.trim() || !values.author?.trim()) {

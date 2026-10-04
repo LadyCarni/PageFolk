@@ -20,6 +20,7 @@ export function BookSetup({ book }: { book: AdminBook }) {
         author={book.author}
         totalChapters={book.totalChapters}
         minTotal={Math.max(0, ...book.sections.map((s) => s.endChapter))}
+        readMonth={book.readMonth}
         completion={{ description: Boolean(book.blurb), cover: coverVersion !== null, sections: coverage.complete }}
       />
       <DescriptionCoverCard book={book} coverVersion={coverVersion} />

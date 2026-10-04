@@ -114,6 +114,12 @@ export function AdminForm({
         values[element.name] = element.value
         if (element.value !== element.defaultValue) differs = true
       }
+      if (element instanceof HTMLSelectElement && element.name) {
+        values[element.name] = element.value
+        // React marks the option from defaultValue as defaultSelected, so reset() and this agree.
+        const initial = Array.from(element.options).find((option) => option.defaultSelected) ?? element.options[0]
+        if (element.value !== (initial?.value ?? '')) differs = true
+      }
     }
     setChanged(differs)
     setProblem(validateFormValues(rule, values))

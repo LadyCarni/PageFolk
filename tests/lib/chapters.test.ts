@@ -384,3 +384,11 @@ describe('coverageSummary', () => {
     )
   })
 })
+
+describe('validateFormValues readMonth', () => {
+  it('allows a full month, or clearing, and rejects half a choice', () => {
+    expect(validateFormValues({ kind: 'readMonth' }, { month: '09', year: '2026' })).toBeNull()
+    expect(validateFormValues({ kind: 'readMonth' }, { month: '', year: '' })).toBeNull()
+    expect(validateFormValues({ kind: 'readMonth' }, { month: '09', year: '' })).toBe('Choose both a month and a year')
+  })
+})

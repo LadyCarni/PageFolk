@@ -6,7 +6,7 @@ vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
 import { redirect } from 'next/navigation'
@@ -275,6 +275,47 @@ describe('admin actions', () => {
   it('requires a bookId to set a blurb', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     await expect(updateBlurbAction(sectionForm({ bookId: '', blurb: 'x' }))).rejects.toThrow('required')
+  })
+
+  it('rejects updateReadMonthAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    const fd = new FormData()
+    fd.set('bookId', 'b1')
+    fd.set('month', '09')
+    fd.set('year', '2026')
+    await expect(updateReadMonthAction(fd)).rejects.toThrow('Forbidden')
+  })
+
+  it('sets and clears the read month for an admin, and reports half-chosen or invalid months without saving', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Rebecca', author: 'Daphne du Maurier', totalChapters: 27 })
+    const submit = (month: string, year: string) => {
+      const fd = new FormData()
+      fd.set('bookId', book.id)
+      fd.set('month', month)
+      fd.set('year', year)
+      return updateReadMonthAction(fd)
+    }
+    const stored = async () => (await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).readMonth
+
+    expect(await submit('09', '2026')).toEqual({})
+    expect(await stored()).toBe('2026-09')
+    expect(revalidatePath).toHaveBeenCalledWith('/shelf')
+
+    expect(await submit('09', '')).toEqual({ error: 'Choose both a month and a year' })
+    expect(await submit('13', '2026')).toEqual({ error: expect.stringMatching(/^Choose a month and year between 2000 and \d{4}$/) })
+    expect(await stored()).toBe('2026-09')
+
+    expect(await submit('', '')).toEqual({})
+    expect(await stored()).toBeNull()
+  })
+
+  it('requires a bookId to set the read month', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const fd = new FormData()
+    fd.set('month', '09')
+    fd.set('year', '2026')
+    await expect(updateReadMonthAction(fd)).rejects.toThrow('bookId is required')
   })
 
   it('rejects deleteSectionAction for a non-admin', async () => {

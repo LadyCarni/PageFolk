@@ -101,9 +101,12 @@ Pure helpers, unit-tested:
 
 - `orderShelf(books)`: books with a `readMonth` first, newest month first; then books without one, newest `createdAt`
   first.
-- `shelfSummary(total, read)`: "8 books finished together. You have read 3 of them." Singulars: "1 book finished
-  together." and "You have read 1 of them." Zero read: "You haven't finished any yet." (`total` is never zero here;
-  the empty state covers that.)
+- `shelfSummary(total, read)`: "8 books finished together. You have read 3 of them." Zero read: "You haven't
+  finished any yet." With a single book: "1 book finished together. You have read it." or "You haven't finished it
+  yet." (`total` is never zero here; the empty state covers that.)
+
+The `ShelfBook` type and these pure helpers live in `src/lib/shelf-view.ts`, free of Prisma so client components can
+import them. `getShelf` lives in `src/lib/shelf.ts`. Month formatting helpers live in `src/lib/read-month.ts`.
 
 ### Route
 

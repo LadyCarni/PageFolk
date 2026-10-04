@@ -12,3 +12,16 @@ export function validateClubName(name: string): string | null {
 export function validateBlurb(text: string): string | null {
   return text.trim().length > BLURB_MAX ? `Blurb must be ${BLURB_MAX} characters or fewer` : null
 }
+
+export const READ_MONTH_MIN_YEAR = 2000
+
+// "YYYY-MM" from 2000 to next year. Empty is valid: saving it clears the month.
+export function validateReadMonth(input: string, now: Date = new Date()): string | null {
+  if (input === '') return null
+  const maxYear = now.getFullYear() + 1
+  const message = `Choose a month and year between ${READ_MONTH_MIN_YEAR} and ${maxYear}`
+  const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(input)
+  if (!match) return message
+  const year = Number(match[1])
+  return year < READ_MONTH_MIN_YEAR || year > maxYear ? message : null
+}

@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/db'
 import { validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
 import { ValidationError } from '@/lib/errors'
-import { validateBlurb } from '@/lib/limits'
+import { validateBlurb, validateReadMonth } from '@/lib/limits'
 import { syncUnlocksForBook } from '@/lib/progress'
 
 // The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
@@ -129,6 +129,12 @@ export async function setBlurb(bookId: string, text: string) {
   if (problem) throw new ValidationError(problem)
   const trimmed = text.trim()
   return prisma.book.update({ where: { id: bookId }, data: { blurb: trimmed === '' ? null : trimmed } })
+}
+
+export async function setReadMonth(bookId: string, readMonth: string) {
+  const problem = validateReadMonth(readMonth)
+  if (problem) throw new ValidationError(problem)
+  return prisma.book.update({ where: { id: bookId }, data: { readMonth: readMonth === '' ? null : readMonth } })
 }
 
 export async function deleteSection(sectionId: string): Promise<void> {

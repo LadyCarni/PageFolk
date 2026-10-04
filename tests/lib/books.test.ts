@@ -10,6 +10,7 @@ import {
   deleteSection,
   deleteBook,
   setBlurb,
+  setReadMonth,
 } from '@/lib/books'
 import { setProgress } from '@/lib/progress'
 import { ValidationError } from '@/lib/errors'
@@ -286,5 +287,18 @@ describe('books', () => {
     await expect(setBlurb(book.id, 'b'.repeat(1001))).rejects.toBeInstanceOf(ValidationError)
 
     expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).blurb).toBe('a'.repeat(1000))
+  })
+
+  it('setReadMonth stores a month, clears with empty, and rejects bad input without saving', async () => {
+    const book = await prisma.book.create({ data: { title: 'Rebecca', author: 'Daphne du Maurier', totalChapters: 27 } })
+
+    await setReadMonth(book.id, '2026-09')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).readMonth).toBe('2026-09')
+
+    await expect(setReadMonth(book.id, '2026-13')).rejects.toThrow(ValidationError)
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).readMonth).toBe('2026-09')
+
+    await setReadMonth(book.id, '')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).readMonth).toBeNull()
   })
 })

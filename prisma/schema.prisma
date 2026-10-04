@@ -35,6 +35,7 @@ model Book {
 
   totalChapters Int
   blurb         String?
+  readMonth     String? // "YYYY-MM", the month the club read the book
 
   sections Section[]
   cover    BookCover?

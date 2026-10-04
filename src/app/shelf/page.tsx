@@ -6,10 +6,9 @@ import { getShelf } from '@/lib/shelf'
 import { shelfSummary } from '@/lib/shelf-view'
 import { ShelfBrowser } from '@/components/ShelfBrowser'
 
-export default async function ShelfPage({ searchParams }: { searchParams: { book?: string | string[] } }) {
+export default async function ShelfPage() {
   const user = await requireUser()
   const books = await getShelf(user.id)
-  const requestedId = typeof searchParams.book === 'string' ? searchParams.book : undefined
 
   if (books.length === 0) {
     return (
@@ -25,7 +24,7 @@ export default async function ShelfPage({ searchParams }: { searchParams: { book
   }
 
   return (
-    <ShelfBrowser books={books} requestedId={requestedId}>
+    <ShelfBrowser books={books}>
       <Heading as="h1" size="2xl">
         Our shelf
       </Heading>

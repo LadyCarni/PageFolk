@@ -2,6 +2,7 @@
 
 import { useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import NextLink from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Box, Grid, Link, Text } from '@chakra-ui/react'
 import { CoverImage } from '@/components/CoverImage'
 import { ShelfPreview } from '@/components/ShelfPreview'
@@ -14,16 +15,11 @@ const WIDE_QUERY = '(min-width: 62em)'
 
 // The shelf grid with a preview of the selected book. On wide screens a plain click on a cover
 // previews it (a second click on the selected cover opens it); everywhere else covers are links.
-export function ShelfBrowser({
-  books,
-  requestedId,
-  children,
-}: {
-  books: ShelfBook[]
-  requestedId: string | undefined
-  children: ReactNode
-}) {
-  const [selectedId, setSelectedId] = useState(() => pickShelfBook(books, requestedId))
+export function ShelfBrowser({ books, children }: { books: ShelfBook[]; children: ReactNode }) {
+  // Read ?book= from the live URL, not a server prop: after replaceState and a Back navigation,
+  // the cached server render still has the original request's params.
+  const searchParams = useSearchParams()
+  const [selectedId, setSelectedId] = useState(() => pickShelfBook(books, searchParams.get('book') ?? undefined))
   const panelRef = useRef<HTMLDivElement>(null)
   const selected = books.find((book) => book.id === selectedId) ?? null
   const fullHeight = `calc(100dvh - ${NAV_HEIGHT_PX}px)`

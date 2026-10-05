@@ -134,7 +134,7 @@ export default async function AdminPage({ searchParams }: { searchParams: { book
           Back to books
         </Link>
         {book ? (
-          <BookSetup book={book} />
+          <BookSetup key={book.id} book={book} />
         ) : (
           <Flex h="100%" minH="50vh" align="center" justify="center" p={8}>
             <Heading as="h2" size="lg" fontStyle="italic" color="mist" textAlign="center">

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { pickAdminBook } from '@/lib/admin-view'
+import { makeCurrentPrompt, pickAdminBook } from '@/lib/admin-view'
 
 // Newest first, as listBooks() returns them.
 const books = [
@@ -25,5 +25,13 @@ describe('pickAdminBook', () => {
 
   it('is null when there are no books', () => {
     expect(pickAdminBook([], 'anything')).toEqual({ book: null, explicit: false })
+  })
+})
+
+describe('makeCurrentPrompt', () => {
+  it('names the book going live and the one moving to the shelf', () => {
+    expect(makeCurrentPrompt('Rebecca', 'The Stand')).toBe(
+      'Make "Rebecca" the current book? "The Stand" will move to the shelf, and every member will see "Rebecca" on This month.'
+    )
   })
 })

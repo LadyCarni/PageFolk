@@ -9,3 +9,8 @@ export function pickAdminBook<T extends { id: string; status: string }>(
   if (requested) return { book: requested, explicit: true }
   return { book: books.find((b) => b.status === 'current') ?? books[0] ?? null, explicit: false }
 }
+
+// The confirmation shown before a swap replaces what every member sees on This month.
+export function makeCurrentPrompt(title: string, currentTitle: string): string {
+  return `Make "${title}" the current book? "${currentTitle}" will move to the shelf, and every member will see "${title}" on This month.`
+}

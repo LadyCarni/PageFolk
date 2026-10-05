@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { requireUser } from '@/lib/session'
 import { listBooks } from '@/lib/books'
 import { getBookView } from '@/lib/book-view'
+import { canViewBook } from '@/lib/book-access'
 import { bookPath } from '@/lib/threads'
 import { BookView } from '@/components/BookView'
 
@@ -22,7 +23,7 @@ export default async function ShelfBookPage({
   }
 
   const data = await getBookView(params.bookId, user.id, requested)
-  if (!data) notFound()
+  if (!data || !canViewBook(data.book.status, user.isAdmin)) notFound()
 
   return (
     <BookView

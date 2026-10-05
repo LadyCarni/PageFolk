@@ -99,7 +99,10 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
   }
 }
 
-export async function getSectionBookId(sectionId: string): Promise<string | null> {
-  const section = await prisma.section.findUnique({ where: { id: sectionId }, select: { bookId: true } })
-  return section?.bookId ?? null
+export async function getSectionBook(sectionId: string): Promise<{ bookId: string; status: string } | null> {
+  const section = await prisma.section.findUnique({
+    where: { id: sectionId },
+    select: { bookId: true, book: { select: { status: true } } },
+  })
+  return section ? { bookId: section.bookId, status: section.book.status } : null
 }

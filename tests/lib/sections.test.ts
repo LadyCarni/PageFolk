@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { getSectionBookId, getSectionsForViewer, getSectionThread } from '@/lib/sections'
+import { getSectionBook, getSectionsForViewer, getSectionThread } from '@/lib/sections'
 
 async function resetDb() {
   await prisma.readingProgress.deleteMany()
@@ -191,7 +191,7 @@ describe('getSectionThread', () => {
     const sectionId = await setup()
     const section = await prisma.section.findUniqueOrThrow({ where: { id: sectionId } })
 
-    expect(await getSectionBookId(sectionId)).toBe(section.bookId)
-    expect(await getSectionBookId('does-not-exist')).toBeNull()
+    expect(await getSectionBook(sectionId)).toEqual({ bookId: section.bookId, status: 'current' })
+    expect(await getSectionBook('does-not-exist')).toBeNull()
   })
 })

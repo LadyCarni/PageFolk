@@ -11,6 +11,7 @@ export type BookViewData = {
     blurb: string | null
     totalChapters: number
     coverVersion: number | null
+    status: string
   }
   finished: number
   sections: SectionSummary[]
@@ -52,6 +53,7 @@ export async function getBookView(
       blurb: book.blurb,
       totalChapters: book.totalChapters,
       coverVersion: book.cover?.updatedAt.getTime() ?? null,
+      status: book.status,
     },
     finished,
     sections,

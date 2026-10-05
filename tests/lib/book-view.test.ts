@@ -56,6 +56,7 @@ describe('getBookView', () => {
       blurb: 'An orphaned girl.',
       totalChapters: 38,
       coverVersion: null,
+      status: 'current',
     })
     expect(data?.finished).toBe(12)
     expect(data?.sections).toHaveLength(3)

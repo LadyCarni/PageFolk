@@ -48,4 +48,17 @@ describe('setProgressAction', () => {
     expect((await prisma.readingProgress.findMany()).map((p) => p.chaptersFinished)).toEqual([38])
     expect(await prisma.threadMembership.count({ where: { userId: user.id } })).toBe(1)
   })
+
+  it('refuses a member on an upcoming book, saving nothing, and allows an admin', async () => {
+    const { book, user } = await setup()
+    await prisma.book.update({ where: { id: book.id }, data: { status: 'upcoming' } })
+
+    mockRequireUser.mockResolvedValue({ id: user.id, isAdmin: false })
+    await expect(setProgressAction(book.id, 10)).rejects.toThrow('Not found')
+    expect(await prisma.readingProgress.count()).toBe(0)
+    expect(await prisma.threadMembership.count()).toBe(0)
+
+    mockRequireUser.mockResolvedValue({ id: user.id, isAdmin: true })
+    expect(await setProgressAction(book.id, 10)).toBe(10)
+  })
 })

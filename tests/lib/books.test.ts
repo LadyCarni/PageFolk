@@ -4,7 +4,8 @@ import {
   listBooks,
   createBook,
   addSection,
-  setBookStatus,
+  makeBookCurrent,
+  markBookPast,
   updateSection,
   updateTotalChapters,
   deleteSection,
@@ -124,10 +125,64 @@ describe('books', () => {
   it('filters by status', async () => {
     const current = await newBook()
     const past = await createBook({ title: 'Old Book', author: 'Someone', totalChapters: 10 })
-    await setBookStatus(past.id, 'past')
+    await markBookPast(past.id)
 
     expect((await listBooks('current')).map((b) => b.id)).toEqual([current.id])
     expect((await listBooks('past')).map((b) => b.id)).toEqual([past.id])
+  })
+
+  it('makes the first book current, later books upcoming, and a book added with no current book current', async () => {
+    const first = await newBook()
+    const second = await createBook({ title: 'Emma', author: 'Jane Austen', totalChapters: 30 })
+    expect(first.status).toBe('current')
+    expect(second.status).toBe('upcoming')
+
+    await markBookPast(first.id)
+    const third = await createBook({ title: 'Persuasion', author: 'Jane Austen', totalChapters: 24 })
+    expect(third.status).toBe('current')
+  })
+
+  it('adds a current book after the only current book is deleted', async () => {
+    const only = await newBook()
+    await deleteBook(only.id)
+    const next = await createBook({ title: 'Emma', author: 'Jane Austen', totalChapters: 30 })
+    expect(next.status).toBe('current')
+  })
+
+  it('makeBookCurrent moves the old current book to the shelf, from upcoming or from past', async () => {
+    const a = await newBook()
+    const b = await createBook({ title: 'Emma', author: 'Jane Austen', totalChapters: 30 })
+    const status = async (id: string) => (await prisma.book.findUniqueOrThrow({ where: { id } })).status
+
+    await makeBookCurrent(b.id)
+    expect([await status(a.id), await status(b.id)]).toEqual(['past', 'current'])
+
+    await makeBookCurrent(a.id)
+    expect([await status(a.id), await status(b.id)]).toEqual(['current', 'past'])
+  })
+
+  it('makeBookCurrent leaves exactly one current book, heals duplicates, and leaves other upcoming books alone', async () => {
+    const make = (title: string, status: string) =>
+      prisma.book.create({ data: { title, author: 'A', totalChapters: 10, status } })
+    const x = await make('X', 'current')
+    const y = await make('Y', 'current')
+    const u1 = await make('U1', 'upcoming')
+    const u2 = await make('U2', 'upcoming')
+
+    await makeBookCurrent(u1.id)
+
+    const byId = Object.fromEntries((await prisma.book.findMany()).map((b) => [b.id, b.status]))
+    expect(byId).toEqual({ [x.id]: 'past', [y.id]: 'past', [u1.id]: 'current', [u2.id]: 'upcoming' })
+  })
+
+  it('makeBookCurrent on the book that is already current changes nothing', async () => {
+    const a = await newBook()
+    const past = await prisma.book.create({ data: { title: 'P', author: 'A', totalChapters: 10, status: 'past' } })
+
+    await makeBookCurrent(a.id)
+
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: a.id } })).status).toBe('current')
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: past.id } })).status).toBe('past')
   })
 
   it("includes each section's post count", async () => {

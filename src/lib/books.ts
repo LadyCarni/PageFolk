@@ -7,6 +7,8 @@ import { syncUnlocksForBook } from '@/lib/progress'
 // The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
 const SYNC_TIMEOUT_MS = 15_000
 
+export type BookStatus = 'upcoming' | 'current' | 'past'
+
 type SectionInput = { startChapter: number; endChapter: number; title?: string | null }
 
 function cleanTitle(title: string | null | undefined): string | null {
@@ -14,7 +16,7 @@ function cleanTitle(title: string | null | undefined): string | null {
   return trimmed ? trimmed : null
 }
 
-export async function listBooks(status?: 'current' | 'past') {
+export async function listBooks(status?: BookStatus) {
   return prisma.book.findMany({
     where: status ? { status } : undefined,
     orderBy: { createdAt: 'desc' },
@@ -31,10 +33,14 @@ export async function listBooks(status?: 'current' | 'past') {
 
 export type AdminBook = Awaited<ReturnType<typeof listBooks>>[number]
 
+// A club has one current book. The first book goes live straight away; later ones wait as upcoming.
 export async function createBook(input: { title: string; author: string; totalChapters: number; coverUrl?: string }) {
   const problem = validateTotalChapters(input.totalChapters)
   if (problem) throw new ValidationError(problem)
-  return prisma.book.create({ data: { ...input, status: 'current' } })
+  return prisma.$transaction(async (tx) => {
+    const currentCount = await tx.book.count({ where: { status: 'current' } })
+    return tx.book.create({ data: { ...input, status: currentCount === 0 ? 'current' : 'upcoming' } })
+  })
 }
 
 export async function addSection(bookId: string, input: SectionInput) {
@@ -76,8 +82,16 @@ export async function addSection(bookId: string, input: SectionInput) {
   )
 }
 
-export async function setBookStatus(bookId: string, status: 'current' | 'past') {
-  return prisma.book.update({ where: { id: bookId }, data: { status } })
+// Every other current book moves to the shelf in the same transaction, so there is never more than one.
+export async function makeBookCurrent(bookId: string) {
+  return prisma.$transaction(async (tx) => {
+    await tx.book.updateMany({ where: { status: 'current', NOT: { id: bookId } }, data: { status: 'past' } })
+    return tx.book.update({ where: { id: bookId }, data: { status: 'current' } })
+  })
+}
+
+export async function markBookPast(bookId: string) {
+  return prisma.book.update({ where: { id: bookId }, data: { status: 'past' } })
 }
 
 export async function updateSection(sectionId: string, input: SectionInput) {

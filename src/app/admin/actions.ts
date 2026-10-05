@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, setBookStatus, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth } from '@/lib/books'
+import { createBook, addSection, makeBookCurrent, markBookPast, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth } from '@/lib/books'
 import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
@@ -67,11 +67,16 @@ export async function addSectionAction(formData: FormData): Promise<FormResult> 
   })
 }
 
-export async function setBookStatusAction(bookId: string, status: 'current' | 'past') {
+export async function makeBookCurrentAction(bookId: string) {
   await requireAdmin()
-  await setBookStatus(bookId, status)
-  revalidatePath('/admin')
-  revalidatePath('/')
+  await makeBookCurrent(bookId)
+  revalidateBookPages()
+}
+
+export async function markBookPastAction(bookId: string) {
+  await requireAdmin()
+  await markBookPast(bookId)
+  revalidateBookPages()
 }
 
 export async function updateSectionAction(formData: FormData): Promise<FormResult> {

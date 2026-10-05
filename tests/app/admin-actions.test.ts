@@ -6,7 +6,7 @@ vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
 import { redirect } from 'next/navigation'
@@ -275,6 +275,28 @@ describe('admin actions', () => {
   it('requires a bookId to set a blurb', async () => {
     mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
     await expect(updateBlurbAction(sectionForm({ bookId: '', blurb: 'x' }))).rejects.toThrow('required')
+  })
+
+  it('rejects status changes for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(makeBookCurrentAction('b1')).rejects.toThrow('Forbidden')
+    await expect(markBookPastAction('b1')).rejects.toThrow('Forbidden')
+  })
+
+  it('makes a book current, moving the old one to the shelf, and marks a book past, refreshing the pages', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const old = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+    const next = await createBook({ title: 'Emma', author: 'Jane Austen', totalChapters: 30 })
+    const status = async (id: string) => (await prisma.book.findUniqueOrThrow({ where: { id } })).status
+
+    await makeBookCurrentAction(next.id)
+    expect([await status(old.id), await status(next.id)]).toEqual(['past', 'current'])
+    for (const path of ['/', '/admin', '/shelf']) expect(revalidatePath).toHaveBeenCalledWith(path)
+
+    vi.mocked(revalidatePath).mockClear()
+    await markBookPastAction(next.id)
+    expect(await status(next.id)).toBe('past')
+    for (const path of ['/', '/admin', '/shelf']) expect(revalidatePath).toHaveBeenCalledWith(path)
   })
 
   it('rejects updateReadMonthAction for a non-admin', async () => {

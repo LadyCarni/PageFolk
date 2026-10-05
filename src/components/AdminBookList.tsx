@@ -3,7 +3,7 @@ import { Box, Button, Flex, Heading, HStack, Link, Text, VStack } from '@chakra-
 import type { AdminBook } from '@/lib/books'
 import { DeleteBookButton } from '@/components/DeleteBookButton'
 import { LABEL_PROPS } from '@/components/adminStyles'
-import { deleteBookAction, setBookStatusAction } from '@/app/admin/actions'
+import { deleteBookAction, makeBookCurrentAction, markBookPastAction } from '@/app/admin/actions'
 
 function StatusBadge({ current }: { current: boolean }) {
   return (
@@ -73,11 +73,12 @@ export function AdminBookList({ books, selectedId }: { books: AdminBook[]; selec
                   <form
                     action={async () => {
                       'use server'
-                      await setBookStatusAction(book.id, current ? 'past' : 'current')
+                      if (current) await markBookPastAction(book.id)
+                      else await makeBookCurrentAction(book.id)
                     }}
                   >
                     <Button type="submit" size="sm" variant="goldOutline">
-                      {current ? 'Mark as past' : 'Mark as current'}
+                      {current ? 'Mark as past' : 'Make current'}
                     </Button>
                   </form>
                   <DeleteBookButton

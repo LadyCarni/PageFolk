@@ -1,4 +1,5 @@
-import { Button, Heading, Image, Text, VStack } from '@chakra-ui/react'
+import { Button, HStack, Heading, Image, Link, Text, VStack } from '@chakra-ui/react'
+import NextLink from 'next/link'
 import { redirect } from 'next/navigation'
 import { auth, signIn } from '@/auth'
 import { signInRedirectPath } from '@/lib/sign-in-redirect'
@@ -24,11 +25,11 @@ export default async function SignInPage({
         Every page, together.
       </Text>
       {isAccessDenied ? (
-        <Text color="dustyRose" fontWeight="bold">
-          You&apos;re not on the list — contact the admin to get access.
+        <Text color="dustyRose" fontWeight="bold" textAlign="center" maxW="md">
+          Thanks for signing in! Your request is with Caryn. Once you&apos;re approved, just sign in again.
         </Text>
       ) : (
-        <Text color="mist">Sign in with the Google account you were invited with.</Text>
+        <Text color="mist" textAlign="center">Sign in with Google to join the club.</Text>
       )}
       <form
         action={async () => {
@@ -40,6 +41,14 @@ export default async function SignInPage({
           Sign in with Google
         </Button>
       </form>
+      <HStack spacing={4}>
+        <Link as={NextLink} href="/privacy" color="mist" fontSize="sm">
+          Privacy
+        </Link>
+        <Link as={NextLink} href="/terms" color="mist" fontSize="sm">
+          Terms
+        </Link>
+      </HStack>
     </VStack>
   )
 }

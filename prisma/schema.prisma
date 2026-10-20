@@ -25,6 +25,14 @@ model AllowedEmail {
   addedAt DateTime @default(now())
 }
 
+// Someone who signed in with Google but isn't on the allowed list yet.
+model AccessRequest {
+  email       String   @id
+  name        String?
+  avatarUrl   String?
+  requestedAt DateTime @default(now())
+}
+
 model Book {
   id        String   @id @default(cuid())
   title     String

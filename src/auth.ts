@@ -1,7 +1,7 @@
 import NextAuth from 'next-auth'
 import Google from 'next-auth/providers/google'
 import { prisma } from '@/lib/db'
-import { isEmailAllowed } from '@/lib/allowlist'
+import { allowOrRequestAccess } from '@/lib/access-requests'
 import { isAdminEmail } from '@/lib/admin'
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -16,8 +16,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   callbacks: {
     async signIn({ user }) {
-      if (!user.email) return false
-      return isEmailAllowed(user.email)
+      return allowOrRequestAccess(user)
     },
     async jwt({ token, user }) {
       if (user) {

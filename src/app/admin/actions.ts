@@ -8,6 +8,7 @@ import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
+import { approveAccessRequest, dismissAccessRequest } from '@/lib/access-requests'
 import { ValidationError } from '@/lib/errors'
 import { parseWholeNumber } from '@/lib/chapters'
 import { readMonthFromParts } from '@/lib/read-month'
@@ -194,5 +195,17 @@ export async function addAllowedEmailAction(formData: FormData) {
 export async function removeAllowedEmailAction(email: string) {
   await requireAdmin()
   await removeAllowedEmail(email)
+  revalidatePath('/members')
+}
+
+export async function approveAccessRequestAction(email: string) {
+  await requireAdmin()
+  await approveAccessRequest(email)
+  revalidatePath('/members')
+}
+
+export async function dismissAccessRequestAction(email: string) {
+  await requireAdmin()
+  await dismissAccessRequest(email)
   revalidatePath('/members')
 }

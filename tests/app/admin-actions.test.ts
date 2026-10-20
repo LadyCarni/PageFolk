@@ -6,7 +6,7 @@ vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction, approveAccessRequestAction, dismissAccessRequestAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
 import { redirect } from 'next/navigation'
@@ -22,6 +22,7 @@ describe('admin actions', () => {
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
     await prisma.allowedEmail.deleteMany()
+    await prisma.accessRequest.deleteMany()
     await prisma.section.deleteMany()
     await prisma.book.deleteMany()
     await prisma.club.deleteMany()
@@ -74,6 +75,33 @@ describe('admin actions', () => {
   it('rejects removeAllowedEmailAction for a non-admin', async () => {
     mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
     await expect(removeAllowedEmailAction('a@example.com')).rejects.toThrow('Forbidden')
+  })
+
+  it('approves an access request for an admin', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    await prisma.accessRequest.create({ data: { email: 'asker@example.com' } })
+    await approveAccessRequestAction('asker@example.com')
+    expect(await prisma.accessRequest.count()).toBe(0)
+    expect(await prisma.allowedEmail.findMany()).toEqual([expect.objectContaining({ email: 'asker@example.com' })])
+    expect(revalidatePath).toHaveBeenCalledWith('/members')
+  })
+
+  it('dismisses an access request for an admin', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    await prisma.accessRequest.create({ data: { email: 'asker@example.com' } })
+    await dismissAccessRequestAction('asker@example.com')
+    expect(await prisma.accessRequest.count()).toBe(0)
+    expect(await prisma.allowedEmail.count()).toBe(0)
+    expect(revalidatePath).toHaveBeenCalledWith('/members')
+  })
+
+  it('rejects approving or dismissing access requests for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await prisma.accessRequest.create({ data: { email: 'asker@example.com' } })
+    await expect(approveAccessRequestAction('asker@example.com')).rejects.toThrow('Forbidden')
+    await expect(dismissAccessRequestAction('asker@example.com')).rejects.toThrow('Forbidden')
+    expect(await prisma.accessRequest.count()).toBe(1)
+    expect(await prisma.allowedEmail.count()).toBe(0)
   })
 
   it('rejects a title-less book', async () => {

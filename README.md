@@ -21,28 +21,16 @@
 
 ## Production
 
-Live at https://bookclub.carynfarvour.design on a DigitalOcean Droplet
-(Ubuntu 24.04, 1 GB RAM + 2 GB swap). Log in with `ssh bookclub` (alias in
-`~/.ssh/config`, key `~/.ssh/id_ed25519_droplet`).
+Runs as a Next.js server (`npm run build`, then `npm start`, port 3002) behind
+nginx with HTTPS, as a systemd service. Example config is in `deploy/`. After
+pulling an update: `npm ci`, `npx prisma db push`, `npm run build`, then restart
+the service.
 
-- App: `/opt/bookclub`, run by the `bookclub` user as the `bookclub` systemd
-  service on port 3002; nginx proxies to it, certbot handles HTTPS and renewal.
-- Config: `/opt/bookclub/.env` (readable only by `bookclub`). The Font Awesome
-  package token is in `/home/bookclub/.npmrc`.
-- Database: `/opt/bookclub/prisma/prod.db`. Backed up nightly at 3am to
-  `/opt/bookclub/backups/` (14 days kept) by `/etc/cron.d/bookclub-backup`.
-- Firewall (ufw) allows only SSH, 80 and 443.
-- Google OAuth is in Testing mode: each tester must be added under Google Auth
-  Platform → Audience → Test users, and in the app's Allowed emails panel.
+Installing dependencies needs a Font Awesome Pro package token in the
+machine's user-level `~/.npmrc`.
 
-## Deploying an update
+## Access
 
-```bash
-ssh bookclub
-cd /opt/bookclub
-sudo -u bookclub git pull
-sudo -u bookclub -H npm ci
-sudo -u bookclub sh -c 'set -a; . ./.env; set +a; npx prisma db push'
-sudo -u bookclub npm run build
-systemctl restart bookclub
-```
+Anyone can sign in with Google. Accounts that aren't on the allowed list are
+turned away and appear under "Waiting for approval" on the Members page, where
+the admin (`ADMIN_EMAIL`) can approve or dismiss them.

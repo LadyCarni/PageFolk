@@ -22,9 +22,10 @@
 ## Production
 
 Runs as a Next.js server (`npm run build`, then `npm start`, port 3002) behind
-nginx with HTTPS, as a systemd service. Example config is in `deploy/`. After
-pulling an update: `npm ci`, `npx prisma db push`, `npm run build`, then restart
-the service.
+nginx with HTTPS, as a systemd service. Example config is in `deploy/`. To deploy
+an update, run `deploy/deploy.sh` on the server as root. It backs up the
+database, pulls, runs `npm ci`, `npx prisma db push` and `npm run build`, then
+restarts the service, and stops at the first step that fails.
 
 Installing dependencies needs a Font Awesome Pro package token in the
 machine's user-level `~/.npmrc`.

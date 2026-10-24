@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BLURB_MAX, CLUB_NAME_MAX, validateBlurb, validateClubName, validateReadMonth } from '@/lib/limits'
+import { BLURB_MAX, CHAPTER_NAME_MAX, CLUB_NAME_MAX, validateBlurb, validateChapterName, validateClubName, validateReadMonth } from '@/lib/limits'
 
 describe('validateClubName', () => {
   it('accepts a normal name, counting characters after trimming', () => {
@@ -47,5 +47,13 @@ describe('validateReadMonth', () => {
     for (const bad of ['2026-9', '26-09', '2026/09', 'September 2026', '2026-00', '2026-13', '1999-12', '2028-01', ' 2026-09']) {
       expect(validateReadMonth(bad, now)).toBe('Choose a month and year between 2000 and 2027')
     }
+  })
+})
+
+describe('validateChapterName', () => {
+  it('accepts exactly 100 characters and rejects 101', () => {
+    expect(CHAPTER_NAME_MAX).toBe(100)
+    expect(validateChapterName('x'.repeat(100))).toBeNull()
+    expect(validateChapterName('x'.repeat(101))).toBe('Chapter names can be at most 100 characters')
   })
 })

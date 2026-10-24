@@ -48,6 +48,18 @@ model Book {
   sections Section[]
   cover    BookCover?
   progress ReadingProgress[]
+
+  chapterNames ChapterName[]
+}
+
+model ChapterName {
+  bookId String
+  number Int // 1-based chapter number
+  name   String
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, number])
 }
 
 model BookCover {

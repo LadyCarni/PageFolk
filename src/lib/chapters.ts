@@ -179,3 +179,16 @@ export function coverageSummary(coverage: Coverage): { lead: string; rest: strin
     rest: `Not yet covered: ${formatGaps(gaps)}.`,
   }
 }
+
+// Pasting a list into one chapter-name row: each non-blank line fills the next row down.
+// values[0] is chapter 1. Lines past the last chapter are dropped and counted.
+export function fillDown(values: string[], startIndex: number, pasted: string): { values: string[]; dropped: number } {
+  const lines = pasted
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const next = [...values]
+  const room = Math.max(0, values.length - startIndex)
+  lines.slice(0, room).forEach((line, i) => (next[startIndex + i] = line))
+  return { values: next, dropped: Math.max(0, lines.length - room) }
+}

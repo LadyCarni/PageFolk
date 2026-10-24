@@ -13,6 +13,13 @@ export function validateBlurb(text: string): string | null {
   return text.trim().length > BLURB_MAX ? `Blurb must be ${BLURB_MAX} characters or fewer` : null
 }
 
+export const CHAPTER_NAME_MAX = 100
+
+// Counted after trimming; a blank name is valid and means the chapter has no name.
+export function validateChapterName(name: string): string | null {
+  return name.trim().length > CHAPTER_NAME_MAX ? `Chapter names can be at most ${CHAPTER_NAME_MAX} characters` : null
+}
+
 export const READ_MONTH_MIN_YEAR = 2000
 
 // "YYYY-MM" from 2000 to next year. Empty is valid: saving it clears the month.

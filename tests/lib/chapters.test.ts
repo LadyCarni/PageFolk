@@ -8,6 +8,7 @@ import {
   parseWholeNumber,
   validateFormValues,
   clampProgress,
+  fillDown,
   segmentStates,
   chapterCoverage,
   formatGaps,
@@ -390,5 +391,19 @@ describe('validateFormValues readMonth', () => {
     expect(validateFormValues({ kind: 'readMonth' }, { month: '09', year: '2026' })).toBeNull()
     expect(validateFormValues({ kind: 'readMonth' }, { month: '', year: '' })).toBeNull()
     expect(validateFormValues({ kind: 'readMonth' }, { month: '09', year: '' })).toBe('Choose both a month and a year')
+  })
+})
+
+describe('fillDown', () => {
+  it('fills the row and the rows below, skipping blank lines', () => {
+    expect(fillDown(['', '', '', ''], 1, 'One\n\n Two \r\nThree')).toEqual({ values: ['', 'One', 'Two', 'Three'], dropped: 0 })
+  })
+
+  it('drops lines past the last chapter', () => {
+    expect(fillDown(['', ''], 0, 'a\nb\nc\nd')).toEqual({ values: ['a', 'b'], dropped: 2 })
+  })
+
+  it('overwrites existing names it reaches and leaves the others', () => {
+    expect(fillDown(['x', 'y', 'z'], 1, 'b')).toEqual({ values: ['x', 'b', 'z'], dropped: 0 })
   })
 })

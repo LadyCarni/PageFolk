@@ -55,7 +55,16 @@ export function ThreadCard({
             Sealed
           </Text>
           <Text fontSize="sm" color="mist">
-            Opens after chapter {section.endChapter}, {toGo} chapter{toGo === 1 ? '' : 's'} to go
+            Opens after chapter {section.endChapter}
+            {section.endChapterName && (
+              <>
+                {' · '}
+                <Text as="span" fontStyle="italic">
+                  {section.endChapterName}
+                </Text>
+              </>
+            )}
+            , {toGo} chapter{toGo === 1 ? '' : 's'} to go
           </Text>
         </Box>
       </Flex>

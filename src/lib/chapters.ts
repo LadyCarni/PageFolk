@@ -197,3 +197,14 @@ export function fillDown(values: string[], startIndex: number, pasted: string): 
   lines.slice(0, room).forEach((line, i) => (next[startIndex + i] = line))
   return { values: next, dropped: Math.max(0, lines.length - room) }
 }
+
+// The line on the progress card naming where you are. Null when the book has no chapter names,
+// so books without them show the card exactly as before.
+export function lastFinishedLabel(
+  finished: number,
+  names: Record<number, string>
+): { caption: string; name: string | null } | null {
+  if (Object.keys(names).length === 0) return null
+  if (finished <= 0) return { caption: 'Not started yet', name: null }
+  return { caption: `Last finished · Chapter ${finished}`, name: names[finished] ?? null }
+}

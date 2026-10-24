@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { Box, Flex, HStack, IconButton, Text } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
-import { clampProgress, segmentStates } from '@/lib/chapters'
+import { clampProgress, lastFinishedLabel, segmentStates } from '@/lib/chapters'
 
 const SEGMENT_COLORS = { done: 'antiqueGold', current: 'progressCurrent', todo: 'progressTodo' } as const
 
@@ -13,12 +13,14 @@ export function ProgressStepper({
   totalChapters,
   initialFinished,
   sections,
+  chapterNames,
   saveProgress,
 }: {
   bookId: string
   totalChapters: number
   initialFinished: number
   sections: { startChapter: number; endChapter: number }[]
+  chapterNames: Record<number, string>
   saveProgress: (bookId: string, chaptersFinished: number) => Promise<number>
 }) {
   const [finished, setFinished] = useState(initialFinished)
@@ -41,6 +43,8 @@ export function ProgressStepper({
     })
   }
 
+  const place = lastFinishedLabel(finished, chapterNames)
+
   const buttonProps = {
     variant: 'outline',
     borderRadius: 'full',
@@ -55,6 +59,18 @@ export function ProgressStepper({
       <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="dustyRose" textAlign="center">
         Your place in the book
       </Text>
+      {place && (
+        <Box textAlign="center" mt={3} aria-live="polite">
+          <Text fontSize="sm" color="mist">
+            {place.caption}
+          </Text>
+          {place.name && (
+            <Text fontFamily="heading" fontStyle="italic" fontSize="xl" color="parchment" mt={1}>
+              {place.name}
+            </Text>
+          )}
+        </Box>
+      )}
       <Flex align="center" justify="space-between" mt=".25em">
         <IconButton
           aria-label="One chapter fewer"

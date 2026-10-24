@@ -9,6 +9,7 @@ import {
   validateFormValues,
   clampProgress,
   fillDown,
+  lastFinishedLabel,
   segmentStates,
   chapterCoverage,
   formatGaps,
@@ -419,5 +420,23 @@ describe('fillDown', () => {
 
   it('overwrites existing names it reaches and leaves the others', () => {
     expect(fillDown(['x', 'y', 'z'], 1, 'b')).toEqual({ values: ['x', 'b', 'z'], dropped: 0 })
+  })
+})
+
+describe('lastFinishedLabel', () => {
+  it('is null when the book has no chapter names, so the card is unchanged', () => {
+    expect(lastFinishedLabel(7, {})).toBeNull()
+  })
+
+  it('names the last finished chapter', () => {
+    expect(lastFinishedLabel(7, { 7: 'B&B' })).toEqual({ caption: 'Last finished · Chapter 7', name: 'B&B' })
+  })
+
+  it('shows just the number when that chapter has no name', () => {
+    expect(lastFinishedLabel(7, { 1: 'Arrivals' })).toEqual({ caption: 'Last finished · Chapter 7', name: null })
+  })
+
+  it('says not started yet at 0', () => {
+    expect(lastFinishedLabel(0, { 1: 'Arrivals' })).toEqual({ caption: 'Not started yet', name: null })
   })
 })

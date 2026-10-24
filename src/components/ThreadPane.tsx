@@ -12,7 +12,7 @@ import { NoteItem } from '@/components/NoteItem'
 
 type OpenThread = Extract<ThreadResult, { status: 'unlocked' }>
 
-function SafeGroundPill({ endChapter }: { endChapter: number }) {
+function SafeGroundPill({ endChapter, endChapterName }: { endChapter: number; endChapterName: string | null }) {
   return (
     <HStack
       as="span"
@@ -30,6 +30,14 @@ function SafeGroundPill({ endChapter }: { endChapter: number }) {
       </Box>
       <Text as="span" fontSize="sm" color="parchment">
         Safe ground: nothing past chapter {endChapter}
+        {endChapterName && (
+          <>
+            {' · '}
+            <Text as="span" fontStyle="italic">
+              {endChapterName}
+            </Text>
+          </>
+        )}
       </Text>
     </HStack>
   )
@@ -65,7 +73,7 @@ export function ThreadPane({
         <Heading as="h2" size="xl" mt={1}>
           {title ?? range}
         </Heading>
-        <SafeGroundPill endChapter={thread.endChapter} />
+        <SafeGroundPill endChapter={thread.endChapter} endChapterName={thread.endChapterName} />
       </Box>
 
       <MessagesScroller scrollKey={`${sectionId}:${topLevel.length}`}>

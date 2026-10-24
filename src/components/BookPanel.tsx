@@ -29,6 +29,7 @@ export function BookPanel({ data, label }: { data: BookViewData; label: string }
         totalChapters={book.totalChapters}
         initialFinished={finished}
         sections={sections}
+        chapterNames={book.chapterNames}
         saveProgress={setProgressAction}
       />
     </VStack>

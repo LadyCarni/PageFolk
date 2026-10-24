@@ -250,6 +250,18 @@ describe('validateFormValues', () => {
     })
   })
 
+  describe('chapter names rule', () => {
+    it('rejects any name over 100 characters, with the same message as the server', () => {
+      expect(validateFormValues({ kind: 'chapterNames' }, { 'name-1': 'ok', 'name-2': 'x'.repeat(101) })).toBe(
+        'Chapter names can be at most 100 characters'
+      )
+    })
+
+    it('accepts valid and blank names', () => {
+      expect(validateFormValues({ kind: 'chapterNames' }, { 'name-1': 'B&B', 'name-2': '' })).toBeNull()
+    })
+  })
+
   describe('new book rule', () => {
     const rule = { kind: 'newBook' as const }
 

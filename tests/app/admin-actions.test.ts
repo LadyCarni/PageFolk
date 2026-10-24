@@ -6,9 +6,10 @@ vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction, approveAccessRequestAction, dismissAccessRequestAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateChapterNamesAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction, approveAccessRequestAction, dismissAccessRequestAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
+import { getChapterNames } from '@/lib/chapter-names'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 
@@ -17,6 +18,7 @@ describe('admin actions', () => {
     mockRequireAdmin.mockReset()
     vi.mocked(redirect).mockClear()
     vi.mocked(revalidatePath).mockClear()
+    await prisma.chapterName.deleteMany()
     await prisma.readingProgress.deleteMany()
     await prisma.bookCover.deleteMany()
     await prisma.post.deleteMany()
@@ -278,6 +280,25 @@ describe('admin actions', () => {
     expect(await updateClubNameAction(sectionForm({ clubName: '   ' }))).toEqual({ error: 'Club name is required' })
     expect((await updateClubNameAction(sectionForm({ clubName: 'a'.repeat(41) }))).error).toContain('40 characters')
     expect(await getClubName()).toBe('The Thursday Readers')
+  })
+
+  it('rejects updateChapterNamesAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    await expect(updateChapterNamesAction(sectionForm({ bookId: 'whatever', 'name-1': 'x' }))).rejects.toThrow('Forbidden')
+  })
+
+  it('saves chapter names for an admin, and reports an over-long one', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Dune', author: 'Frank Herbert', totalChapters: 30 })
+
+    const form = sectionForm({ bookId: book.id, 'name-1': 'Arrivals', 'name-2': '', 'name-7': 'B&B' })
+    expect(await updateChapterNamesAction(form)).toEqual({})
+    expect(await getChapterNames(book.id)).toEqual({ 1: 'Arrivals', 7: 'B&B' })
+    expect(revalidatePath).toHaveBeenCalled()
+
+    expect(await updateChapterNamesAction(sectionForm({ bookId: book.id, 'name-1': 'x'.repeat(101) }))).toEqual({
+      error: 'Chapter names can be at most 100 characters',
+    })
   })
 
   it('rejects updateBlurbAction for a non-admin', async () => {

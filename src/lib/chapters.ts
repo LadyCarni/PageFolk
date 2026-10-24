@@ -1,4 +1,4 @@
-import { validateBlurb, validateClubName } from '@/lib/limits'
+import { validateBlurb, validateChapterName, validateClubName } from '@/lib/limits'
 import { readMonthFromParts } from '@/lib/read-month'
 
 export function chapterRangeName(start: number, end: number): string {
@@ -68,6 +68,7 @@ export type FormRule =
   | { kind: 'clubName' }
   | { kind: 'blurb' }
   | { kind: 'readMonth' }
+  | { kind: 'chapterNames' }
 
 export function namedMinimumMessage(lastNamed: number): string {
   return `Total chapters cannot be less than ${lastNamed}, the last chapter with a name`
@@ -101,6 +102,14 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
 
   if (rule.kind === 'blurb') {
     return validateBlurb(values.blurb ?? '')
+  }
+
+  if (rule.kind === 'chapterNames') {
+    for (const [field, value] of Object.entries(values)) {
+      const problem = field.startsWith('name-') ? validateChapterName(value) : null
+      if (problem) return problem
+    }
+    return null
   }
 
   if (rule.kind === 'readMonth') {

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
 import { createBook, addSection, makeBookCurrent, markBookPast, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth } from '@/lib/books'
+import { setChapterNames } from '@/lib/chapter-names'
 import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
@@ -125,6 +126,23 @@ export async function updateBlurbAction(formData: FormData): Promise<FormResult>
   }
   return reportingValidation(async () => {
     await setBlurb(bookId, String(formData.get('blurb') ?? ''))
+    revalidateBookPages()
+  })
+}
+
+export async function updateChapterNamesAction(formData: FormData): Promise<FormResult> {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  if (!bookId) {
+    throw new Error('bookId is required')
+  }
+  const names: Record<number, string> = {}
+  for (const [field, value] of Array.from(formData.entries())) {
+    const match = /^name-(\d+)$/.exec(field)
+    if (match) names[Number(match[1])] = String(value)
+  }
+  return reportingValidation(async () => {
+    await setChapterNames(bookId, names)
     revalidateBookPages()
   })
 }

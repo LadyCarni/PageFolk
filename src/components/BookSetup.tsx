@@ -2,6 +2,7 @@ import { VStack } from '@chakra-ui/react'
 import type { AdminBook } from '@/lib/books'
 import { chapterCoverage } from '@/lib/chapters'
 import { BookSetupHeader } from '@/components/BookSetupHeader'
+import { ChapterNamesCard } from '@/components/ChapterNamesCard'
 import { DescriptionCoverCard } from '@/components/DescriptionCoverCard'
 import { SectionsCard } from '@/components/SectionsCard'
 
@@ -34,6 +35,12 @@ export function BookSetup({ book }: { book: AdminBook }) {
           title: s.title,
           postCount: s._count.posts,
         }))}
+      />
+      <ChapterNamesCard
+        key={book.totalChapters}
+        bookId={book.id}
+        totalChapters={book.totalChapters}
+        names={book.chapterNames}
       />
     </VStack>
   )

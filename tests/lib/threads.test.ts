@@ -19,6 +19,7 @@ const sealed = (id: string, order: number): SectionSummary => ({
   startChapter: order * 5 - 4,
   endChapter: order * 5,
   chaptersToGo: 3,
+  endChapterName: null,
 })
 
 describe('pickDefaultThread', () => {

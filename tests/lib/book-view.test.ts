@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
 import { getBookView } from '@/lib/book-view'
+import { setChapterNames } from '@/lib/chapter-names'
 
 async function setup() {
   const book = await prisma.book.create({
@@ -29,6 +30,7 @@ async function unlock(userId: string, sectionId: string) {
 
 describe('getBookView', () => {
   beforeEach(async () => {
+    await prisma.chapterName.deleteMany()
     await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
@@ -57,9 +59,19 @@ describe('getBookView', () => {
       totalChapters: 38,
       coverVersion: null,
       status: 'current',
+      chapterNames: {},
     })
     expect(data?.finished).toBe(12)
     expect(data?.sections).toHaveLength(3)
+  })
+
+  it("includes the book's chapter names", async () => {
+    const { book, user } = await setup()
+    await setChapterNames(book.id, { 1: 'Arrivals' })
+
+    const data = await getBookView(book.id, user.id)
+
+    expect(data?.book.chapterNames).toEqual({ 1: 'Arrivals' })
   })
 
   it('reports a cover version when the book has a cover', async () => {

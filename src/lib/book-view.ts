@@ -1,3 +1,4 @@
+import { getChapterNames } from '@/lib/chapter-names'
 import { prisma } from '@/lib/db'
 import { getProgress } from '@/lib/progress'
 import { getSectionsForViewer, getSectionThread, type SectionSummary, type ThreadResult } from '@/lib/sections'
@@ -12,6 +13,7 @@ export type BookViewData = {
     totalChapters: number
     coverVersion: number | null
     status: string
+    chapterNames: Record<number, string>
   }
   finished: number
   sections: SectionSummary[]
@@ -33,9 +35,10 @@ export async function getBookView(
   })
   if (!book) return null
 
-  const [finished, sections] = await Promise.all([
+  const [finished, sections, chapterNames] = await Promise.all([
     getProgress(userId, bookId),
     getSectionsForViewer(bookId, userId),
+    getChapterNames(bookId),
   ])
   const { selectedId, explicit } = resolveSelectedThread(sections, requestedThreadId)
 
@@ -54,6 +57,7 @@ export async function getBookView(
       totalChapters: book.totalChapters,
       coverVersion: book.cover?.updatedAt.getTime() ?? null,
       status: book.status,
+      chapterNames,
     },
     finished,
     sections,

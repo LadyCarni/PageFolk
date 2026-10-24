@@ -1,11 +1,21 @@
 import { prisma } from '@/lib/db'
 import { sectionDisplayName } from '@/lib/chapters'
+import { getChapterNames } from '@/lib/chapter-names'
 import { getProgress } from '@/lib/progress'
 
-// A sealed thread exposes only its chapter range and how far away it is. Its title and
+// A sealed thread exposes only its chapter range, how far away it is, and the name of the
+// chapter it opens after (table-of-contents information, not a spoiler). Its title and
 // posts must never reach the page: this shape is the server-side guarantee of that.
 export type SectionSummary =
-  | { id: string; order: number; status: 'locked'; startChapter: number; endChapter: number; chaptersToGo: number }
+  | {
+      id: string
+      order: number
+      status: 'locked'
+      startChapter: number
+      endChapter: number
+      chaptersToGo: number
+      endChapterName: string | null
+    }
   | {
       id: string
       order: number
@@ -33,11 +43,12 @@ export type ThreadResult =
       title: string | null
       startChapter: number
       endChapter: number
+      endChapterName: string | null
       posts: PostWithAuthor[]
     }
 
 export async function getSectionsForViewer(bookId: string, userId: string): Promise<SectionSummary[]> {
-  const finished = await getProgress(userId, bookId)
+  const [finished, chapterNames] = await Promise.all([getProgress(userId, bookId), getChapterNames(bookId)])
   const sections = await prisma.section.findMany({
     where: { bookId },
     orderBy: { order: 'asc' },
@@ -58,6 +69,7 @@ export async function getSectionsForViewer(bookId: string, userId: string): Prom
         startChapter: section.startChapter,
         endChapter: section.endChapter,
         chaptersToGo: Math.max(0, section.endChapter - finished),
+        endChapterName: chapterNames[section.endChapter] ?? null,
       }
     }
     return {
@@ -83,11 +95,16 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
     return { status: 'locked' }
   }
 
-  const posts = await prisma.post.findMany({
-    where: { sectionId },
-    orderBy: { createdAt: 'asc' },
-    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
-  })
+  const [posts, endChapterName] = await Promise.all([
+    prisma.post.findMany({
+      where: { sectionId },
+      orderBy: { createdAt: 'asc' },
+      include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    }),
+    prisma.chapterName.findUnique({
+      where: { bookId_number: { bookId: section.bookId, number: section.endChapter } },
+    }),
+  ])
 
   return {
     status: 'unlocked',
@@ -95,6 +112,7 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
     title: section.title,
     startChapter: section.startChapter,
     endChapter: section.endChapter,
+    endChapterName: endChapterName?.name ?? null,
     posts,
   }
 }

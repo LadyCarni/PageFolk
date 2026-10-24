@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
 import { getSectionBook, getSectionsForViewer, getSectionThread } from '@/lib/sections'
+import { setChapterNames } from '@/lib/chapter-names'
 
 async function resetDb() {
+  await prisma.chapterName.deleteMany()
   await prisma.readingProgress.deleteMany()
   await prisma.post.deleteMany()
   await prisma.threadMembership.deleteMany()
@@ -35,12 +37,38 @@ describe('getSectionsForViewer', () => {
     const summaries = await getSectionsForViewer(book.id, viewer.id)
 
     expect(summaries).toEqual([
-      { id: book.sections[0].id, order: 1, status: 'locked', startChapter: 11, endChapter: 15, chaptersToGo: 15 },
+      {
+        id: book.sections[0].id,
+        order: 1,
+        status: 'locked',
+        startChapter: 11,
+        endChapter: 15,
+        chaptersToGo: 15,
+        endChapterName: null,
+      },
     ])
     for (const leaked of ['title', 'label', 'name', 'posts', 'postCount', 'lastPostAt']) {
       expect(summaries[0]).not.toHaveProperty(leaked)
     }
     expect(JSON.stringify(summaries)).not.toContain('Lowood')
+  })
+
+  it('names the chapter a sealed section opens after, when the book has that name', async () => {
+    const book = await prisma.book.create({
+      data: {
+        title: 'Dune',
+        author: 'Herbert',
+        totalChapters: 30,
+        sections: { create: [{ startChapter: 11, endChapter: 15, title: 'Lowood', order: 1 }] },
+      },
+    })
+    const viewer = await prisma.user.create({ data: { googleId: 'g-cn', email: 'cn@example.com' } })
+    await setChapterNames(book.id, { 15: 'The Lighthouse' })
+
+    const [summary] = await getSectionsForViewer(book.id, viewer.id)
+
+    expect(summary).toMatchObject({ status: 'locked', endChapterName: 'The Lighthouse' })
+    expect(summary).not.toHaveProperty('title')
   })
 
   it("counts chapters to go from the viewer's progress", async () => {
@@ -184,7 +212,20 @@ describe('getSectionThread', () => {
       expect(result.title).toBe('Lowood')
       expect(result.startChapter).toBe(6)
       expect(result.endChapter).toBe(10)
+      expect(result.endChapterName).toBeNull()
     }
+  })
+
+  it('names the chapter an unlocked thread ends at, when the book has that name', async () => {
+    const sectionId = await setup()
+    const section = await prisma.section.findUniqueOrThrow({ where: { id: sectionId } })
+    await setChapterNames(section.bookId, { 9: 'Elsewhere', 10: 'B&B' })
+    const viewer = await prisma.user.create({ data: { googleId: 'g-cn2', email: 'cn2@example.com' } })
+    await unlock(viewer.id, sectionId)
+
+    const result = await getSectionThread(sectionId, viewer.id)
+
+    expect(result).toMatchObject({ status: 'unlocked', endChapterName: 'B&B' })
   })
 
   it('finds the book a section belongs to, or null when it does not exist', async () => {

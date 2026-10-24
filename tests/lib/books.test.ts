@@ -14,6 +14,7 @@ import {
   setReadMonth,
 } from '@/lib/books'
 import { setProgress } from '@/lib/progress'
+import { setChapterNames } from '@/lib/chapter-names'
 import { ValidationError } from '@/lib/errors'
 
 async function newBook(totalChapters = 30) {
@@ -22,6 +23,7 @@ async function newBook(totalChapters = 30) {
 
 describe('books', () => {
   beforeEach(async () => {
+    await prisma.chapterName.deleteMany()
     await prisma.readingProgress.deleteMany()
     await prisma.post.deleteMany()
     await prisma.threadMembership.deleteMany()
@@ -266,6 +268,17 @@ describe('books', () => {
     await expect(updateTotalChapters(book.id, 25)).rejects.toThrow('cannot be less than 30')
     await expect(updateTotalChapters(book.id, 0)).rejects.toThrow('Total chapters')
     expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).totalChapters).toBe(30)
+  })
+
+  it('refuses a total below the last named chapter, until that name is cleared', async () => {
+    const book = await newBook(30)
+    await setChapterNames(book.id, { 24: 'X' })
+    await expect(updateTotalChapters(book.id, 20)).rejects.toThrow(
+      'Total chapters cannot be less than 24, the last chapter with a name'
+    )
+    await setChapterNames(book.id, {})
+    await updateTotalChapters(book.id, 20)
+    expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).totalChapters).toBe(20)
   })
 
   it('allows lowering the total when there are no sections beyond it', async () => {

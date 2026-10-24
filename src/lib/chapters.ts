@@ -63,11 +63,15 @@ type OtherSection = { id: string; startChapter: number; endChapter: number; titl
 // What a form needs to know to check its own values, as plain data a server page can pass down.
 export type FormRule =
   | { kind: 'section'; totalChapters: number; others: OtherSection[]; ignoreId?: string }
-  | { kind: 'total'; minTotal: number }
+  | { kind: 'total'; minTotal: number; minNamed?: number }
   | { kind: 'newBook' }
   | { kind: 'clubName' }
   | { kind: 'blurb' }
   | { kind: 'readMonth' }
+
+export function namedMinimumMessage(lastNamed: number): string {
+  return `Total chapters cannot be less than ${lastNamed}, the last chapter with a name`
+}
 
 // The same checks the server runs, so a form can disable Save before a round trip.
 export function validateFormValues(rule: FormRule, values: Record<string, string>): string | null {
@@ -86,7 +90,8 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
     const total = parseWholeNumber(values.totalChapters)
     return (
       validateTotalChapters(total) ??
-      (total < rule.minTotal ? `Total chapters cannot be less than ${rule.minTotal}, where the last thread ends` : null)
+      (total < rule.minTotal ? `Total chapters cannot be less than ${rule.minTotal}, where the last thread ends` : null) ??
+      (rule.minNamed && total < rule.minNamed ? namedMinimumMessage(rule.minNamed) : null)
     )
   }
 

@@ -17,6 +17,7 @@ export function BookSetupHeader({
   author,
   totalChapters,
   minTotal,
+  minNamed,
   readMonth,
   completion,
 }: {
@@ -25,6 +26,7 @@ export function BookSetupHeader({
   author: string
   totalChapters: number
   minTotal: number
+  minNamed: number
   readMonth: string | null
   completion: Completion
 }) {
@@ -58,7 +60,7 @@ export function BookSetupHeader({
           <Box mt={2}>
             <AdminForm
               action={updateTotalChaptersAction}
-              rule={{ kind: 'total', minTotal }}
+              rule={{ kind: 'total', minTotal, minNamed }}
               mode="edit"
               submitLabel="Save"
               hiddenFields={{ bookId }}

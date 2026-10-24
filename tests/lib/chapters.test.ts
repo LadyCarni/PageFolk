@@ -233,6 +233,20 @@ describe('validateFormValues', () => {
       expect(validateFormValues({ kind: 'total', minTotal: 0 }, { totalChapters: '0' })).toContain('Total chapters')
       expect(validateFormValues({ kind: 'total', minTotal: 0 }, { totalChapters: '2.5' })).toContain('Total chapters')
     })
+
+    it('rejects a total below the last named chapter, with the same message as the server', () => {
+      const named = { kind: 'total' as const, minTotal: 0, minNamed: 24 }
+      expect(validateFormValues(named, { totalChapters: '20' })).toBe(
+        'Total chapters cannot be less than 24, the last chapter with a name'
+      )
+      expect(validateFormValues(named, { totalChapters: '24' })).toBeNull()
+    })
+
+    it('shows the thread message first when the thread minimum is the one broken', () => {
+      expect(validateFormValues({ kind: 'total', minTotal: 30, minNamed: 24 }, { totalChapters: '20' })).toBe(
+        'Total chapters cannot be less than 30, where the last thread ends'
+      )
+    })
   })
 
   describe('new book rule', () => {

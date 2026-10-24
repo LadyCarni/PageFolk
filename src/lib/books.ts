@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
-import { validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
+import { namedMinimumMessage, validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
+import { highestNamedChapter } from '@/lib/chapter-names'
 import { ValidationError } from '@/lib/errors'
 import { validateBlurb, validateReadMonth } from '@/lib/limits'
 import { syncUnlocksForBook } from '@/lib/progress'
@@ -27,6 +28,7 @@ export async function listBooks(status?: BookStatus) {
       },
       // Only the timestamp, never the image bytes; it doubles as a cache-busting version.
       cover: { select: { updatedAt: true } },
+      chapterNames: { orderBy: { number: 'asc' } },
     },
   })
 }
@@ -135,6 +137,8 @@ export async function updateTotalChapters(bookId: string, totalChapters: number)
   if (_max.endChapter !== null && totalChapters < _max.endChapter) {
     throw new ValidationError(`Total chapters cannot be less than ${_max.endChapter}, where the last thread ends`)
   }
+  const lastNamed = await highestNamedChapter(bookId)
+  if (totalChapters < lastNamed) throw new ValidationError(namedMinimumMessage(lastNamed))
   return prisma.book.update({ where: { id: bookId }, data: { totalChapters } })
 }
 

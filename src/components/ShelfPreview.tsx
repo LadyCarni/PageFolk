@@ -37,6 +37,11 @@ export function ShelfPreview({ book }: { book: ShelfBook }) {
           <Text fontFamily="heading" fontStyle="italic" fontSize="lg" color="mist" mt={1}>
             {book.author}
           </Text>
+          {book.genre && (
+            <Text {...LABEL_PROPS} color="antiqueGold" mt={2}>
+              {book.genre}
+            </Text>
+          )}
           <Box
             as="span"
             display="inline-block"

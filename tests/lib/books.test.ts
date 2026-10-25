@@ -12,6 +12,7 @@ import {
   deleteBook,
   setBlurb,
   setReadMonth,
+  setGenre,
 } from '@/lib/books'
 import { setProgress } from '@/lib/progress'
 import { setChapterNames } from '@/lib/chapter-names'
@@ -368,5 +369,19 @@ describe('books', () => {
 
     await setReadMonth(book.id, '')
     expect((await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).readMonth).toBeNull()
+  })
+
+  it('setGenre stores a listed genre, clears with empty, and rejects anything else without saving', async () => {
+    const book = await prisma.book.create({ data: { title: 'Rebecca', author: 'Daphne du Maurier', totalChapters: 27 } })
+    const stored = async () => (await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).genre
+
+    await setGenre(book.id, 'Mystery')
+    expect(await stored()).toBe('Mystery')
+
+    await expect(setGenre(book.id, 'Cookbooks')).rejects.toThrow(ValidationError)
+    expect(await stored()).toBe('Mystery')
+
+    await setGenre(book.id, '')
+    expect(await stored()).toBeNull()
   })
 })

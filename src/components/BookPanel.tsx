@@ -22,6 +22,11 @@ export function BookPanel({ data, label }: { data: BookViewData; label: string }
         <Text fontFamily="heading" fontStyle="italic" fontSize="lg" color="mist" mt={1}>
           {book.author}
         </Text>
+        {book.genre && (
+          <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="antiqueGold" mt={2}>
+            {book.genre}
+          </Text>
+        )}
       </Box>
       {book.blurb && <Text whiteSpace="pre-wrap">{book.blurb}</Text>}
       <ProgressStepper

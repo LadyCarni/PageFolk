@@ -48,7 +48,7 @@ describe('getShelf', () => {
     const shelf = await getShelf(user.id)
 
     expect(shelf.map((b) => b.title)).toEqual(['September', 'Undated'])
-    expect(shelf[0]).toMatchObject({ readMonth: '2026-09', coverVersion: null, totalChapters: 10, blurb: null })
+    expect(shelf[0]).toMatchObject({ readMonth: '2026-09', coverVersion: null, totalChapters: 10, blurb: null, genre: null })
   })
 
   it('marks a book read only when every chapter is finished, and clamps progress past the total', async () => {

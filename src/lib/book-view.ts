@@ -10,6 +10,7 @@ export type BookViewData = {
     title: string
     author: string
     blurb: string | null
+    genre: string | null
     totalChapters: number
     coverVersion: number | null
     status: string
@@ -54,6 +55,7 @@ export async function getBookView(
       title: book.title,
       author: book.author,
       blurb: book.blurb,
+      genre: book.genre,
       totalChapters: book.totalChapters,
       coverVersion: book.cover?.updatedAt.getTime() ?? null,
       status: book.status,

@@ -6,7 +6,7 @@ vi.mock('@/lib/session', () => ({ requireAdmin: () => mockRequireAdmin() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
 
-import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateChapterNamesAction, updateReadMonthAction, makeBookCurrentAction, markBookPastAction, approveAccessRequestAction, dismissAccessRequestAction } from '@/app/admin/actions'
+import { createBookAction, addAllowedEmailAction, removeAllowedEmailAction, addSectionAction, updateSectionAction, updateTotalChaptersAction, deleteSectionAction, deleteBookAction, uploadCoverAction, removeCoverAction, updateClubNameAction, updateBlurbAction, updateChapterNamesAction, updateReadMonthAction, updateGenreAction, makeBookCurrentAction, markBookPastAction, approveAccessRequestAction, dismissAccessRequestAction } from '@/app/admin/actions'
 import { getClubName } from '@/lib/club'
 import { createBook, addSection } from '@/lib/books'
 import { getChapterNames } from '@/lib/chapter-names'
@@ -378,6 +378,36 @@ describe('admin actions', () => {
     expect(await stored()).toBe('2026-09')
 
     expect(await submit('', '')).toEqual({})
+    expect(await stored()).toBeNull()
+  })
+
+  it('rejects updateGenreAction for a non-admin', async () => {
+    mockRequireAdmin.mockRejectedValue(new Error('Forbidden: admin only'))
+    const fd = new FormData()
+    fd.set('bookId', 'whatever')
+    fd.set('genre', 'Mystery')
+    await expect(updateGenreAction(fd)).rejects.toThrow('Forbidden')
+  })
+
+  it('sets and clears the genre for an admin, and reports an unlisted genre without saving', async () => {
+    mockRequireAdmin.mockResolvedValue({ id: 'admin-1', isAdmin: true })
+    const book = await createBook({ title: 'Rebecca', author: 'Daphne du Maurier', totalChapters: 27 })
+    const submit = (genre: string) => {
+      const fd = new FormData()
+      fd.set('bookId', book.id)
+      fd.set('genre', genre)
+      return updateGenreAction(fd)
+    }
+    const stored = async () => (await prisma.book.findUniqueOrThrow({ where: { id: book.id } })).genre
+
+    expect(await submit('Mystery')).toEqual({})
+    expect(await stored()).toBe('Mystery')
+    expect(revalidatePath).toHaveBeenCalledWith('/shelf')
+
+    expect(await submit('Cookbooks')).toEqual({ error: 'Choose a genre from the list' })
+    expect(await stored()).toBe('Mystery')
+
+    expect(await submit('')).toEqual({})
     expect(await stored()).toBeNull()
   })
 

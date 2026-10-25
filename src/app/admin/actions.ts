@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/session'
-import { createBook, addSection, makeBookCurrent, markBookPast, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth } from '@/lib/books'
+import { createBook, addSection, makeBookCurrent, markBookPast, updateSection, updateTotalChapters, deleteSection, deleteBook, setBlurb, setReadMonth, setGenre } from '@/lib/books'
 import { setChapterNames } from '@/lib/chapter-names'
 import { setClubName } from '@/lib/club'
 import { setBookCover, removeBookCover } from '@/lib/covers'
@@ -157,6 +157,18 @@ export async function updateReadMonthAction(formData: FormData): Promise<FormRes
   if ('error' in parsed) return { error: parsed.error }
   return reportingValidation(async () => {
     await setReadMonth(bookId, parsed.readMonth)
+    revalidateBookPages()
+  })
+}
+
+export async function updateGenreAction(formData: FormData): Promise<FormResult> {
+  await requireAdmin()
+  const bookId = String(formData.get('bookId') ?? '')
+  if (!bookId) {
+    throw new Error('bookId is required')
+  }
+  return reportingValidation(async () => {
+    await setGenre(bookId, String(formData.get('genre') ?? ''))
     revalidateBookPages()
   })
 }

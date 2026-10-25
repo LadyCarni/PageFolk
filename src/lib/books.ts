@@ -3,6 +3,7 @@ import { namedMinimumMessage, validateChapterRange, validateNoOverlap, validateT
 import { highestNamedChapter } from '@/lib/chapter-names'
 import { ValidationError } from '@/lib/errors'
 import { validateBlurb, validateReadMonth } from '@/lib/limits'
+import { validateGenre } from '@/lib/genres'
 import { syncUnlocksForBook } from '@/lib/progress'
 
 // The unlock sync is readers x sections upserts; give it more than Prisma's 5s default.
@@ -153,6 +154,12 @@ export async function setReadMonth(bookId: string, readMonth: string) {
   const problem = validateReadMonth(readMonth)
   if (problem) throw new ValidationError(problem)
   return prisma.book.update({ where: { id: bookId }, data: { readMonth: readMonth === '' ? null : readMonth } })
+}
+
+export async function setGenre(bookId: string, genre: string) {
+  const problem = validateGenre(genre)
+  if (problem) throw new ValidationError(problem)
+  return prisma.book.update({ where: { id: bookId }, data: { genre: genre === '' ? null : genre } })
 }
 
 export async function deleteSection(sectionId: string): Promise<void> {

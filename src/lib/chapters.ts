@@ -1,5 +1,6 @@
 import { validateBlurb, validateChapterName, validateClubName } from '@/lib/limits'
 import { readMonthFromParts } from '@/lib/read-month'
+import { validateGenre } from '@/lib/genres'
 
 export function chapterRangeName(start: number, end: number): string {
   return start === end ? `Chapter ${start}` : `Chapters ${start} to ${end}`
@@ -68,6 +69,7 @@ export type FormRule =
   | { kind: 'clubName' }
   | { kind: 'blurb' }
   | { kind: 'readMonth' }
+  | { kind: 'genre' }
   | { kind: 'chapterNames' }
 
 export function namedMinimumMessage(lastNamed: number): string {
@@ -115,6 +117,10 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
   if (rule.kind === 'readMonth') {
     const parsed = readMonthFromParts(values.month ?? '', values.year ?? '')
     return 'error' in parsed ? parsed.error : null
+  }
+
+  if (rule.kind === 'genre') {
+    return validateGenre(values.genre ?? '')
   }
 
   if (!values.title?.trim() || !values.author?.trim()) {

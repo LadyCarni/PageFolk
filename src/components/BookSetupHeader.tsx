@@ -5,12 +5,13 @@ import { Box, Button, Flex, Heading, Input, Select, Text } from '@chakra-ui/reac
 import { AdminForm } from '@/components/AdminForm'
 import { CompletionChips, type Completion } from '@/components/CompletionChips'
 import { LABEL_PROPS, FIELD_PROPS, SELECT_PROPS } from '@/components/adminStyles'
-import { updateReadMonthAction, updateTotalChaptersAction } from '@/app/admin/actions'
+import { updateGenreAction, updateReadMonthAction, updateTotalChaptersAction } from '@/app/admin/actions'
+import { GENRES } from '@/lib/genres'
 import { MONTH_NAMES, formatReadMonth, readMonthYears, splitReadMonth } from '@/lib/read-month'
 
 const SUBTITLE_PROPS = { fontFamily: 'heading', fontStyle: 'italic', fontSize: 'xl', color: 'mist' } as const
 
-// Title, "Author, N chapters" and "Read in Month Year" (both edit in place), and the completion chips.
+// Title, "Author, N chapters", "Read in Month Year" and the genre (all edit in place), and the completion chips.
 export function BookSetupHeader({
   bookId,
   title,
@@ -19,6 +20,7 @@ export function BookSetupHeader({
   minTotal,
   minNamed,
   readMonth,
+  genre,
   completion,
 }: {
   bookId: string
@@ -28,13 +30,17 @@ export function BookSetupHeader({
   minTotal: number
   minNamed: number
   readMonth: string | null
+  genre: string | null
   completion: Completion
 }) {
   const [editingTotal, setEditingTotal] = useState(false)
   const [editingMonth, setEditingMonth] = useState(false)
+  const [editingGenre, setEditingGenre] = useState(false)
   const [clearing, startClearing] = useTransition()
+  const [clearingGenre, startClearingGenre] = useTransition()
   const close = () => setEditingTotal(false)
   const closeMonth = () => setEditingMonth(false)
+  const closeGenre = () => setEditingGenre(false)
   const parts = splitReadMonth(readMonth)
 
   function clearMonth() {
@@ -44,6 +50,15 @@ export function BookSetupHeader({
       formData.set('month', '')
       formData.set('year', '')
       await updateReadMonthAction(formData)
+    })
+  }
+
+  function clearGenre() {
+    startClearingGenre(async () => {
+      const formData = new FormData()
+      formData.set('bookId', bookId)
+      formData.set('genre', '')
+      await updateGenreAction(formData)
     })
   }
 
@@ -135,6 +150,46 @@ export function BookSetupHeader({
             </Button>
             {readMonth && (
               <Button size="sm" variant="link" color="mist" aria-label="Clear month read" isDisabled={clearing} onClick={clearMonth}>
+                Clear
+              </Button>
+            )}
+          </Flex>
+        )}
+        {editingGenre ? (
+          <Box mt={2}>
+            <AdminForm
+              action={updateGenreAction}
+              rule={{ kind: 'genre' }}
+              mode="edit"
+              submitLabel="Save"
+              hiddenFields={{ bookId }}
+              onSuccess={closeGenre}
+              onCancel={closeGenre}
+            >
+              <Text {...SUBTITLE_PROPS}>Genre</Text>
+              <Select {...SELECT_PROPS} name="genre" aria-label="Genre" size="sm" w="200px" defaultValue={genre ?? ''} autoFocus>
+                <option value="">Genre</option>
+                {GENRES.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </Select>
+            </AdminForm>
+          </Box>
+        ) : (
+          <Flex align="baseline" gap={3} mt={1} wrap="wrap">
+            <Text {...SUBTITLE_PROPS}>{genre ? genre : 'Genre: not set'}</Text>
+            <Button
+              size="sm"
+              variant="link"
+              aria-label={genre ? 'Edit genre' : 'Set genre'}
+              onClick={() => setEditingGenre(true)}
+            >
+              {genre ? 'Edit' : 'Set'}
+            </Button>
+            {genre && (
+              <Button size="sm" variant="link" color="mist" aria-label="Clear genre" isDisabled={clearingGenre} onClick={clearGenre}>
                 Clear
               </Button>
             )}

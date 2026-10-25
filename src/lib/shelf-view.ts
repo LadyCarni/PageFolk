@@ -6,6 +6,7 @@ export type ShelfBook = {
   title: string
   author: string
   blurb: string | null
+  genre: string | null
   totalChapters: number
   coverVersion: number | null
   readMonth: string | null

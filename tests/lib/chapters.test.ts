@@ -452,3 +452,11 @@ describe('lastFinishedLabel', () => {
     expect(lastFinishedLabel(0, { 1: 'Arrivals' })).toEqual({ caption: 'Not started yet', name: null })
   })
 })
+
+describe('validateFormValues genre', () => {
+  it('accepts a listed genre or none, and rejects anything else', () => {
+    expect(validateFormValues({ kind: 'genre' }, { genre: 'Fantasy' })).toBeNull()
+    expect(validateFormValues({ kind: 'genre' }, { genre: '' })).toBeNull()
+    expect(validateFormValues({ kind: 'genre' }, { genre: 'Cookbooks' })).toBe('Choose a genre from the list')
+  })
+})

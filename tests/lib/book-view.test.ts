@@ -9,6 +9,7 @@ async function setup() {
       title: 'Jane Eyre',
       author: 'Charlotte Brontë',
       blurb: 'An orphaned girl.',
+      genre: 'Classics',
       totalChapters: 38,
       sections: {
         create: [
@@ -45,7 +46,7 @@ describe('getBookView', () => {
     expect(await getBookView('nope', user.id)).toBeNull()
   })
 
-  it('returns the book details, blurb and progress', async () => {
+  it('returns the book details, blurb, genre and progress', async () => {
     const { book, user } = await setup()
     await prisma.readingProgress.create({ data: { userId: user.id, bookId: book.id, chaptersFinished: 12 } })
 
@@ -56,6 +57,7 @@ describe('getBookView', () => {
       title: 'Jane Eyre',
       author: 'Charlotte Brontë',
       blurb: 'An orphaned girl.',
+      genre: 'Classics',
       totalChapters: 38,
       coverVersion: null,
       status: 'current',

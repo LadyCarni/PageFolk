@@ -23,6 +23,7 @@ export async function getShelf(userId: string): Promise<ShelfBook[]> {
         title: book.title,
         author: book.author,
         blurb: book.blurb,
+        genre: book.genre,
         totalChapters: book.totalChapters,
         coverVersion: book.cover?.updatedAt.getTime() ?? null,
         readMonth: book.readMonth,

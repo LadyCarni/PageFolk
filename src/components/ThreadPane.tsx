@@ -6,9 +6,12 @@ import { chapterRangeName } from '@/lib/chapters'
 import { STARTER_PROMPTS } from '@/lib/prompts'
 import type { ThreadResult } from '@/lib/sections'
 import { createPostAction } from '@/app/sections/actions'
+import { EmptyThread } from '@/components/EmptyThread'
 import { MessagesScroller } from '@/components/MessagesScroller'
 import { NoteComposer } from '@/components/NoteComposer'
 import { NoteItem } from '@/components/NoteItem'
+
+const COMPOSER_ID = 'thread-composer'
 
 type OpenThread = Extract<ThreadResult, { status: 'unlocked' }>
 
@@ -76,12 +79,10 @@ export function ThreadPane({
         <SafeGroundPill endChapter={thread.endChapter} endChapterName={thread.endChapterName} />
       </Box>
 
-      <MessagesScroller scrollKey={`${sectionId}:${topLevel.length}`}>
-        {topLevel.length === 0 ? (
-          <Text color="mist" fontStyle="italic">
-            No notes yet. Start the conversation below.
-          </Text>
-        ) : (
+      {topLevel.length === 0 ? (
+        <EmptyThread composerId={COMPOSER_ID} />
+      ) : (
+        <MessagesScroller scrollKey={`${sectionId}:${topLevel.length}`}>
           <VStack as="ul" align="stretch" spacing={6} p={0} m={0} listStyleType="none">
             {topLevel.map((note) => (
               <Box as="li" key={note.id}>
@@ -89,11 +90,14 @@ export function ThreadPane({
               </Box>
             ))}
           </VStack>
-        )}
-      </MessagesScroller>
+        </MessagesScroller>
+      )}
 
       <Box px={{ base: 4, md: 8 }} py={4} borderTopWidth="1px" borderColor="divider">
         <NoteComposer
+          key={sectionId}
+          id={COMPOSER_ID}
+          focusOnOpen={topLevel.length === 0}
           variant="bar"
           action={createPostAction.bind(null, sectionId)}
           placeholder="Start a new note"

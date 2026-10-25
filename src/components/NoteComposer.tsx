@@ -23,8 +23,12 @@ const MAX_LINES = 6
 
 // The note box. The text area grows with what you type, up to six lines, then scrolls. Starters
 // and the send button are bottom-aligned so they stay put as it grows. Enter inserts a newline;
-// Ctrl/Cmd+Enter or the send button posts. Whitespace-only notes cannot be sent.
+// Ctrl/Cmd+Enter or the send button posts. Whitespace-only notes cannot be sent. With
+// `focusOnOpen`, the cursor starts in the box on mouse/trackpad devices; phones are skipped so the
+// keyboard doesn't pop up over what the reader is looking at.
 export function NoteComposer({
+  id,
+  focusOnOpen,
   action,
   parentPostId,
   placeholder,
@@ -32,6 +36,8 @@ export function NoteComposer({
   starters,
   onSent,
 }: {
+  id?: string
+  focusOnOpen?: boolean
   action: (formData: FormData) => Promise<void>
   parentPostId?: string
   placeholder: string
@@ -80,6 +86,12 @@ export function NoteComposer({
     observer.observe(el)
     return () => observer.disconnect()
   }, [fitHeight])
+
+  useEffect(() => {
+    if (focusOnOpen && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      textRef.current?.focus()
+    }
+  }, [focusOnOpen])
 
   const canSend = text.trim() !== '' && !pending
 
@@ -176,6 +188,7 @@ export function NoteComposer({
         )}
         <Textarea
           ref={textRef}
+          id={id}
           value={text}
           onChange={(event) => setText(event.target.value)}
           onKeyDown={onKeyDown}

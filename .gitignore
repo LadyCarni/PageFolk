@@ -9,3 +9,4 @@ tsconfig.tsbuildinfo
 .claude/worktrees
 .superpowers
 *.local.md
+*.local.env

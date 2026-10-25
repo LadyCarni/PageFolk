@@ -23,7 +23,9 @@
 
 Runs as a Next.js server (`npm run build`, then `npm start`, port 3002) behind
 nginx with HTTPS, as a systemd service. Example config is in `deploy/`. To deploy
-an update, run `deploy/deploy.sh` on the server as root. It backs up the
+an update, run `sudo deploy/deploy.sh` from the app folder on the server. Its
+server-specific settings go in a gitignored `deploy/deploy.local.env` (see the
+top of the script). It backs up the
 database, pulls, runs `npm ci`, `npx prisma db push` and `npm run build`, then
 restarts the service, and stops at the first step that fails.
 

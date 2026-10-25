@@ -1,6 +1,6 @@
 'use client'
 
-import { useLayoutEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useTransition, type FormEvent, type KeyboardEvent } from 'react'
 import {
   Box,
   Button,
@@ -45,9 +45,11 @@ export function NoteComposer({
   const [pending, startTransition] = useTransition()
   const starterMenu = useDisclosure()
 
-  useLayoutEffect(() => {
+  const fitHeight = useCallback(() => {
     const el = textRef.current
-    if (!el) return
+    // While hidden (the thread pane is display:none on small screens until a thread is opened)
+    // everything measures as zero, which would pin the box to a sliver. Wait until it shows.
+    if (!el || el.offsetWidth === 0) return
     el.style.height = 'auto'
     const style = window.getComputedStyle(el)
     const fontSize = parseFloat(style.fontSize) || 16
@@ -60,7 +62,24 @@ export function NoteComposer({
     })
     el.style.height = `${height}px`
     el.style.overflowY = scroll ? 'auto' : 'hidden'
-  }, [text])
+  }, [])
+
+  useLayoutEffect(fitHeight, [text, fitHeight])
+
+  // Refit when the width changes: being revealed from display:none, or the phone rotating and
+  // the text rewrapping. Our own height changes don't touch the width, so this never loops.
+  useEffect(() => {
+    const el = textRef.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let width = el.offsetWidth
+    const observer = new ResizeObserver(() => {
+      if (el.offsetWidth === width) return
+      width = el.offsetWidth
+      fitHeight()
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [fitHeight])
 
   const canSend = text.trim() !== '' && !pending
 

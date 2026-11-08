@@ -56,7 +56,8 @@ export function NavBar({
             </Text>
           )}
         </HStack>
-        <HStack spacing={{ base: 4, md: 6 }} flexShrink={0}>
+        {/* Below lg the header wraps, so the links take their own full-width row. */}
+        <HStack spacing={{ base: 4, md: 6 }} flexShrink={0} w={{ base: '100%', lg: 'auto' }}>
           <NavLinks isAdmin={user.isAdmin} />
           <Menu placement="bottom-end">
             <MenuButton

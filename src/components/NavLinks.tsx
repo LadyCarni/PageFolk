@@ -16,8 +16,15 @@ export function NavLinks({ isAdmin }: { isAdmin: boolean }) {
   const links = isAdmin ? [...LINKS, { href: '/admin' as NavHref, label: 'Admin' }] : LINKS
 
   return (
-    <Box as="nav" aria-label="Main">
-      <HStack as="ul" listStyleType="none" spacing={{ base: 4, md: 6 }} m={0} p={0}>
+    <Box as="nav" aria-label="Main" flex={{ base: 1, lg: 'none' }}>
+      <HStack
+        as="ul"
+        listStyleType="none"
+        spacing={{ base: 4, md: 6 }}
+        justify={{ base: 'space-between', lg: 'flex-start' }}
+        m={0}
+        p={0}
+      >
         {links.map(({ href, label }) => (
           <li key={href}>
             <Link

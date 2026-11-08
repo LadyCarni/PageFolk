@@ -5,6 +5,7 @@ import { Box, Flex, HStack, IconButton, Text } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons'
 import { clampProgress, lastFinishedLabel, segmentStates } from '@/lib/chapters'
+import { QuickUnlockCard } from '@/components/QuickUnlockCard'
 
 const SEGMENT_COLORS = { done: 'antiqueGold', current: 'progressCurrent', todo: 'progressTodo' } as const
 
@@ -28,7 +29,11 @@ export function ProgressStepper({
   const [pending, startTransition] = useTransition()
 
   function step(delta: number) {
-    const next = clampProgress(finished + delta, totalChapters)
+    moveTo(finished + delta)
+  }
+
+  function moveTo(chapter: number) {
+    const next = clampProgress(chapter, totalChapters)
     if (next === finished) return
     const previous = finished
     setFinished(next)
@@ -55,56 +60,65 @@ export function ProgressStepper({
   } as const
 
   return (
-    <Box bg="velvet" color="parchment" borderWidth="1px" borderColor="border" borderRadius="xl" p={5}>
-      <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="dustyRose" textAlign="center">
-        Your place in the book
-      </Text>
-      {place && (
-        <Box textAlign="center" mt={3} aria-live="polite">
-          <Text fontSize="sm" color="mist">
-            {place.caption}
-          </Text>
-          {place.name && (
-            <Text fontFamily="heading" fontStyle="italic" fontSize="xl" color="parchment" mt={1}>
-              {place.name}
-            </Text>
-          )}
-        </Box>
-      )}
-      <Flex align="center" justify="space-between" mt=".25em">
-        <IconButton
-          aria-label="One chapter fewer"
-          icon={<FontAwesomeIcon icon={faMinus} />}
-          onClick={() => step(-1)}
-          isDisabled={pending || finished <= 0}
-          {...buttonProps}
-        />
-        <Box textAlign="center">
-          <Text fontFamily="heading" fontWeight="bold" fontSize="4xl" lineHeight="1" color="antiqueGold" aria-live="polite">
-            {finished}
-          </Text>
-          <Text fontSize="sm" color="mist" mt="1em">
-            chapters finished, of {totalChapters}
-          </Text>
-        </Box>
-        <IconButton
-          aria-label="One chapter more"
-          icon={<FontAwesomeIcon icon={faPlus} />}
-          onClick={() => step(1)}
-          isDisabled={pending || finished >= totalChapters}
-          {...buttonProps}
-        />
-      </Flex>
-      <HStack spacing={1} mt={4} aria-hidden>
-        {segmentStates(sections, finished).map((state, index) => (
-          <Box key={index} flex="1" h="6px" borderRadius="full" bg={SEGMENT_COLORS[state]} />
-        ))}
-      </HStack>
-      {error && (
-        <Text role="alert" mt={2} fontSize="sm" color="dustyRose">
-          {error}
+    <>
+      <Box bg="velvet" color="parchment" borderWidth="1px" borderColor="border" borderRadius="xl" p={5}>
+        <Text fontSize="xs" letterSpacing="0.14em" textTransform="uppercase" color="dustyRose" textAlign="center">
+          Your place in the book
         </Text>
-      )}
-    </Box>
+        {place && (
+          <Box textAlign="center" mt={3} aria-live="polite">
+            <Text fontSize="sm" color="mist">
+              {place.caption}
+            </Text>
+            {place.name && (
+              <Text fontFamily="heading" fontStyle="italic" fontSize="xl" color="parchment" mt={1}>
+                {place.name}
+              </Text>
+            )}
+          </Box>
+        )}
+        <Flex align="center" justify="space-between" mt=".25em">
+          <IconButton
+            aria-label="One chapter fewer"
+            icon={<FontAwesomeIcon icon={faMinus} />}
+            onClick={() => step(-1)}
+            isDisabled={pending || finished <= 0}
+            {...buttonProps}
+          />
+          <Box textAlign="center">
+            <Text fontFamily="heading" fontWeight="bold" fontSize="4xl" lineHeight="1" color="antiqueGold" aria-live="polite">
+              {finished}
+            </Text>
+            <Text fontSize="sm" color="mist" mt="1em">
+              chapters finished, of {totalChapters}
+            </Text>
+          </Box>
+          <IconButton
+            aria-label="One chapter more"
+            icon={<FontAwesomeIcon icon={faPlus} />}
+            onClick={() => step(1)}
+            isDisabled={pending || finished >= totalChapters}
+            {...buttonProps}
+          />
+        </Flex>
+        <HStack spacing={1} mt={4} aria-hidden>
+          {segmentStates(sections, finished).map((state, index) => (
+            <Box key={index} flex="1" h="6px" borderRadius="full" bg={SEGMENT_COLORS[state]} />
+          ))}
+        </HStack>
+        {error && (
+          <Text role="alert" mt={2} fontSize="sm" color="dustyRose">
+            {error}
+          </Text>
+        )}
+      </Box>
+      <QuickUnlockCard
+        finished={finished}
+        totalChapters={totalChapters}
+        chapterNames={chapterNames}
+        pending={pending}
+        onUnlock={moveTo}
+      />
+    </>
   )
 }

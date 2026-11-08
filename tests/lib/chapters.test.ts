@@ -10,6 +10,7 @@ import {
   clampProgress,
   fillDown,
   lastFinishedLabel,
+  quickUnlockOptions,
   segmentStates,
   chapterCoverage,
   formatGaps,
@@ -458,5 +459,22 @@ describe('validateFormValues genre', () => {
     expect(validateFormValues({ kind: 'genre' }, { genre: 'Fantasy' })).toBeNull()
     expect(validateFormValues({ kind: 'genre' }, { genre: '' })).toBeNull()
     expect(validateFormValues({ kind: 'genre' }, { genre: 'Cookbooks' })).toBe('Choose a genre from the list')
+  })
+})
+
+describe('quickUnlockOptions', () => {
+  it('offers only chapters after the reader\'s place, so nothing is resealed', () => {
+    expect(quickUnlockOptions(3, 5, {}).map((o) => o.chapter)).toEqual([4, 5])
+  })
+
+  it('labels chapters with their names where the admin set them', () => {
+    expect(quickUnlockOptions(0, 2, { 2: 'The Storm' })).toEqual([
+      { chapter: 1, label: 'Chapter 1' },
+      { chapter: 2, label: 'Chapter 2 · The Storm' },
+    ])
+  })
+
+  it('is empty once the book is finished', () => {
+    expect(quickUnlockOptions(5, 5, {})).toEqual([])
   })
 })

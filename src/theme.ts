@@ -30,6 +30,7 @@ const theme = extendTheme({
     border: '#5a4050', // card and bubble borders
     borderOpen: '#6b4a5b', // open thread card borders
     borderMuted: '#7a5568', // sealed dashed borders, input borders, small ornaments
+    borderGold: 'rgba(212, 176, 106, 0.4)', // faded antique gold: the quick-unlock card
     progressCurrent: '#9b5a6e', // progress bar segment you're partway through
     progressTodo: '#3a2833', // progress bar segments not yet reached
     onGold: '#1a0f14', // dark text on gold buttons and avatars

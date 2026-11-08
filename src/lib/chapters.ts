@@ -223,3 +223,17 @@ export function lastFinishedLabel(
   if (finished <= 0) return { caption: 'Not started yet', name: null }
   return { caption: `Last finished · Chapter ${finished}`, name: names[finished] ?? null }
 }
+
+// The quick-unlock picker: only chapters past the reader's place, since it never reseals threads.
+export function quickUnlockOptions(
+  finished: number,
+  total: number,
+  names: Record<number, string>
+): { chapter: number; label: string }[] {
+  const options: { chapter: number; label: string }[] = []
+  for (let chapter = finished + 1; chapter <= total; chapter++) {
+    const name = names[chapter]
+    options.push({ chapter, label: name ? `Chapter ${chapter} · ${name}` : `Chapter ${chapter}` })
+  }
+  return options
+}

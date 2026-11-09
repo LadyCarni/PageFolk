@@ -6,6 +6,7 @@ import { prisma } from '@/lib/db'
 import { canViewBook } from '@/lib/book-access'
 import { setProgress } from '@/lib/progress'
 import { createPost, deletePost } from '@/lib/posts'
+import { toggleReaction } from '@/lib/reactions'
 
 function revalidateBookViews() {
   revalidatePath('/')
@@ -34,5 +35,11 @@ export async function createPostAction(sectionId: string, formData: FormData) {
 export async function deletePostAction(sectionId: string, postId: string) {
   const user = await requireUser()
   await deletePost(postId, user.id)
+  revalidateBookViews()
+}
+
+export async function toggleReactionAction(postId: string, kind: string) {
+  const user = await requireUser()
+  await toggleReaction(postId, user.id, kind)
   revalidateBookViews()
 }

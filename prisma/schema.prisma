@@ -18,6 +18,7 @@ model User {
   memberships ThreadMembership[]
   posts       Post[]
   progress    ReadingProgress[]
+  reactions   PostReaction[]
 }
 
 model AllowedEmail {
@@ -111,6 +112,20 @@ model Post {
   user       User    @relation(fields: [userId], references: [id])
   parentPost Post?   @relation("Replies", fields: [parentPostId], references: [id])
   replies    Post[]  @relation("Replies")
+  reactions  PostReaction[]
+}
+
+// One member's reaction to a post. The key makes each kind count once per person; removing the row undoes it.
+model PostReaction {
+  postId    String
+  userId    String
+  kind      String // one of REACTIONS in src/lib/reactions.ts
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([postId, userId, kind])
 }
 
 model ReadingProgress {

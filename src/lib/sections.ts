@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { sectionDisplayName } from '@/lib/chapters'
 import { getChapterNames } from '@/lib/chapter-names'
 import { getProgress } from '@/lib/progress'
+import { summarizeReactions, type ReactionSummary } from '@/lib/reactions'
 
 // A sealed thread exposes only its chapter range, how far away it is, and the name of the
 // chapter it opens after (table-of-contents information, not a spoiler). Its title and
@@ -33,6 +34,7 @@ export type PostWithAuthor = {
   parentPostId: string | null
   createdAt: Date
   user: { id: string; name: string | null; avatarUrl: string | null }
+  reactions: ReactionSummary
 }
 
 export type ThreadResult =
@@ -99,7 +101,10 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
     prisma.post.findMany({
       where: { sectionId },
       orderBy: { createdAt: 'asc' },
-      include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+      include: {
+        user: { select: { id: true, name: true, avatarUrl: true } },
+        reactions: { select: { kind: true, userId: true } },
+      },
     }),
     prisma.chapterName.findUnique({
       where: { bookId_number: { bookId: section.bookId, number: section.endChapter } },
@@ -113,7 +118,8 @@ export async function getSectionThread(sectionId: string, userId: string): Promi
     startChapter: section.startChapter,
     endChapter: section.endChapter,
     endChapterName: endChapterName?.name ?? null,
-    posts,
+    // Who reacted stays on the server; the page only gets counts.
+    posts: posts.map(({ reactions, ...post }) => ({ ...post, reactions: summarizeReactions(reactions, userId) })),
   }
 }
 

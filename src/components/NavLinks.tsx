@@ -46,6 +46,9 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
         listStyleType="none"
         spacing={{ base: 3, md: 6 }}
         justify={{ base: 'space-between', lg: 'flex-start' }}
+        // Baseline, not centre: the Admin menu button's padding makes it taller than the text links,
+        // so centring would lift its text above theirs.
+        align="baseline"
         m={0}
         p={0}
       >
@@ -76,6 +79,7 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
                 position="relative"
                 fontSize="inherit"
                 fontWeight="inherit"
+                lineHeight="inherit"
                 aria-label={badges.admin ? 'Admin, requests to review' : undefined}
                 color={adminActive ? 'antiqueGold' : 'body'}
                 pb={1}

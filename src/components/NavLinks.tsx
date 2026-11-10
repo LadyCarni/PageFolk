@@ -13,12 +13,21 @@ const LINKS: { href: NavHref; label: string }[] = [
   { href: '/whats-new', label: "What's new" },
 ]
 
+// Every nav item is the same box: room for the active underline below, matched by an invisible
+// border and padding above, so the label sits in the vertical middle of the nav bar.
+const UNDERLINE_BOX = {
+  py: 1,
+  borderTopWidth: '1px',
+  borderBottomWidth: '1px',
+  borderTopColor: 'transparent',
+} as const
+
 function NavDot() {
   return (
     <Box
       aria-hidden
       position="absolute"
-      top="-2px"
+      top="3px"
       right="-10px"
       boxSize="8px"
       borderRadius="full"
@@ -46,9 +55,7 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
         listStyleType="none"
         spacing={{ base: 3, md: 6 }}
         justify={{ base: 'space-between', lg: 'flex-start' }}
-        // Baseline, not centre: the Admin menu button's padding makes it taller than the text links,
-        // so centring would lift its text above theirs.
-        align="baseline"
+        align="center"
         m={0}
         p={0}
       >
@@ -61,9 +68,9 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
               aria-current={active === href ? 'page' : undefined}
               aria-label={href === '/whats-new' && showWhatsNewDot ? "What's new, new updates" : undefined}
               color={active === href ? 'antiqueGold' : 'body'}
-              pb={1}
-              borderBottomWidth="1px"
-              borderColor={active === href ? 'antiqueGold' : 'transparent'}
+              display="inline-block"
+              {...UNDERLINE_BOX}
+              borderBottomColor={active === href ? 'antiqueGold' : 'transparent'}
               _hover={{ color: active === href ? 'antiqueGold' : 'parchment', textDecoration: 'none' }}
             >
               {label}
@@ -82,9 +89,8 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
                 lineHeight="inherit"
                 aria-label={badges.admin ? 'Admin, requests to review' : undefined}
                 color={adminActive ? 'antiqueGold' : 'body'}
-                pb={1}
-                borderBottomWidth="1px"
-                borderColor={adminActive ? 'antiqueGold' : 'transparent'}
+                {...UNDERLINE_BOX}
+                borderBottomColor={adminActive ? 'antiqueGold' : 'transparent'}
                 _hover={{ color: adminActive ? 'antiqueGold' : 'parchment', textDecoration: 'none' }}
               >
                 Admin

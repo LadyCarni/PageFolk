@@ -9,7 +9,7 @@ import { MemberRequestBadge } from '@/components/whats-new/MemberRequestBadge'
 function RequestCrown() {
   return (
     <Box as="span" color="antiqueGold" mr={2} title="Member request" aria-label="Member request" role="img">
-      <FontAwesomeIcon icon={faCrown} size="xs" />
+      <FontAwesomeIcon icon={faCrown} />
     </Box>
   )
 }
@@ -27,7 +27,7 @@ export function Changelog({ versions }: { versions: ChangelogVersionView[] }) {
         {versions.map((v) => (
           <Box key={v.version}>
             <Flex align="baseline" gap={3} wrap="wrap">
-              <Heading as="h3" size="xl" fontWeight={500}>
+              <Heading as="h3" size="md" fontWeight={500}>
                 {v.version}{' '}
                 <Text as="span" color="mist" fontWeight={400}>
                   ({formatVersionDate(v.date)})

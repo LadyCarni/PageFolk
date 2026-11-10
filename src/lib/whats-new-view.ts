@@ -100,10 +100,11 @@ export async function getWhatsNewView(
     .map((i) => ({ id: i.id, title: i.title, display: displayFor(i) }))
 
   const byNumber = new Map(items.filter((i) => i.number !== null).map((i) => [i.number as number, i]))
-  const changelog: ChangelogVersionView[] = CHANGELOG.map((v) => ({
+  // On a first visit (nothing seen yet) only the newest version is tagged New, not the whole history.
+  const changelog: ChangelogVersionView[] = CHANGELOG.map((v, index) => ({
     version: v.version,
     date: v.date,
-    isNew: isNewerThan(v.version, lastSeenBefore),
+    isNew: lastSeenBefore === null ? index === 0 : isNewerThan(v.version, lastSeenBefore),
     lines: v.lines.map((l) => {
       const item = l.roadmap === undefined ? undefined : byNumber.get(l.roadmap)
       return { text: l.text, itemId: item?.id ?? null, isMemberRequest: item?.isMemberRequest ?? false }

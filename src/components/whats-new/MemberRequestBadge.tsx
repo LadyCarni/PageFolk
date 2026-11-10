@@ -14,8 +14,9 @@ export function MemberRequestBadge() {
       borderRadius="full"
       color="antiqueGold"
       verticalAlign="middle"
+      fontSize="xs"
     >
-      <FontAwesomeIcon icon={faCrown} size="xs" aria-hidden />
+      <FontAwesomeIcon icon={faCrown} aria-hidden />
       <Text as="span" fontSize="xs" color="antiqueGold">
         Member request
       </Text>

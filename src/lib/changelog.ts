@@ -4,13 +4,19 @@ export type ChangelogVersion = { version: string; date: string; lines: Changelog
 // Newest first. Add a new entry at the top when something ships.
 export const CHANGELOG: ChangelogVersion[] = [
   {
-    version: '1.2',
-    date: '2026-11-08',
+    version: '1.3',
+    // Set to the real deploy date when this goes live.
+    date: '2026-11-09',
     lines: [
-      { text: 'Quick unlock card to jump ahead to a chapter or unlock everything' },
+      { text: "What's new: see what's coming up, suggest features, upvote ideas and read the changelog" },
       { text: 'React to notes and replies with laugh, heart or sad' },
       { text: 'Nav links spread across the full width on phones' },
     ],
+  },
+  {
+    version: '1.2',
+    date: '2026-11-08',
+    lines: [{ text: 'Quick unlock card to jump ahead to a chapter or unlock everything' }],
   },
   {
     version: '1.1',

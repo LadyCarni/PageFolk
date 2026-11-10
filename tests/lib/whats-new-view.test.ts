@@ -64,7 +64,8 @@ describe('getWhatsNewView', () => {
     expect(lines[1]).toEqual({ text: 'Ghost', itemId: null, isMemberRequest: false })
     expect(view.changelog.map((v) => v.isNew)).toEqual([true, false])
     const all = await getWhatsNewView(asViewer(member), null)
-    expect(all.changelog.map((v) => v.isNew)).toEqual([true, true])
+    // A first visit (nothing seen yet) tags only the latest version, not the whole history.
+    expect(all.changelog.map((v) => v.isNew)).toEqual([true, false])
   })
 
   it('hides review items from other members', async () => {

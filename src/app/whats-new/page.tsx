@@ -37,27 +37,38 @@ export default async function WhatsNewPage({ searchParams }: { searchParams: { i
     </VStack>
   )
 
-  if (!selected) return <><MarkSeen />{column}</>
-
   const fullHeight = `calc(100dvh - ${NAV_HEIGHT_PX}px)`
+  // One stable tree whether or not a thread is open, so selecting an item does not remount the
+  // column (which would reset its scroll and any open Suggest form).
   return (
     <>
-    <MarkSeen />
-    <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} h={{ lg: fullHeight }} minH={{ base: fullHeight }}>
-      <Box display={{ base: 'none', lg: 'block' }} overflowY={{ lg: 'auto' }} minH={0}>
-        {column}
-      </Box>
-      <Box
+      <MarkSeen />
+      <Grid
         as="main"
-        bg="panel"
-        borderLeftWidth={{ lg: '1px' }}
-        borderColor="divider"
-        minH={0}
-        h={{ base: fullHeight, lg: '100%' }}
+        templateColumns={selected ? { base: '1fr', lg: '1fr 1fr' } : '1fr'}
+        h={selected ? { lg: fullHeight } : undefined}
+        minH={selected ? { base: fullHeight } : undefined}
       >
-        <ItemThreadPane thread={selected} viewer={user} backHref="/whats-new" />
-      </Box>
-    </Grid>
+        <Box
+          display={selected ? { base: 'none', lg: 'block' } : 'block'}
+          overflowY={selected ? { lg: 'auto' } : undefined}
+          minH={0}
+        >
+          {column}
+        </Box>
+        <Box
+          as="section"
+          aria-label="Request thread"
+          display={selected ? 'block' : 'none'}
+          bg="panel"
+          borderLeftWidth={{ lg: '1px' }}
+          borderColor="divider"
+          minH={0}
+          h={{ base: fullHeight, lg: '100%' }}
+        >
+          {selected && <ItemThreadPane thread={selected} viewer={user} backHref="/whats-new" />}
+        </Box>
+      </Grid>
     </>
   )
 }

@@ -14,11 +14,13 @@ function ReviewForm({
   action,
   label,
   variant,
+  confirmMessage,
   children,
 }: {
   action: (formData: FormData) => Promise<FormResult>
   label: string
   variant: 'solid' | 'dangerOutline'
+  confirmMessage?: string
   children: React.ReactNode
 }) {
   const [state, formAction] = useFormState(
@@ -26,7 +28,12 @@ function ReviewForm({
     {}
   )
   return (
-    <form action={formAction}>
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        if (confirmMessage && !window.confirm(confirmMessage)) e.preventDefault()
+      }}
+    >
       {children}
       <Flex align="center" gap={3} mt={3}>
         <SubmitButton label={label} variant={variant} />
@@ -77,7 +84,10 @@ export function ApproveForm({ itemId, title, description }: { itemId: string; ti
 
 export function DeclineForm({ itemId }: { itemId: string }) {
   return (
-    <ReviewForm action={(formData) => declineRequestAction(itemId, formData)} label="Decline" variant="dangerOutline">
+    <ReviewForm action={(formData) => declineRequestAction(itemId, formData)} label="Decline"
+      variant="dangerOutline"
+      confirmMessage="Decline this request? The requester will see it as Not planned."
+    >
       <Box>
         <Text {...LABEL_PROPS} color="dustyRose" mb={2}>
           Note to the requester (optional)

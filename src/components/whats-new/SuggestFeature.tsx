@@ -3,6 +3,7 @@
 import { useState, useTransition, type FormEvent } from 'react'
 import { Box, Button, Flex, Heading, Input, Text, Textarea, VStack } from '@chakra-ui/react'
 import { submitFeatureRequestAction } from '@/app/whats-new/actions'
+import { FEATURE_DESCRIPTION_MAX, FEATURE_TITLE_MAX } from '@/lib/limits'
 
 // The "Coming up" heading row with the Suggest a feature button, and the inline form it opens.
 export function SuggestFeature() {
@@ -16,13 +17,17 @@ export function SuggestFeature() {
     const data = new FormData(e.currentTarget)
     setError(null)
     startTransition(async () => {
-      const result = await submitFeatureRequestAction(data)
-      if (result.error) {
-        setError(result.error)
-        return
+      try {
+        const result = await submitFeatureRequestAction(data)
+        if (result.error) {
+          setError(result.error)
+          return
+        }
+        setOpen(false)
+        setThanks(true)
+      } catch {
+        setError('Could not send your idea. Try again.')
       }
-      setOpen(false)
-      setThanks(true)
     })
   }
 
@@ -39,6 +44,7 @@ export function SuggestFeature() {
             onClick={() => {
               setOpen(true)
               setThanks(false)
+              setError(null)
             }}
           >
             Suggest a feature
@@ -53,11 +59,12 @@ export function SuggestFeature() {
       {open && (
         <Box as="form" onSubmit={onSubmit} mt={4} p={4} bg="velvet" borderWidth="1px" borderColor="border" borderRadius="xl">
           <VStack align="stretch" spacing={3}>
-            <Input name="title" aria-label="Feature title" placeholder="What feature would you like to see?" maxLength={200} />
+            <Input name="title" aria-label="Feature title" placeholder="What feature would you like to see?" maxLength={FEATURE_TITLE_MAX} />
             <Textarea
               name="description"
               aria-label="Feature description"
               rows={4}
+              maxLength={FEATURE_DESCRIPTION_MAX}
               placeholder="Describe what the feature does? What other apps have you used that has this feature, as an example?"
             />
             {error && (
@@ -69,7 +76,10 @@ export function SuggestFeature() {
               <Button type="submit" isLoading={pending}>
                 Submit Feature Request
               </Button>
-              <Button type="button" variant="link" onClick={() => setOpen(false)} isDisabled={pending}>
+              <Button type="button" variant="link" onClick={() => {
+                  setOpen(false)
+                  setError(null)
+                }} isDisabled={pending}>
                 Cancel
               </Button>
             </Flex>

@@ -81,11 +81,17 @@ export function ItemThreadPane({
                   {entry.text}
                 </Text>
               ) : (
+                entry.kind === 'original' && !thread.isMemberRequest ? (
+                  entry.description ? (
+                    <Text whiteSpace="pre-wrap">{entry.description}</Text>
+                  ) : null
+                ) : (
                 <Bubble
                   entry={entry}
                   mine={entry.author.id === viewer.id}
                   admin={entry.kind === 'reply'}
                 />
+                )
               )}
             </Box>
           ))}

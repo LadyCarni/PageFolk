@@ -25,7 +25,11 @@ export function RoadmapItemRow({
   const [pending, startTransition] = useTransition()
   const [problem, setProblem] = useState<string | null>(null)
 
-  function changeStatus(next: string) {
+  function changeStatus(next: string, select: HTMLSelectElement) {
+    if (next === 'not_planned' && !window.confirm('Mark this as not planned? It will leave the roadmap and can\'t be undone here.')) {
+      select.value = status
+      return
+    }
     setProblem(null)
     startTransition(async () => {
       try {
@@ -50,7 +54,7 @@ export function RoadmapItemRow({
           key={status}
           aria-label={`Status of #${number}`}
           defaultValue={status}
-          onChange={(e) => changeStatus(e.target.value)}
+          onChange={(e) => changeStatus(e.target.value, e.target)}
           isDisabled={pending}
           w="auto"
           size="sm"

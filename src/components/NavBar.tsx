@@ -8,9 +8,11 @@ import { UserAvatar } from '@/components/UserAvatar'
 export function NavBar({
   user,
   clubName,
+  badges,
 }: {
   user: { id: string; name?: string | null; isAdmin: boolean }
   clubName: string | null
+  badges: { whatsNew: boolean; admin: boolean }
 }) {
   return (
     <Box
@@ -57,8 +59,8 @@ export function NavBar({
           )}
         </HStack>
         {/* Below lg the header wraps, so the links take their own full-width row. */}
-        <HStack spacing={{ base: 4, md: 6 }} flexShrink={0} w={{ base: '100%', lg: 'auto' }}>
-          <NavLinks isAdmin={user.isAdmin} />
+        <HStack spacing={{ base: 3, md: 6 }} flexShrink={0} w={{ base: '100%', lg: 'auto' }}>
+          <NavLinks isAdmin={user.isAdmin} badges={badges} />
           <Menu placement="bottom-end">
             <MenuButton
               aria-label="Account menu"

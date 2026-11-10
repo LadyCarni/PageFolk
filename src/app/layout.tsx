@@ -7,6 +7,7 @@ import { Providers } from './providers'
 import { auth } from '@/auth'
 import { NavBar } from '@/components/NavBar'
 import { getClubName } from '@/lib/club'
+import { getNavBadges } from '@/lib/nav-badges'
 
 // The stylesheet is imported above, so stop Font Awesome injecting it at runtime.
 config.autoAddCss = false
@@ -24,6 +25,9 @@ export const metadata = { title: 'PageFolk' }
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const session = await auth()
   const clubName = session?.user ? await getClubName() : null
+  const badges = session?.user
+    ? await getNavBadges({ id: session.user.id, isAdmin: Boolean(session.user.isAdmin) })
+    : { whatsNew: false, admin: false }
 
   return (
     <html lang="en" className={`${cormorant.variable} ${lora.variable}`} suppressHydrationWarning>
@@ -38,6 +42,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 isAdmin: Boolean(session.user.isAdmin),
               }}
               clubName={clubName}
+              badges={badges}
             />
           ) : null}
           {children}

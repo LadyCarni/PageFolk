@@ -72,9 +72,10 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
           <li>
             <Menu placement="bottom-end">
               <MenuButton
-                as={Link}
-                href="#"
+                type="button"
                 position="relative"
+                fontSize="inherit"
+                fontWeight="inherit"
                 aria-label={badges.admin ? 'Admin, requests to review' : undefined}
                 color={adminActive ? 'antiqueGold' : 'body'}
                 pb={1}

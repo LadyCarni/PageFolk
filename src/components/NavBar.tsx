@@ -2,8 +2,14 @@ import NextLink from 'next/link'
 import { Box, Flex, HStack, Image, Link, Menu, MenuButton, MenuItem, MenuList, Text } from '@chakra-ui/react'
 import { signOut } from '@/auth'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
+import { MobileNav } from '@/components/MobileNav'
 import { NavLinks } from '@/components/NavLinks'
 import { UserAvatar } from '@/components/UserAvatar'
+
+async function signOutAction() {
+  'use server'
+  await signOut()
+}
 
 export function NavBar({
   user,
@@ -17,6 +23,7 @@ export function NavBar({
   return (
     <Box
       as="header"
+      position="relative"
       bg="midnightPlum"
       borderBottomWidth="1px"
       borderColor="divider"
@@ -24,8 +31,15 @@ export function NavBar({
       py={{ base: 3, lg: 0 }}
       h={{ lg: `${NAV_HEIGHT_PX}px` }}
     >
-      {/* On large screens the header is one fixed-height row, so a long club name is cut short instead of wrapping. */}
-      <Flex align="center" justify="space-between" wrap={{ base: 'wrap', lg: 'nowrap' }} gap={3} h="100%">
+      {/* Phones and large screens get one row, so a long club name is cut short instead of wrapping.
+          In between, the links wrap onto their own row. */}
+      <Flex
+        align="center"
+        justify="space-between"
+        wrap={{ base: 'nowrap', md: 'wrap', lg: 'nowrap' }}
+        gap={3}
+        h="100%"
+      >
         <HStack spacing={4} minW={0}>
           <Link
             flexShrink={0}
@@ -58,8 +72,14 @@ export function NavBar({
             </Text>
           )}
         </HStack>
-        {/* Below lg the header wraps, so the links take their own full-width row. */}
-        <HStack spacing={{ base: 3, md: 6 }} flexShrink={0} w={{ base: '100%', lg: 'auto' }}>
+        {/* Below md everything lives in the mobile menu. Between md and lg the links take their own full-width row. */}
+        <MobileNav user={user} badges={badges} signOutAction={signOutAction} />
+        <HStack
+          display={{ base: 'none', md: 'flex' }}
+          spacing={6}
+          flexShrink={0}
+          w={{ md: '100%', lg: 'auto' }}
+        >
           <NavLinks isAdmin={user.isAdmin} badges={badges} />
           <Menu placement="bottom-end">
             <MenuButton
@@ -77,12 +97,7 @@ export function NavBar({
                   {user.name}
                 </Text>
               )}
-              <form
-                action={async () => {
-                  'use server'
-                  await signOut()
-                }}
-              >
+              <form action={signOutAction}>
                 <MenuItem
                   as="button"
                   type="submit"

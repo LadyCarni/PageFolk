@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import { Box, HStack, Link, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { activeNavHref, type NavHref } from '@/lib/nav'
 
-const LINKS: { href: NavHref; label: string }[] = [
+export const LINKS: { href: NavHref; label: string }[] = [
   { href: '/', label: 'This month' },
   { href: '/shelf', label: 'Our shelf' },
   { href: '/members', label: 'Members' },
@@ -22,7 +22,7 @@ const UNDERLINE_BOX = {
   borderTopColor: 'transparent',
 } as const
 
-function NavDot() {
+export function NavDot() {
   return (
     <Box
       aria-hidden
@@ -37,7 +37,8 @@ function NavDot() {
   )
 }
 
-export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { whatsNew: boolean; admin: boolean } }) {
+// Shared by the desktop links and the mobile menu.
+export function useNavState(badges: { whatsNew: boolean }) {
   const pathname = usePathname()
   const active = activeNavHref(pathname)
   // The root layout does not re-render on client navigation, so remember the visit to hide the dot.
@@ -46,6 +47,11 @@ export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { what
     if (active === '/whats-new') setVisitedWhatsNew(true)
   }, [active])
   const showWhatsNewDot = badges.whatsNew && !visitedWhatsNew && active !== '/whats-new'
+  return { pathname, active, showWhatsNewDot }
+}
+
+export function NavLinks({ isAdmin, badges }: { isAdmin: boolean; badges: { whatsNew: boolean; admin: boolean } }) {
+  const { active, showWhatsNewDot } = useNavState(badges)
   const adminActive = active === '/admin'
 
   return (

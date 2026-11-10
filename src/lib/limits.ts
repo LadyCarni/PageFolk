@@ -32,3 +32,17 @@ export function validateReadMonth(input: string, now: Date = new Date()): string
   const year = Number(match[1])
   return year < READ_MONTH_MIN_YEAR || year > maxYear ? message : null
 }
+
+export const FEATURE_TITLE_MAX = 100
+export const FEATURE_DESCRIPTION_MAX = 2000
+export const FEATURE_REPLY_MAX = 2000
+
+export function validateFeatureText(title: string, description: string): string | null {
+  const t = title.trim()
+  const d = description.trim()
+  if (!t) return 'Give your idea a title'
+  if (t.length > FEATURE_TITLE_MAX) return `Title must be ${FEATURE_TITLE_MAX} characters or fewer`
+  if (!d) return 'Add a short description'
+  if (d.length > FEATURE_DESCRIPTION_MAX) return `Description must be ${FEATURE_DESCRIPTION_MAX} characters or fewer`
+  return null
+}

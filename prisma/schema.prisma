@@ -20,6 +20,10 @@ model User {
   posts       Post[]
   progress    ReadingProgress[]
   reactions   PostReaction[]
+
+  roadmapItems   RoadmapItem[]  @relation("RoadmapAuthor")
+  roadmapVotes   RoadmapVote[]
+  roadmapEntries RoadmapEntry[]
 }
 
 model AllowedEmail {
@@ -144,4 +148,43 @@ model ReadingProgress {
 model Club {
   id   Int    @id @default(1)
   name String
+}
+
+model RoadmapItem {
+  id                  String   @id @default(cuid())
+  number              Int?     @unique // assigned on approval or admin create
+  title               String // public wording
+  description         String
+  originalTitle       String // as first written; shown at the top of the thread
+  originalDescription String
+  status              String // 'review' | 'planned' | 'in_progress' | 'not_planned'
+  isMemberRequest     Boolean
+  authorId            String
+  createdAt           DateTime @default(now())
+
+  author  User           @relation("RoadmapAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  votes   RoadmapVote[]
+  entries RoadmapEntry[]
+}
+
+model RoadmapVote {
+  itemId String
+  userId String
+
+  item RoadmapItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([itemId, userId])
+}
+
+model RoadmapEntry {
+  id        String   @id @default(cuid())
+  itemId    String
+  authorId  String
+  kind      String // 'reply' | 'event'
+  body      String // reply text, or event code: 'approved' | 'planned' | 'in_progress' | 'not_planned'
+  createdAt DateTime @default(now())
+
+  item   RoadmapItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  author User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
 }

@@ -51,9 +51,9 @@ export function isNewerThan(version: string, lastSeen: string | null): boolean {
 }
 
 // Which version shipped each roadmap item. If a number appears twice, the oldest version wins.
-export function shippedVersionByNumber(): Map<number, string> {
+export function shippedVersionByNumber(changelog: ChangelogVersion[] = CHANGELOG): Map<number, string> {
   const shipped = new Map<number, string>()
-  for (const { version, lines } of [...CHANGELOG].reverse()) {
+  for (const { version, lines } of [...changelog].reverse()) {
     for (const { roadmap } of lines) {
       if (roadmap !== undefined && !shipped.has(roadmap)) shipped.set(roadmap, version)
     }

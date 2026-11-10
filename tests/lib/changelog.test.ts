@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CHANGELOG, compareVersions, isNewerThan, latestVersion } from '@/lib/changelog'
+import { CHANGELOG, compareVersions, isNewerThan, latestVersion, shippedVersionByNumber } from '@/lib/changelog'
 
 describe('changelog', () => {
   it('compares versions numerically per part', () => {
@@ -26,5 +26,13 @@ describe('changelog', () => {
       expect(entry.version).toMatch(/^\d+\.\d+$/)
       expect(entry.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     }
+  })
+
+  it('gives the oldest version when a roadmap number appears twice', () => {
+    const fixture = [
+      { version: '1.2', date: '2026-02-01', lines: [{ text: 'b', roadmap: 5 }] },
+      { version: '1.1', date: '2026-01-01', lines: [{ text: 'a', roadmap: 5 }] },
+    ]
+    expect(shippedVersionByNumber(fixture).get(5)).toBe('1.1')
   })
 })

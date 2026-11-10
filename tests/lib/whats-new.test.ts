@@ -27,4 +27,9 @@ describe('whats-new', () => {
     const user = await prisma.user.create({ data: { googleId: 'g-a', email: 'a@example.com', lastSeenVersion: '99.0' } })
     expect(await hasUnseenVersion(user.id)).toBe(false)
   })
+
+  it('copes with a user that no longer exists', async () => {
+    expect(await hasUnseenVersion('missing')).toBe(false)
+    expect(await markVersionSeen('missing')).toBeNull()
+  })
 })

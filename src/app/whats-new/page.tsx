@@ -33,7 +33,7 @@ export default async function WhatsNewPage({ searchParams }: { searchParams: { i
       </Box>
       <Box as="section">
         <SuggestFeature />
-        <VStack as="ul" align="stretch" spacing={3} mt={4} p={0} m={0} listStyleType="none">
+        <VStack as="ul" align="stretch" spacing={3} mt={6} mb={0} mx={0} p={0} listStyleType="none">
           {view.roadmap.map((card) => (
             <Box as="li" key={card.id}>
               <RoadmapCard card={card} selected={card.id === selectedId} />

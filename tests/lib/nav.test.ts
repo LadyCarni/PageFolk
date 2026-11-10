@@ -7,6 +7,7 @@ describe('activeNavHref', () => {
     expect(activeNavHref('/shelf')).toBe('/shelf')
     expect(activeNavHref('/shelf/abc123')).toBe('/shelf')
     expect(activeNavHref('/members')).toBe('/members')
+    expect(activeNavHref('/whats-new')).toBe('/whats-new')
     expect(activeNavHref('/admin')).toBe('/admin')
     expect(activeNavHref('/admin/allowed-emails')).toBe('/admin')
   })
@@ -14,6 +15,7 @@ describe('activeNavHref', () => {
   it('does not match look-alike paths', () => {
     expect(activeNavHref('/shelfy')).toBeNull()
     expect(activeNavHref('/membership')).toBeNull()
+    expect(activeNavHref('/whats-newer')).toBeNull()
     expect(activeNavHref('/sign-in')).toBeNull()
   })
 })

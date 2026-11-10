@@ -13,7 +13,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "db:backfill-chapters": "node scripts/migrate-sections.mjs",
-    "db:mock-notes": "node scripts/mock-notes.mjs"
+    "db:mock-notes": "node scripts/mock-notes.mjs",
+    "db:seed-roadmap": "dotenv -e .env -- node scripts/seed-roadmap.mjs"
   },
   "dependencies": {
     "@awesome.me/kit-729f370433": "^1.0.7",

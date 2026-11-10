@@ -29,6 +29,7 @@ const theme = extendTheme({
     divider: '#3a2733', // dividers and header borders
     border: '#5a4050', // card and bubble borders
     borderOpen: '#6b4a5b', // open thread card borders
+    statusGreen: '#7fbf8c', // In progress dot, shipped status
     borderMuted: '#7a5568', // sealed dashed borders, input borders, small ornaments
     borderGold: 'rgba(212, 176, 106, 0.4)', // faded antique gold: the quick-unlock card
     progressCurrent: '#9b5a6e', // progress bar segment you're partway through

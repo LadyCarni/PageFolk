@@ -7,3 +7,17 @@ export class ValidationError extends Error {
     this.name = 'ValidationError'
   }
 }
+
+export type FormResult = { error?: string }
+
+// Turns the user-fixable ValidationError into a message the form can show.
+// Everything else (e.g. "Forbidden: admin only") still throws.
+export async function reportingValidation(work: () => Promise<void>): Promise<FormResult> {
+  try {
+    await work()
+    return {}
+  } catch (error) {
+    if (error instanceof ValidationError) return { error: error.message }
+    throw error
+  }
+}

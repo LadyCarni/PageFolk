@@ -53,8 +53,13 @@ export async function declineRequest(itemId: string, adminId: string, note: stri
   await prisma.$transaction(async (tx) => {
     await requireReview(tx, itemId)
     await tx.roadmapItem.update({ where: { id: itemId }, data: { status: 'not_planned' } })
-    await tx.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'event', body: 'not_planned' } })
-    if (reply) await tx.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'reply', body: reply } })
+    // Explicit timestamps so the reply sorts strictly after the event when a thread is ordered by createdAt.
+    const now = new Date()
+    await tx.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'event', body: 'not_planned', createdAt: now } })
+    if (reply) {
+      const later = new Date(now.getTime() + 1)
+      await tx.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'reply', body: reply, createdAt: later } })
+    }
   })
 }
 

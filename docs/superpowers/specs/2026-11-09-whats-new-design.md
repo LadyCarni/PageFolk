@@ -123,9 +123,11 @@ A dot shows on the Admin nav item while any request is Under review. It clears w
 
 ## Changelog in code, and versions
 
+- **First entries:** the first published changelog is pre-filled with the last several features already built, such as reactions, the mobile nav fix, quick unlock, genre and tap-to-start threads. They're grouped into versions by deploy date. *(Caryn asked for this.)*
+
 - Changelog entries live in a source file, for example `src/lib/changelog.ts`, as a typed list with version, date and items. An item can reference the roadmap item it delivered.
 - At each deploy, Claude adds a version entry summarizing the changes in plain language, and bumps the version.
-- An item counts as **shipped** once a published changelog version references it. It then leaves Coming up, its requester sees "Shipped in X.Y", and an event line is added to its thread. Roadmap items are rows in the production database, so the reference must use the production ID. Claude can already reach the server over SSH during deploys (details in the gitignored `DEPLOY.local.md`). At deploy time, Claude looks up the delivered item's ID with a read-only query on the production database and writes it into the changelog entry. The admin does nothing by hand. *(Claude's call.)* The page should ignore a reference that doesn't match any row, without failing, so local development with `dev.db` still works.
+- An item counts as **shipped** once a published changelog version references it. It then leaves Coming up, its requester sees "Shipped in X.Y", and an event line is added to its thread. Every roadmap item gets a short sequential number (for example **#7**), assigned when it's created or approved and shown next to it on the admin Feature requests page. Before a deploy, Caryn tells Claude which numbers ship (for example "#7 and #9 are in this one"), and Claude writes those numbers into the changelog entry. Claude doesn't reach into the production database. *(Caryn decided this, so she doesn't have to unlock her SSH key for every deploy.)* The page should ignore a number that doesn't match any row, without failing, so local development with `dev.db` still works.
 
 ## The What's new dot
 
@@ -158,4 +160,4 @@ A dot shows on the Admin nav item while any request is Under review. It clears w
 - Any signed-in member can submit any number of requests, with no rate limit.
 - Brand-new members see the dot once, as an introduction to the page.
 - The Admin dot shows while any request is waiting, rather than tracking whether the admin has seen them.
-- The first published changelog is backfilled with a few entries for recent features.
+

@@ -60,3 +60,13 @@ export function shippedVersionByNumber(changelog: ChangelogVersion[] = CHANGELOG
   }
   return shipped
 }
+
+// "2026-11-08" → "November 8, 2026". Read as UTC so the day never shifts with the viewer's time zone.
+export function formatVersionDate(date: string): string {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'UTC',
+  })
+}

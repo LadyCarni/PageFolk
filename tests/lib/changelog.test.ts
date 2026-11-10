@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { CHANGELOG, compareVersions, isNewerThan, latestVersion, shippedVersionByNumber } from '@/lib/changelog'
+import { CHANGELOG, compareVersions, formatVersionDate, isNewerThan, latestVersion, shippedVersionByNumber } from '@/lib/changelog'
 
 describe('changelog', () => {
   it('compares versions numerically per part', () => {
@@ -34,5 +34,10 @@ describe('changelog', () => {
       { version: '1.1', date: '2026-01-01', lines: [{ text: 'a', roadmap: 5 }] },
     ]
     expect(shippedVersionByNumber(fixture).get(5)).toBe('1.1')
+  })
+
+  it('formats a version date as a long date, without shifting the day by time zone', () => {
+    expect(formatVersionDate('2026-11-08')).toBe('November 8, 2026')
+    expect(formatVersionDate('2026-01-01')).toBe('January 1, 2026')
   })
 })

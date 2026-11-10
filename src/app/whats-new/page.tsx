@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers'
-import { Box, Grid, VStack } from '@chakra-ui/react'
+import { Box, Grid, Heading, Text, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
 import { getLastSeenVersion } from '@/lib/whats-new'
@@ -21,7 +21,16 @@ export default async function WhatsNewPage({ searchParams }: { searchParams: { i
   const selectedId = selected?.id ?? null
 
   const column = (
-    <VStack align="stretch" spacing={10} maxW="760px" mx="auto" px={{ base: 4, md: 8 }} py={8}>
+    // Left-aligned on the nav's gutter, with a readable maximum width, rather than centred.
+    <VStack align="stretch" spacing={10} maxW="880px" px={{ base: 4, md: 8 }} py={8}>
+      <Box>
+        <Heading as="h1" size="2xl">
+          What&apos;s new
+        </Heading>
+        <Text color="mist" mt={2}>
+          What we&apos;re building next, and everything that&apos;s changed.
+        </Text>
+      </Box>
       <Box as="section">
         <SuggestFeature />
         <VStack as="ul" align="stretch" spacing={3} mt={4} p={0} m={0} listStyleType="none">

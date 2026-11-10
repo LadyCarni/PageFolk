@@ -1,4 +1,4 @@
-import { validateBlurb, validateChapterName, validateClubName } from '@/lib/limits'
+import { validateFeatureText, validateBlurb, validateChapterName, validateClubName } from '@/lib/limits'
 import { readMonthFromParts } from '@/lib/read-month'
 import { validateGenre } from '@/lib/genres'
 
@@ -71,6 +71,7 @@ export type FormRule =
   | { kind: 'readMonth' }
   | { kind: 'genre' }
   | { kind: 'chapterNames' }
+  | { kind: 'feature' }
 
 export function namedMinimumMessage(lastNamed: number): string {
   return `Total chapters cannot be less than ${lastNamed}, the last chapter with a name`
@@ -117,6 +118,10 @@ export function validateFormValues(rule: FormRule, values: Record<string, string
   if (rule.kind === 'readMonth') {
     const parsed = readMonthFromParts(values.month ?? '', values.year ?? '')
     return 'error' in parsed ? parsed.error : null
+  }
+
+  if (rule.kind === 'feature') {
+    return validateFeatureText(values.title ?? '', values.description ?? '')
   }
 
   if (rule.kind === 'genre') {

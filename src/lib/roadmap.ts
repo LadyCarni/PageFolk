@@ -1,6 +1,7 @@
 import { Prisma, type RoadmapItem } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { ValidationError } from '@/lib/errors'
+import { CHANGELOG, shippedVersionByNumber } from '@/lib/changelog'
 import { FEATURE_REPLY_MAX, validateFeatureText } from '@/lib/limits'
 
 export type RoadmapStatus = 'review' | 'planned' | 'in_progress' | 'not_planned'
@@ -147,4 +148,29 @@ export async function addAdminReply(itemId: string, adminId: string, body: strin
   if (!text) throw new ValidationError('Write a reply first')
   if (text.length > FEATURE_REPLY_MAX) throw new ValidationError(`Replies can be at most ${FEATURE_REPLY_MAX} characters`)
   await prisma.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'reply', body: text } })
+}
+
+// Everything the admin page needs: requests waiting for review (oldest first) and the live
+// roadmap by number, without shipped or not-planned items.
+export async function listAdminRoadmap(): Promise<{
+  pending: (RoadmapItem & { author: { name: string | null } })[]
+  active: (RoadmapItem & { votes: number })[]
+}> {
+  const [pending, planned] = await Promise.all([
+    prisma.roadmapItem.findMany({
+      where: { status: 'review' },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { name: true } } },
+    }),
+    prisma.roadmapItem.findMany({
+      where: { status: { in: ['planned', 'in_progress'] } },
+      orderBy: { number: 'asc' },
+      include: { _count: { select: { votes: true } } },
+    }),
+  ])
+  const shipped = shippedVersionByNumber(CHANGELOG)
+  const active = planned
+    .filter((item) => item.number === null || !shipped.has(item.number))
+    .map(({ _count, ...item }) => ({ ...item, votes: _count.votes }))
+  return { pending, active }
 }

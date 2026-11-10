@@ -8,8 +8,11 @@ vi.mock('@/lib/session', () => ({
   requireAdmin: () => mockRequireAdmin(),
 }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+const mockCookieSet = vi.fn()
+vi.mock('next/headers', () => ({ cookies: () => ({ set: mockCookieSet }) }))
 
-import { submitFeatureRequestAction, toggleVoteAction } from '@/app/whats-new/actions'
+import { latestVersion } from '@/lib/changelog'
+import { markWhatsNewSeenAction, submitFeatureRequestAction, toggleVoteAction } from '@/app/whats-new/actions'
 import { revalidatePath } from 'next/cache'
 import { createAdminItem } from '@/lib/roadmap'
 
@@ -17,6 +20,7 @@ describe('whats-new member actions', () => {
   let userId: string
   beforeEach(async () => {
     vi.mocked(revalidatePath).mockClear()
+    mockCookieSet.mockClear()
     await prisma.roadmapEntry.deleteMany()
     await prisma.roadmapVote.deleteMany()
     await prisma.roadmapItem.deleteMany()
@@ -50,5 +54,29 @@ describe('whats-new member actions', () => {
     await toggleVoteAction(item.id)
     expect(await prisma.roadmapVote.count()).toBe(1)
     expect(revalidatePath).toHaveBeenCalledWith('/whats-new')
+  })
+
+  it('marks seen and stores the previous version in a cookie when it changed', async () => {
+    await prisma.user.update({ where: { id: userId }, data: { lastSeenVersion: '0.1' } })
+    await markWhatsNewSeenAction()
+    expect(mockCookieSet).toHaveBeenCalledWith('whats_new_prev', '0.1', {
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/whats-new',
+      maxAge: 3600,
+    })
+    expect((await prisma.user.findUnique({ where: { id: userId } }))?.lastSeenVersion).toBe(latestVersion())
+    expect(revalidatePath).not.toHaveBeenCalled()
+  })
+
+  it('stores an empty value for a first visit', async () => {
+    await markWhatsNewSeenAction()
+    expect(mockCookieSet).toHaveBeenCalledWith('whats_new_prev', '', expect.any(Object))
+  })
+
+  it('does not set the cookie when already up to date', async () => {
+    await prisma.user.update({ where: { id: userId }, data: { lastSeenVersion: latestVersion() } })
+    await markWhatsNewSeenAction()
+    expect(mockCookieSet).not.toHaveBeenCalled()
   })
 })

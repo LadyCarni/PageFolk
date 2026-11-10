@@ -1,8 +1,10 @@
+import { cookies } from 'next/headers'
 import { Box, Grid, VStack } from '@chakra-ui/react'
 import { requireUser } from '@/lib/session'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
-import { markVersionSeen } from '@/lib/whats-new'
+import { getLastSeenVersion } from '@/lib/whats-new'
 import { getWhatsNewView } from '@/lib/whats-new-view'
+import { MarkSeen } from '@/components/whats-new/MarkSeen'
 import { Changelog } from '@/components/whats-new/Changelog'
 import { ItemThreadPane } from '@/components/whats-new/ItemThreadPane'
 import { RoadmapCard } from '@/components/whats-new/RoadmapCard'
@@ -11,7 +13,8 @@ import { YourRequests } from '@/components/whats-new/YourRequests'
 
 export default async function WhatsNewPage({ searchParams }: { searchParams: { item?: string | string[] } }) {
   const user = await requireUser()
-  const before = await markVersionSeen(user.id)
+  const prevCookie = cookies().get('whats_new_prev')
+  const before = prevCookie ? prevCookie.value || null : await getLastSeenVersion(user.id)
   const requested = typeof searchParams.item === 'string' ? searchParams.item : undefined
   const view = await getWhatsNewView(user, before, requested)
   const { selected } = view
@@ -34,10 +37,12 @@ export default async function WhatsNewPage({ searchParams }: { searchParams: { i
     </VStack>
   )
 
-  if (!selected) return column
+  if (!selected) return <><MarkSeen />{column}</>
 
   const fullHeight = `calc(100dvh - ${NAV_HEIGHT_PX}px)`
   return (
+    <>
+    <MarkSeen />
     <Grid templateColumns={{ base: '1fr', lg: '1fr 1fr' }} h={{ lg: fullHeight }} minH={{ base: fullHeight }}>
       <Box display={{ base: 'none', lg: 'block' }} overflowY={{ lg: 'auto' }} minH={0}>
         {column}
@@ -53,5 +58,6 @@ export default async function WhatsNewPage({ searchParams }: { searchParams: { i
         <ItemThreadPane thread={selected} viewer={user} backHref="/whats-new" />
       </Box>
     </Grid>
+    </>
   )
 }

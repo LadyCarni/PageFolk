@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { prisma } from '@/lib/db'
-import { hasUnseenVersion, markVersionSeen } from '@/lib/whats-new'
+import { getLastSeenVersion, hasUnseenVersion, markVersionSeen } from '@/lib/whats-new'
 
 describe('whats-new', () => {
   beforeEach(async () => {
@@ -31,5 +31,12 @@ describe('whats-new', () => {
   it('copes with a user that no longer exists', async () => {
     expect(await hasUnseenVersion('missing')).toBe(false)
     expect(await markVersionSeen('missing')).toBeNull()
+  })
+
+  it('reads the last seen version without changing it', async () => {
+    const user = await prisma.user.create({ data: { googleId: 'g-a', email: 'a@example.com', lastSeenVersion: '1.0' } })
+    expect(await getLastSeenVersion(user.id)).toBe('1.0')
+    expect(await getLastSeenVersion(user.id)).toBe('1.0')
+    expect(await getLastSeenVersion('missing')).toBeNull()
   })
 })

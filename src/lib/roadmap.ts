@@ -1,7 +1,7 @@
-import type { Prisma, RoadmapItem } from '@prisma/client'
+import { Prisma, type RoadmapItem } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { ValidationError } from '@/lib/errors'
-import { validateFeatureText } from '@/lib/limits'
+import { FEATURE_REPLY_MAX, validateFeatureText } from '@/lib/limits'
 
 export type RoadmapStatus = 'review' | 'planned' | 'in_progress' | 'not_planned'
 
@@ -105,4 +105,46 @@ export async function updateItem(itemId: string, title: string, description: str
 
 export function pendingRequestCount(): Promise<number> {
   return prisma.roadmapItem.count({ where: { status: 'review' } })
+}
+
+// Unreleased requests stay private to their author and admins; `shipped` lets a changelog link expose any item.
+export function canViewItem(
+  item: { status: string; authorId: string; number: number | null },
+  viewer: { id: string; isAdmin: boolean },
+  shipped: boolean,
+): boolean {
+  return (
+    viewer.isAdmin ||
+    item.authorId === viewer.id ||
+    item.status === 'planned' ||
+    item.status === 'in_progress' ||
+    shipped
+  )
+}
+
+// Adds the viewer's vote, or removes it if they already had it. Returns whether it is now on.
+export async function toggleVote(itemId: string, userId: string): Promise<boolean> {
+  const item = await prisma.roadmapItem.findUnique({ where: { id: itemId }, select: { status: true } })
+  if (!item || (item.status !== 'planned' && item.status !== 'in_progress')) {
+    throw new ValidationError('You can only vote on roadmap items')
+  }
+
+  const removed = await prisma.roadmapVote.deleteMany({ where: { itemId, userId } })
+  if (removed.count > 0) return false
+
+  try {
+    await prisma.roadmapVote.create({ data: { itemId, userId } })
+  } catch (e) {
+    // A double tap raced us to it: the vote is on either way.
+    if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) throw e
+  }
+  return true
+}
+
+// Admin-ness is checked by the caller.
+export async function addAdminReply(itemId: string, adminId: string, body: string): Promise<void> {
+  const text = body.trim()
+  if (!text) throw new ValidationError('Write a reply first')
+  if (text.length > FEATURE_REPLY_MAX) throw new ValidationError(`Replies can be at most ${FEATURE_REPLY_MAX} characters`)
+  await prisma.roadmapEntry.create({ data: { itemId, authorId: adminId, kind: 'reply', body: text } })
 }

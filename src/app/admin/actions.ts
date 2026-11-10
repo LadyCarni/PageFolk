@@ -10,23 +10,11 @@ import { setBookCover, removeBookCover } from '@/lib/covers'
 import { MAX_COVER_BYTES } from '@/lib/cover-limits'
 import { addAllowedEmail, removeAllowedEmail } from '@/lib/allowlist'
 import { approveAccessRequest, dismissAccessRequest } from '@/lib/access-requests'
-import { ValidationError } from '@/lib/errors'
+import { ValidationError, reportingValidation, type FormResult } from '@/lib/errors'
 import { parseWholeNumber } from '@/lib/chapters'
 import { readMonthFromParts } from '@/lib/read-month'
 
-export type FormResult = { error?: string }
-
-// Turns the user-fixable ValidationError into a message the form can show.
-// Everything else (e.g. "Forbidden: admin only") still throws.
-async function reportingValidation(work: () => Promise<void>): Promise<FormResult> {
-  try {
-    await work()
-    return {}
-  } catch (error) {
-    if (error instanceof ValidationError) return { error: error.message }
-    throw error
-  }
-}
+export type { FormResult }
 
 function revalidateBookPages() {
   revalidatePath('/admin')

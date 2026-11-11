@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Box, Flex, Heading, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react'
 import { UserAvatar } from '@/components/UserAvatar'
-import { coverColor } from '@/lib/cover-color'
+import { CoverMark } from '@/components/CoverMark'
 import { voteLabel, type LongListEntry } from '@/lib/long-list-view'
 import { SuggestionDate } from './SuggestionDate'
 import { GenrePill } from './LongListRow'
@@ -25,7 +25,7 @@ export function LongListDetails({
   return (
     <VStack align="stretch" spacing={6} p={{ base: 6, lg: 10 }}>
       <Flex gap={6} align="flex-start">
-        <Box aria-hidden flexShrink={0} w="120px" aspectRatio="2 / 3" borderRadius="md" bg={coverColor(book.id)} />
+        <CoverMark id={book.id} width={120} diamond={10} />
         <Box minW={0}>
           <Heading as="h2" size="xl" color="parchment">
             {book.title}

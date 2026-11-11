@@ -3,7 +3,7 @@
 import type { MouseEvent } from 'react'
 import NextLink from 'next/link'
 import { Box, Flex, LinkBox, LinkOverlay, Text } from '@chakra-ui/react'
-import { coverColor } from '@/lib/cover-color'
+import { CoverMark } from '@/components/CoverMark'
 import type { LongListEntry } from '@/lib/long-list-view'
 import { LongListVoteButton } from './LongListVoteButton'
 
@@ -26,12 +26,10 @@ export function GenrePill({ genre }: { genre: string }) {
 
 export function LongListRow({
   book,
-  rank,
   selected,
   onSelect,
 }: {
   book: LongListEntry
-  rank: number | null
   selected: boolean
   onSelect: (event: MouseEvent<HTMLAnchorElement>, id: string) => void
 }) {
@@ -47,14 +45,9 @@ export function LongListRow({
       bg={selected ? { base: 'transparent', lg: 'bubbleMine' } : 'transparent'}
       _hover={{ bg: 'bubbleMine' }}
     >
-      {rank !== null && (
-        <Text aria-hidden w="24px" textAlign="right" color="mist" fontFamily="heading" flexShrink={0}>
-          {rank}
-        </Text>
-      )}
-      <Box aria-hidden flexShrink={0} w="34px" h="48px" borderRadius="sm" bg={coverColor(book.id)} />
+      <CoverMark id={book.id} width={34} diamond={5} />
       <Box flex={1} minW={0}>
-        <Flex align="center" gap={2} wrap="wrap">
+        <Flex align="baseline" columnGap={2} rowGap={1} wrap="wrap">
           <LinkOverlay
             as={NextLink}
             href={`/long-list/${book.id}`}
@@ -63,6 +56,8 @@ export function LongListRow({
             color="parchment"
             fontFamily="heading"
             fontWeight="semibold"
+            fontSize="xl"
+            lineHeight="short"
             _hover={{ textDecoration: 'none' }}
           >
             {book.title}

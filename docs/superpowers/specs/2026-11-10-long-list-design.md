@@ -63,11 +63,10 @@ Route: `/long-list` (builder's call; see "Left to the builder"). Members only, b
 
 One condensed row per book, top to bottom:
 
-1. **Rank number**, shown only when sorting by Most votes. Tied books get consecutive numbers (no "=2").
-2. **Small generated cover**, the same coloured cover the shelf uses for books without an uploaded cover (`cover-color.ts`). When version 2 adds `coverUrl`, it shows that image instead.
-3. **Title** (serif, parchment), then "by **Author**" (mist), then a **genre** pill (dusty rose outline) if one is set.
-4. **Synopsis** on one line, cut off with "…".
-5. On the right: the **vote count** ("7 votes", "1 vote", "0 votes") and a **Vote** button. If the viewer has voted, the button is gold and reads **✓ Voted**. Clicking it again removes the vote. Voting from a row does not open the panel.
+1. **Small generated cover** (`CoverMark`): the book's cover colour from `cover-color.ts`, with the shelf's double gold frame and diamond but no title or author, since the space is too small for text. When version 2 adds `coverUrl`, it shows that image instead. (Changed after review: no rank number. The order and vote counts already show which books lead, and a number means nothing under Newest or A–Z.)
+2. **Title** (serif, parchment, larger than the author line, all sharing one text baseline), then "by **Author**" (mist), then a **genre** pill (dusty rose outline) if one is set.
+3. **Synopsis** on one line, cut off with "…".
+4. On the right: the **vote count** ("7 votes", "1 vote", "0 votes") and a **Vote** button. If the viewer has voted, the button is gold and reads **✓ Voted**. Clicking it again removes the vote. Voting from a row does not open the panel.
 
 Clicking anywhere else on a row selects that book in the details panel. The selected row is highlighted (`bubbleMine`, as in the mockup).
 

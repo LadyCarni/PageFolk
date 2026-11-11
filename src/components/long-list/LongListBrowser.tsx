@@ -51,11 +51,10 @@ export function LongListBrowser({
       <Box as="main" overflowY={{ lg: 'auto' }} minH={0} p={{ base: 6, md: 10 }}>
         {header}
         <Box as="ul" mt={6} mx={-4} p={0} listStyleType="none">
-          {books.map((book, index) => (
+          {books.map((book) => (
             <LongListRow
               key={book.id}
               book={book}
-              rank={sort === 'votes' ? index + 1 : null}
               selected={book.id === selected?.id}
               onSelect={onSelect}
             />

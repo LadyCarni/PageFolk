@@ -5,7 +5,8 @@ import NextLink from 'next/link'
 import { Box, Button, Collapse, Flex, IconButton, Link, Text, useOutsideClick } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faBars, faXmark } from '@fortawesome/free-solid-svg-icons'
-import { LINKS, NavDot, useNavState } from '@/components/NavLinks'
+import { BOOKSHELF_LINKS, LINKS, NavDot, useNavState } from '@/components/NavLinks'
+import { bookshelfHref } from '@/lib/nav'
 import { UserAvatar } from '@/components/UserAvatar'
 
 const ADMIN_LINKS = [
@@ -78,6 +79,18 @@ export function MobileNav({
   const hasDot = showWhatsNewDot || showAdminDot
   const adminActiveHref = pathname.startsWith('/admin/feature-requests') ? '/admin/feature-requests' : '/admin'
 
+  const renderLinks = (links: typeof LINKS) =>
+    links.map(({ href, label }) => (
+      <li key={href}>
+        <PanelLink href={href} isActive={active === href} onNavigate={close}>
+          <Box as="span" position="relative">
+            {label}
+            {href === '/whats-new' && showWhatsNewDot && <NavDot />}
+          </Box>
+        </PanelLink>
+      </li>
+    ))
+
   return (
     <Box ref={wrapperRef} display={{ base: 'block', md: 'none' }} flexShrink={0}>
       <IconButton
@@ -119,16 +132,30 @@ export function MobileNav({
             py={2}
           >
             <Box as="ul" listStyleType="none" m={0} p={0}>
-              {LINKS.map(({ href, label }) => (
-                <li key={href}>
-                  <PanelLink href={href} isActive={active === href} onNavigate={close}>
-                    <Box as="span" position="relative">
-                      {label}
-                      {href === '/whats-new' && showWhatsNewDot && <NavDot />}
-                    </Box>
-                  </PanelLink>
-                </li>
-              ))}
+              {renderLinks(LINKS.slice(0, 1))}
+              <li>
+                <Text
+                  px={4}
+                  pt={3}
+                  pb={1}
+                  fontSize="xs"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  color="mist"
+                >
+                  Bookshelf
+                </Text>
+                <Box as="ul" listStyleType="none" m={0} p={0}>
+                  {BOOKSHELF_LINKS.map(({ href, label }) => (
+                    <li key={href}>
+                      <PanelLink href={href} isActive={bookshelfHref(pathname) === href} onNavigate={close}>
+                        {label}
+                      </PanelLink>
+                    </li>
+                  ))}
+                </Box>
+              </li>
+              {renderLinks(LINKS.slice(1))}
             </Box>
             {user.isAdmin && (
               <Box borderTopWidth="1px" borderColor="divider" mt={2} pt={2}>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BLURB_MAX, CHAPTER_NAME_MAX, CLUB_NAME_MAX, validateBlurb, validateChapterName, validateClubName, validateReadMonth } from '@/lib/limits'
+import { BLURB_MAX, CHAPTER_NAME_MAX, CLUB_NAME_MAX, validateBlurb, validateChapterName, validateClubName, validateReadMonth, validateSuggestion } from '@/lib/limits'
 
 describe('validateClubName', () => {
   it('accepts a normal name, counting characters after trimming', () => {
@@ -55,5 +55,32 @@ describe('validateChapterName', () => {
     expect(CHAPTER_NAME_MAX).toBe(100)
     expect(validateChapterName('x'.repeat(100))).toBeNull()
     expect(validateChapterName('x'.repeat(101))).toBe('Chapter names can be at most 100 characters')
+  })
+})
+
+describe('validateSuggestion', () => {
+  const ok = { title: 'Title', author: 'Author', genre: '', synopsis: 'A synopsis' }
+
+  it('accepts a valid suggestion, with or without a genre', () => {
+    expect(validateSuggestion(ok)).toBeNull()
+    expect(validateSuggestion({ ...ok, genre: 'Mystery' })).toBeNull()
+  })
+
+  it('requires title, author and synopsis', () => {
+    expect(validateSuggestion({ ...ok, title: '  ' })).toBe('Add a title')
+    expect(validateSuggestion({ ...ok, author: '' })).toBe('Add an author')
+    expect(validateSuggestion({ ...ok, synopsis: '' })).toBe('Add a short synopsis')
+  })
+
+  it('enforces the length limits', () => {
+    expect(validateSuggestion({ ...ok, title: 'a'.repeat(200) })).toBeNull()
+    expect(validateSuggestion({ ...ok, title: 'a'.repeat(201) })).toBe('Title must be 200 characters or fewer')
+    expect(validateSuggestion({ ...ok, author: 'a'.repeat(201) })).toBe('Author must be 200 characters or fewer')
+    expect(validateSuggestion({ ...ok, synopsis: 'a'.repeat(300) })).toBeNull()
+    expect(validateSuggestion({ ...ok, synopsis: 'a'.repeat(301) })).toBe('Synopsis must be 300 characters or fewer')
+  })
+
+  it('rejects a genre that is not in the list', () => {
+    expect(validateSuggestion({ ...ok, genre: 'Nope' })).toBe('Choose a genre from the list')
   })
 })

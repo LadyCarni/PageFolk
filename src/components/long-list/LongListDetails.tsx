@@ -3,6 +3,7 @@ import { Box, Flex, Heading, Text, VStack, Wrap, WrapItem } from '@chakra-ui/rea
 import { UserAvatar } from '@/components/UserAvatar'
 import { coverColor } from '@/lib/cover-color'
 import { voteLabel, type LongListEntry } from '@/lib/long-list-view'
+import { SuggestionDate } from './SuggestionDate'
 import { GenrePill } from './LongListRow'
 import { LongListVoteButton } from './LongListVoteButton'
 
@@ -19,7 +20,6 @@ export function LongListDetails({
   isAdmin: boolean
   actions?: ReactNode
 }) {
-  const date = book.createdAt.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
   const by = book.suggestedBy.id === viewerId ? 'you' : (book.suggestedBy.name ?? 'a member')
 
   return (
@@ -39,7 +39,7 @@ export function LongListDetails({
             </Box>
           )}
           <Text fontSize="sm" color="mist" mt={3}>
-            Suggested by {by} · {date}
+            Suggested by {by} · <SuggestionDate createdAt={book.createdAt} />
           </Text>
         </Box>
       </Flex>

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent } from 'react'
 import NextLink from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Box,
   Button,
@@ -24,7 +24,7 @@ import {
 import { editSuggestionAction, suggestBookAction } from '@/app/long-list/actions'
 import { GENRES } from '@/lib/genres'
 import { LONG_LIST_AUTHOR_MAX, LONG_LIST_SYNOPSIS_MAX, LONG_LIST_TITLE_MAX } from '@/lib/limits'
-import type { LongListEntry } from '@/lib/long-list-view'
+import { longListTarget, parseSort, type LongListEntry } from '@/lib/long-list-view'
 
 // Chakra's lg breakpoint: the details panel only exists at this width and up.
 const WIDE_QUERY = '(min-width: 62em)'
@@ -39,6 +39,7 @@ export function SuggestionModal({
   book?: LongListEntry
 }) {
   const router = useRouter()
+  const sort = parseSort(useSearchParams().get('sort') ?? undefined)
   const [error, setError] = useState<{ message: string; href?: string | null } | null>(null)
   const [pending, startTransition] = useTransition()
   const editing = Boolean(book)
@@ -63,8 +64,7 @@ export function SuggestionModal({
         if (editing) {
           router.refresh()
         } else if (result.bookId) {
-          const wide = window.matchMedia(WIDE_QUERY).matches
-          router.push(wide ? `/long-list?book=${result.bookId}` : `/long-list/${result.bookId}`)
+          router.push(longListTarget(`/long-list?book=${result.bookId}`, window.matchMedia(WIDE_QUERY).matches, sort))
         }
       } catch {
         setError({ message: 'Something went wrong. Try again.' })
@@ -108,7 +108,11 @@ export function SuggestionModal({
               {error.href && (
                 <>
                   {' '}
-                  <Link as={NextLink} href={error.href} onClick={close}>
+                  <Link
+                    as={NextLink}
+                    href={longListTarget(error.href, window.matchMedia(WIDE_QUERY).matches, sort)}
+                    onClick={close}
+                  >
                     See it
                   </Link>
                 </>

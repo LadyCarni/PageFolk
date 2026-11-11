@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { duplicateKey, longListSummary, parseSort, sortLongList, voteLabel } from '@/lib/long-list-view'
+import { duplicateKey, longListTarget, longListSummary, parseSort, sortLongList, voteLabel } from '@/lib/long-list-view'
 
 describe('parseSort', () => {
   it('accepts known sorts and falls back to votes', () => {
@@ -60,5 +60,18 @@ describe('labels', () => {
   it('labels votes', () => {
     expect(voteLabel(1)).toBe('1 vote')
     expect(voteLabel(0)).toBe('0 votes')
+  })
+})
+
+describe('longListTarget', () => {
+  it('opens the panel on wide screens, keeping the sort', () => {
+    expect(longListTarget('/long-list?book=abc', true, 'az')).toBe('/long-list?sort=az&book=abc')
+  })
+  it('goes to the book page on narrow screens', () => {
+    expect(longListTarget('/long-list?book=abc', false, 'votes')).toBe('/long-list/abc')
+  })
+  it('leaves other hrefs alone', () => {
+    expect(longListTarget('/shelf/xyz', false, 'votes')).toBe('/shelf/xyz')
+    expect(longListTarget('/', true, 'newest')).toBe('/')
   })
 })

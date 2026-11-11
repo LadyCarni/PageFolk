@@ -46,7 +46,8 @@ export function ChooseBookModal({
         if (result?.error) setError(result.error)
       } catch (err) {
         // redirect() surfaces as a thrown navigation signal in some Next versions; let it through.
-        if (err && typeof err === 'object' && 'digest' in err) throw err
+        const digest = (err as { digest?: unknown } | null)?.digest
+        if (typeof digest === 'string' && digest.startsWith('NEXT_REDIRECT')) throw err
         setError('Something went wrong. Try again.')
       }
     })
@@ -64,7 +65,7 @@ export function ChooseBookModal({
             How many chapters does <em>{book.title}</em> have?
           </Text>
           <FormControl>
-            <NumberInput min={1} defaultValue={1}>
+            <NumberInput min={1} clampValueOnBlur={false}>
               <NumberInputField name="totalChapters" aria-label="Number of chapters" />
             </NumberInput>
           </FormControl>

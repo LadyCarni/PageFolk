@@ -57,3 +57,12 @@ export function longListSummary(count: number): string {
 export function voteLabel(count: number): string {
   return `${count} ${count === 1 ? 'vote' : 'votes'}`
 }
+
+// Where a "See it" / post-create link should go. The details panel only exists on wide
+// screens, so narrow screens go to the book's own page. Other hrefs pass through.
+export function longListTarget(href: string, wide: boolean, sort: LongListSort): string {
+  const match = /^\/long-list\?book=([^&]+)$/.exec(href)
+  if (!match) return href
+  const id = match[1]
+  return wide ? `/long-list?sort=${sort}&book=${id}` : `/long-list/${id}`
+}

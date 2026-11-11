@@ -24,6 +24,9 @@ model User {
   roadmapItems   RoadmapItem[]  @relation("RoadmapAuthor")
   roadmapVotes   RoadmapVote[]
   roadmapEntries RoadmapEntry[]
+
+  longListBooks LongListBook[]
+  longListVotes LongListVote[]
 }
 
 model AllowedEmail {
@@ -187,4 +190,33 @@ model RoadmapEntry {
 
   item   RoadmapItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
   author User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model LongListBook {
+  id            String   @id @default(cuid())
+  title         String
+  author        String
+  genre         String?  // one of GENRES in src/lib/genres.ts
+  synopsis      String
+  suggestedById String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Version 2 (Google Books). Empty in version 1.
+  googleBooksId String?  @unique
+  coverUrl      String?
+
+  suggestedBy User           @relation(fields: [suggestedById], references: [id], onDelete: Cascade)
+  votes       LongListVote[]
+}
+
+model LongListVote {
+  bookId    String
+  userId    String
+  createdAt DateTime @default(now())
+
+  book LongListBook @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, userId])
 }

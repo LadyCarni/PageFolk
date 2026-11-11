@@ -39,7 +39,6 @@ export function SuggestionModal({
   book?: LongListEntry
 }) {
   const router = useRouter()
-  const [synopsisLength, setSynopsisLength] = useState(book?.synopsis.length ?? 0)
   const [error, setError] = useState<{ message: string; href?: string | null } | null>(null)
   const [pending, startTransition] = useTransition()
   const editing = Boolean(book)
@@ -100,20 +99,7 @@ export function SuggestionModal({
               ))}
             </Select>
           </FormControl>
-          <FormControl>
-            <FormLabel>Synopsis</FormLabel>
-            <Textarea
-              name="synopsis"
-              rows={4}
-              defaultValue={book?.synopsis ?? ''}
-              maxLength={LONG_LIST_SYNOPSIS_MAX}
-              placeholder="A sentence or two about the book."
-              onChange={(e) => setSynopsisLength(e.target.value.length)}
-            />
-            <Text fontSize="sm" color="mist" mt={1} textAlign="right" aria-live="polite">
-              {synopsisLength} / {LONG_LIST_SYNOPSIS_MAX}
-            </Text>
-          </FormControl>
+          <SynopsisField initial={book?.synopsis ?? ''} />
           {error && (
             <Box role="alert" fontSize="sm">
               <Text as="span" color="danger">
@@ -140,5 +126,26 @@ export function SuggestionModal({
         </ModalFooter>
       </ModalContent>
     </Modal>
+  )
+}
+
+// Lives inside ModalBody so its counter remounts, and resets, together with the textarea.
+function SynopsisField({ initial }: { initial: string }) {
+  const [length, setLength] = useState(initial.length)
+  return (
+    <FormControl>
+      <FormLabel>Synopsis</FormLabel>
+      <Textarea
+        name="synopsis"
+        rows={4}
+        defaultValue={initial}
+        maxLength={LONG_LIST_SYNOPSIS_MAX}
+        placeholder="A sentence or two about the book."
+        onChange={(e) => setLength(e.target.value.length)}
+      />
+      <Text fontSize="sm" color="mist" mt={1} textAlign="right" aria-live="polite">
+        {length} / {LONG_LIST_SYNOPSIS_MAX}
+      </Text>
+    </FormControl>
   )
 }

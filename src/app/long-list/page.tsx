@@ -28,6 +28,7 @@ export default async function LongListPage({ searchParams }: { searchParams: { s
 
   return (
     <LongListBrowser
+      key={sort}
       books={books}
       sort={sort}
       viewerId={user.id}

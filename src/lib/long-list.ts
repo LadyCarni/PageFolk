@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { DuplicateBookError, ValidationError } from '@/lib/errors'
+import { createBook } from '@/lib/books'
 import { validateSuggestion } from '@/lib/limits'
 import {
   duplicateKey,
@@ -139,4 +140,20 @@ export async function toggleLongListVote(bookId: string, userId: string): Promis
     throw e
   }
   return true
+}
+
+// Turns a suggestion into a club book in one transaction; its votes go with it by cascade.
+// The admin check is the caller's job.
+export async function chooseLongListBook(id: string, totalChapters: number): Promise<{ bookId: string }> {
+  return prisma.$transaction(async (tx) => {
+    const s = await tx.longListBook.findUnique({ where: { id } })
+    if (!s) throw new ValidationError(GONE)
+    const book = await createBook(
+      { title: s.title, author: s.author, totalChapters, blurb: s.synopsis, genre: s.genre },
+      tx,
+    )
+    const removed = await tx.longListBook.deleteMany({ where: { id } })
+    if (removed.count === 0) throw new ValidationError(GONE)
+    return { bookId: book.id }
+  })
 }

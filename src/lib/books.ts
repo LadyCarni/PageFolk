@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { namedMinimumMessage, validateChapterRange, validateNoOverlap, validateTotalChapters } from '@/lib/chapters'
 import { highestNamedChapter } from '@/lib/chapter-names'
@@ -37,13 +38,17 @@ export async function listBooks(status?: BookStatus) {
 export type AdminBook = Awaited<ReturnType<typeof listBooks>>[number]
 
 // A club has one current book. The first book goes live straight away; later ones wait as upcoming.
-export async function createBook(input: { title: string; author: string; totalChapters: number; coverUrl?: string }) {
+export async function createBook(
+  input: { title: string; author: string; totalChapters: number; coverUrl?: string; blurb?: string | null; genre?: string | null },
+  tx?: Prisma.TransactionClient,
+) {
   const problem = validateTotalChapters(input.totalChapters)
   if (problem) throw new ValidationError(problem)
-  return prisma.$transaction(async (tx) => {
-    const currentCount = await tx.book.count({ where: { status: 'current' } })
-    return tx.book.create({ data: { ...input, status: currentCount === 0 ? 'current' : 'upcoming' } })
-  })
+  const run = async (client: Prisma.TransactionClient) => {
+    const currentCount = await client.book.count({ where: { status: 'current' } })
+    return client.book.create({ data: { ...input, status: currentCount === 0 ? 'current' : 'upcoming' } })
+  }
+  return tx ? run(tx) : prisma.$transaction(run)
 }
 
 export async function addSection(bookId: string, input: SectionInput) {

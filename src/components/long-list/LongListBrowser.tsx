@@ -1,12 +1,13 @@
 'use client'
 
-import { useRef, useState, type MouseEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Box, Grid } from '@chakra-ui/react'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
 import type { LongListEntry, LongListSort } from '@/lib/long-list-view'
 import { LongListDetails } from './LongListDetails'
 import { LongListRow } from './LongListRow'
+import { SuggestionActions } from './SuggestionActions'
 
 // Chakra's lg breakpoint: the details panel only exists at this width and up.
 const WIDE_QUERY = '(min-width: 62em)'
@@ -17,19 +18,21 @@ export function LongListBrowser({
   viewerId,
   isAdmin,
   header,
-  actionsFor,
 }: {
   books: LongListEntry[]
   sort: LongListSort
   viewerId: string
   isAdmin: boolean
   header: ReactNode
-  // Task 7 supplies the Edit/Delete/Choose buttons for the selected book.
-  actionsFor?: (book: LongListEntry) => ReactNode
 }) {
   // Read ?book= from the live URL: after replaceState the cached server render has stale params.
   const searchParams = useSearchParams()
   const [selectedId, setSelectedId] = useState(searchParams.get('book'))
+  // A new ?book= arriving through navigation (e.g. after suggesting) selects that book.
+  const bookParam = searchParams.get('book')
+  useEffect(() => {
+    if (bookParam) setSelectedId(bookParam)
+  }, [bookParam])
   const panelRef = useRef<HTMLDivElement>(null)
   const selected = books.find((book) => book.id === selectedId) ?? books[0] ?? null
   const fullHeight = `calc(100dvh - ${NAV_HEIGHT_PX}px)`
@@ -76,7 +79,9 @@ export function LongListBrowser({
             book={selected}
             viewerId={viewerId}
             isAdmin={isAdmin}
-            actions={actionsFor?.(selected)}
+            actions={
+              <SuggestionActions book={selected} viewerId={viewerId} isAdmin={isAdmin} onPhonePage={false} />
+            }
           />
         )}
       </Box>

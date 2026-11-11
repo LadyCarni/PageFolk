@@ -3,6 +3,7 @@ import { requireUser } from '@/lib/session'
 import { listLongList } from '@/lib/long-list'
 import { longListSummary, parseSort } from '@/lib/long-list-view'
 import { LongListBrowser } from '@/components/long-list/LongListBrowser'
+import { SuggestButton } from '@/components/long-list/SuggestButton'
 import { SortPills } from '@/components/long-list/SortPills'
 
 export default async function LongListPage({ searchParams }: { searchParams: { sort?: string | string[] } }) {
@@ -13,9 +14,12 @@ export default async function LongListPage({ searchParams }: { searchParams: { s
   if (books.length === 0) {
     return (
       <Box as="main" p={{ base: 6, md: 10 }}>
-        <Heading as="h1" size="2xl">
-          The Long List
-        </Heading>
+        <Flex justify="space-between" align="center" gap={3}>
+          <Heading as="h1" size="2xl">
+            The Long List
+          </Heading>
+          <SuggestButton />
+        </Flex>
         <Text mt={2} color="mist">
           {longListSummary(0)}
         </Text>
@@ -35,9 +39,12 @@ export default async function LongListPage({ searchParams }: { searchParams: { s
       isAdmin={user.isAdmin}
       header={
         <>
-          <Heading as="h1" size="2xl">
-            The Long List
-          </Heading>
+          <Flex justify="space-between" align="center" gap={3}>
+            <Heading as="h1" size="2xl">
+              The Long List
+            </Heading>
+            <SuggestButton />
+          </Flex>
           <Text mt={2} color="mist">
             {longListSummary(books.length)}
           </Text>

@@ -8,6 +8,7 @@
 #   DB_FILE=/path/to/database.db             # the SQLite file to back up
 #   BACKUP_DIR=/path/to/backups              # where the pre-deploy database copy goes
 #   HEALTH_URL=http://127.0.0.1:PORT/        # checked after the restart
+#   BUILD_MEMORY_MB=1536                     # optional: Node's memory cap for the build (default 1536)
 set -euo pipefail
 
 # Everything lives in main so bash reads the whole script before running it;
@@ -58,11 +59,17 @@ main() {
   step "Updating the database schema"
   as_app sh -c 'set -a; . ./.env; set +a; npx prisma db push'
 
-  step "Building"
-  as_app npm run build
+  # A small server can't run the app and a Next.js build at once, and Node's default memory cap
+  # is too low for the build there. The build also clears the old one as it starts, so the running
+  # app breaks either way: stop it, then build with a raised cap (it can lean on swap).
+  step "Stopping the app for the build"
+  systemctl stop "$SERVICE"
 
-  step "Restarting"
-  systemctl restart "$SERVICE"
+  step "Building"
+  as_app env NODE_OPTIONS="--max-old-space-size=${BUILD_MEMORY_MB:-1536}" npm run build
+
+  step "Starting"
+  systemctl start "$SERVICE"
 
   step "Checking the app responds"
   for _ in $(seq 1 30); do

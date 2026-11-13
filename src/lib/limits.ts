@@ -1,3 +1,6 @@
+import { validateGenre } from '@/lib/genres'
+import type { SuggestionInput } from '@/lib/long-list-view'
+
 export const CLUB_NAME_MAX = 40
 export const BLURB_MAX = 1000
 
@@ -45,4 +48,22 @@ export function validateFeatureText(title: string, description: string): string 
   if (!d) return 'Add a short description'
   if (d.length > FEATURE_DESCRIPTION_MAX) return `Description must be ${FEATURE_DESCRIPTION_MAX} characters or fewer`
   return null
+}
+
+export const LONG_LIST_TITLE_MAX = 200
+export const LONG_LIST_AUTHOR_MAX = 200
+export const LONG_LIST_SYNOPSIS_MAX = 300
+
+// Counted after trimming. Genre is optional; '' means none.
+export function validateSuggestion(input: SuggestionInput): string | null {
+  const title = input.title.trim()
+  const author = input.author.trim()
+  const synopsis = input.synopsis.trim()
+  if (!title) return 'Add a title'
+  if (title.length > LONG_LIST_TITLE_MAX) return `Title must be ${LONG_LIST_TITLE_MAX} characters or fewer`
+  if (!author) return 'Add an author'
+  if (author.length > LONG_LIST_AUTHOR_MAX) return `Author must be ${LONG_LIST_AUTHOR_MAX} characters or fewer`
+  if (!synopsis) return 'Add a short synopsis'
+  if (synopsis.length > LONG_LIST_SYNOPSIS_MAX) return `Synopsis must be ${LONG_LIST_SYNOPSIS_MAX} characters or fewer`
+  return validateGenre(input.genre)
 }

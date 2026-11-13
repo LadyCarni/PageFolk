@@ -21,3 +21,15 @@ export async function reportingValidation(work: () => Promise<void>): Promise<Fo
     throw error
   }
 }
+
+// A suggestion that matches a book already on the Long List or in the club's books.
+// href points at where that book lives, or is null when there is nowhere to link.
+export class DuplicateBookError extends ValidationError {
+  constructor(
+    message: string,
+    readonly href: string | null,
+  ) {
+    super(message)
+    this.name = 'DuplicateBookError'
+  }
+}

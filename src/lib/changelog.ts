@@ -4,6 +4,18 @@ export type ChangelogVersion = { version: string; date: string; lines: Changelog
 // Newest first. Add a new entry at the top when something ships.
 export const CHANGELOG: ChangelogVersion[] = [
   {
+    version: '1.4',
+    // Set to the real deploy date when this goes live.
+    date: '2026-11-12',
+    lines: [
+      {
+        text: "The Long List: suggest books the club might read, like the ones you'd enjoy, and sort or filter by genre",
+        roadmap: 5,
+      },
+      { text: 'Bookshelf menu brings Our shelf and The Long List together' },
+    ],
+  },
+  {
     version: '1.3',
     // Set to the real deploy date when this goes live.
     date: '2026-11-09',

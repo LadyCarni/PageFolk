@@ -1,5 +1,16 @@
 import { describe, it, expect } from 'vitest'
-import { duplicateKey, longListTarget, longListSummary, parseSort, sortLongList, likeLabel } from '@/lib/long-list-view'
+import {
+  duplicateKey,
+  filteredSummary,
+  genresOnList,
+  likeLabel,
+  longListPath,
+  longListSummary,
+  longListTarget,
+  parseGenre,
+  parseSort,
+  sortLongList,
+} from '@/lib/long-list-view'
 
 describe('parseSort', () => {
   it('accepts known sorts and falls back to votes', () => {
@@ -73,5 +84,34 @@ describe('longListTarget', () => {
   it('leaves other hrefs alone', () => {
     expect(longListTarget('/shelf/xyz', false, 'votes')).toBe('/shelf/xyz')
     expect(longListTarget('/', true, 'newest')).toBe('/')
+  })
+})
+
+describe('genre filter', () => {
+  const books = [{ genre: 'Mystery' }, { genre: null }, { genre: 'Fantasy' }, { genre: 'Mystery' }]
+
+  it('offers only the genres on the list, once each, alphabetically', () => {
+    expect(genresOnList(books)).toEqual(['Fantasy', 'Mystery'])
+    expect(genresOnList([{ genre: null }])).toEqual([])
+  })
+
+  it('accepts a genre only if the list has it', () => {
+    expect(parseGenre('Fantasy', ['Fantasy', 'Mystery'])).toBe('Fantasy')
+    expect(parseGenre('Horror', ['Fantasy', 'Mystery'])).toBeNull()
+    expect(parseGenre(undefined, ['Fantasy'])).toBeNull()
+    expect(parseGenre(['Fantasy'], ['Fantasy'])).toBeNull()
+  })
+
+  it('builds the list address with the sort, genre and book', () => {
+    expect(longListPath({ sort: 'votes', genre: null })).toBe('/long-list?sort=votes')
+    expect(longListPath({ sort: 'az', genre: 'Science Fiction' })).toBe('/long-list?sort=az&genre=Science+Fiction')
+    expect(longListPath({ sort: 'newest', genre: 'Mystery', book: 'b1' })).toBe(
+      '/long-list?sort=newest&genre=Mystery&book=b1',
+    )
+  })
+
+  it('describes a filtered list', () => {
+    expect(filteredSummary(3, 12, 'Fantasy')).toBe('3 Fantasy books · 12 suggested in all')
+    expect(filteredSummary(1, 12, 'Mystery')).toBe('1 Mystery book · 12 suggested in all')
   })
 })

@@ -1,6 +1,6 @@
 import NextLink from 'next/link'
 import { Flex, Link } from '@chakra-ui/react'
-import type { LongListSort } from '@/lib/long-list-view'
+import { longListPath, type LongListSort } from '@/lib/long-list-view'
 
 const SORTS: { value: LongListSort; label: string }[] = [
   { value: 'votes', label: 'Most liked' },
@@ -8,8 +8,8 @@ const SORTS: { value: LongListSort; label: string }[] = [
   { value: 'az', label: 'A–Z' },
 ]
 
-// Each link drops ?book= so the panel shows the first book of the new order.
-export function SortPills({ sort }: { sort: LongListSort }) {
+// Each link keeps the genre filter and drops ?book= so the panel shows the first book of the new order.
+export function SortPills({ sort, genre }: { sort: LongListSort; genre: string | null }) {
   return (
     <Flex as="nav" aria-label="Sort the Long List" gap={2} wrap="wrap">
       {SORTS.map(({ value, label }) => {
@@ -18,7 +18,7 @@ export function SortPills({ sort }: { sort: LongListSort }) {
           <Link
             key={value}
             as={NextLink}
-            href={`/long-list?sort=${value}`}
+            href={longListPath({ sort: value, genre })}
             aria-current={active ? 'true' : undefined}
             px={4}
             py={1}

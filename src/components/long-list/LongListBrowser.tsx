@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from 're
 import { useSearchParams } from 'next/navigation'
 import { Box, Grid } from '@chakra-ui/react'
 import { NAV_HEIGHT_PX } from '@/lib/layout'
-import type { LongListEntry, LongListSort } from '@/lib/long-list-view'
+import { longListPath, type LongListEntry, type LongListSort } from '@/lib/long-list-view'
 import { LongListDetails } from './LongListDetails'
 import { LongListRow } from './LongListRow'
 import { SuggestionActions } from './SuggestionActions'
@@ -15,12 +15,14 @@ const WIDE_QUERY = '(min-width: 62em)'
 export function LongListBrowser({
   books,
   sort,
+  genre,
   viewerId,
   isAdmin,
   header,
 }: {
   books: LongListEntry[]
   sort: LongListSort
+  genre: string | null
   viewerId: string
   isAdmin: boolean
   header: ReactNode
@@ -43,7 +45,7 @@ export function LongListBrowser({
     event.preventDefault()
     setSelectedId(id)
     panelRef.current?.scrollTo({ top: 0 })
-    window.history.replaceState(null, '', `/long-list?sort=${sort}&book=${encodeURIComponent(id)}`)
+    window.history.replaceState(null, '', longListPath({ sort, genre, book: id }))
   }
 
   return (

@@ -59,6 +59,7 @@ Route: `/long-list` (builder's call; see "Left to the builder"). Members only, b
   - Most liked: like count, highest first. Ties go to the newest suggestion first.
   - Newest: most recently suggested first.
   - A–Z: by title, ignoring case and a leading "The", "A" or "An" (builder may simplify to ignoring case only).
+- A **genre** dropdown (added after review) beside the sort options: **All genres**, then only the genres the listed books have, alphabetically. It lives in the URL as `?genre=` alongside `?sort=`; changing either keeps the other and drops `?book=`. An unknown genre means all genres. While filtered, the summary reads e.g. "3 Fantasy books · 12 suggested in all".
 
 ### Rows (option C, decided)
 

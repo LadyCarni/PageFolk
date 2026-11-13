@@ -66,3 +66,28 @@ export function longListTarget(href: string, wide: boolean, sort: LongListSort):
   const id = match[1]
   return wide ? `/long-list?sort=${sort}&book=${id}` : `/long-list/${id}`
 }
+
+// The genres the books on the list actually have, alphabetically: the genre filter's options.
+export function genresOnList(books: Pick<LongListEntry, 'genre'>[]): string[] {
+  return [...new Set(books.map((book) => book.genre).filter((genre): genre is string => !!genre))].sort((a, b) =>
+    a.localeCompare(b),
+  )
+}
+
+// The ?genre= value when it's one of the list's genres; anything else means all genres.
+export function parseGenre(raw: string | string[] | undefined, available: string[]): string | null {
+  return typeof raw === 'string' && available.includes(raw) ? raw : null
+}
+
+// The list's address for a sort, an optional genre filter and an optional selected book.
+export function longListPath({ sort, genre, book }: { sort: LongListSort; genre: string | null; book?: string }): string {
+  const params = new URLSearchParams({ sort })
+  if (genre) params.set('genre', genre)
+  if (book) params.set('book', book)
+  return `/long-list?${params.toString()}`
+}
+
+// The summary line while a genre filter is on, e.g. "3 Fantasy books · 12 suggested in all".
+export function filteredSummary(shown: number, total: number, genre: string): string {
+  return `${shown} ${genre} ${shown === 1 ? 'book' : 'books'} · ${total} suggested in all`
+}

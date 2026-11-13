@@ -3,7 +3,7 @@ import { Flex, Link } from '@chakra-ui/react'
 import type { LongListSort } from '@/lib/long-list-view'
 
 const SORTS: { value: LongListSort; label: string }[] = [
-  { value: 'votes', label: 'Most votes' },
+  { value: 'votes', label: 'Most liked' },
   { value: 'newest', label: 'Newest' },
   { value: 'az', label: 'A–Z' },
 ]

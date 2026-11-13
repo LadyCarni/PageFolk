@@ -15,7 +15,8 @@ The votes don't pick the book. They help the conversation at the meetup. That's 
 - A Long List page that stays easy to scan when it holds many books.
 - Any member can suggest a book. No approval is needed, so it appears for everyone straight away.
 - One vote per member per book. Members vote for as many books as they like and can take a vote back.
-- Three sort options: **Most votes** (default), **Newest**, **A–Z**.
+- Three sort options: **Most liked** (default), **Newest**, **A–Z**.
+- On screen, voting is called **liking** (changed after review): "Like" / "✓ Liked", "7 likes", "Most liked". Code and data keep the vote names.
 - A details panel with the full synopsis and the names of everyone who voted.
 - Members can edit and delete their own suggestions.
 - The admin can turn a suggestion into a club book. That removes the book from The Long List.
@@ -52,10 +53,10 @@ Route: `/long-list` (builder's call; see "Left to the builder"). Members only, b
 ### Header
 
 - Heading "The Long List".
-- A summary line, e.g. "12 books suggested · vote for as many as you like". It handles 1 book (singular) and 0 books.
+- A summary line, e.g. "12 books suggested · like as many as you want". It handles 1 book (singular) and 0 books.
 - A gold **Suggest a book** button.
-- Sort options in pill buttons, as in the mockup: **Most votes** (default), **Newest**, **A–Z**. The chosen sort lives in the URL (e.g. `?sort=newest`), so it survives a refresh and a shared link shows the same order.
-  - Most votes: vote count, highest first. Ties go to the newest suggestion first.
+- Sort options in pill buttons, as in the mockup: **Most liked** (default), **Newest**, **A–Z**. The chosen sort lives in the URL (e.g. `?sort=newest`), so it survives a refresh and a shared link shows the same order.
+  - Most liked: like count, highest first. Ties go to the newest suggestion first.
   - Newest: most recently suggested first.
   - A–Z: by title, ignoring case and a leading "The", "A" or "An" (builder may simplify to ignoring case only).
 
@@ -66,7 +67,7 @@ One condensed row per book, top to bottom:
 1. **Small generated cover** (`CoverMark`): the book's cover colour from `cover-color.ts`, with the shelf's double gold frame and diamond but no title or author, since the space is too small for text. When version 2 adds `coverUrl`, it shows that image instead. (Changed after review: no rank number. The order and vote counts already show which books lead, and a number means nothing under Newest or A–Z.)
 2. **Title** (serif, parchment, larger than the author line, all sharing one text baseline), then "by **Author**" (mist), then a **genre** pill (dusty rose outline) if one is set.
 3. **Synopsis** on one line, cut off with "…".
-4. On the right: the **vote count** ("7 votes", "1 vote", "0 votes") and a **Vote** button. If the viewer has voted, the button is gold and reads **✓ Voted**. Clicking it again removes the vote. Voting from a row does not open the panel.
+4. On the right: the **like count** ("7 likes", "1 like", "0 likes") and a **Like** button. If the viewer has liked it, the button is gold and reads **✓ Liked**. Clicking it again removes the vote. Voting from a row does not open the panel.
 
 Clicking anywhere else on a row selects that book in the details panel. The selected row is highlighted (`bubbleMine`, as in the mockup).
 
@@ -85,11 +86,11 @@ Panel contents, top to bottom:
 
 - Generated cover (larger), **title**, **author**, **genre** pill.
 - "Suggested by **Name** · 3 Oct". Shows "Suggested by you" for the viewer's own suggestions.
-- The **Vote / ✓ Voted** button, the same behaviour as in the row.
+- The **Like / ✓ Liked** button, the same behaviour as in the row.
 - The full **synopsis**.
-- A "**7 votes**" label, then the voters as small avatar-and-name pills (`UserAvatar`), showing "You" for the viewer. Ordered by when they voted, earliest first.
+- A "**7 likes**" label, then the voters as small avatar-and-name pills (`UserAvatar`), showing "You" for the viewer. Ordered by when they voted, earliest first.
 - **Edit** and **Delete my suggestion**: shown to the person who suggested the book. The admin sees **Edit** and **Delete** on every book.
-  - Delete asks for confirmation ("Remove *Title* from The Long List? Its votes will be removed too.").
+  - Delete asks for confirmation ("Remove *Title* from The Long List? Its likes will be removed too.").
 - **Admin only:** a **Choose this book** button, set apart under a small dashed divider labelled "Admin", as in the mockup. See "Choosing a book."
 
 If the selected book is deleted or chosen while someone has it open, the panel falls back to the first book in the list after the next refresh.

@@ -3,7 +3,7 @@
 import { startTransition, useOptimistic, useRef } from 'react'
 import { Button, Flex, Text, useToast } from '@chakra-ui/react'
 import { toggleLongListVoteAction } from '@/app/long-list/actions'
-import { voteLabel } from '@/lib/long-list-view'
+import { likeLabel } from '@/lib/long-list-view'
 
 // Optimistic vote toggle. Taps are ignored while one is still in flight.
 export function LongListVoteButton({ bookId, votes, voted }: { bookId: string; votes: number; voted: boolean }) {
@@ -44,10 +44,10 @@ export function LongListVoteButton({ bookId, votes, voted }: { bookId: string; v
           })
         }}
       >
-        {shown.voted ? '✓ Voted' : 'Vote'}
+        {shown.voted ? '✓ Liked' : 'Like'}
       </Button>
       <Text fontSize="sm" color="mist" minW="56px">
-        {voteLabel(shown.votes)}
+        {likeLabel(shown.votes)}
       </Text>
     </Flex>
   )

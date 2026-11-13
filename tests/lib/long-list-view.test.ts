@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { duplicateKey, longListTarget, longListSummary, parseSort, sortLongList, voteLabel } from '@/lib/long-list-view'
+import { duplicateKey, longListTarget, longListSummary, parseSort, sortLongList, likeLabel } from '@/lib/long-list-view'
 
 describe('parseSort', () => {
   it('accepts known sorts and falls back to votes', () => {
@@ -53,13 +53,13 @@ describe('sortLongList', () => {
 describe('labels', () => {
   it('summarises the list', () => {
     expect(longListSummary(0)).toBe('No books suggested yet')
-    expect(longListSummary(1)).toBe('1 book suggested · vote for as many as you like')
-    expect(longListSummary(12)).toBe('12 books suggested · vote for as many as you like')
+    expect(longListSummary(1)).toBe('1 book suggested · like as many as you want')
+    expect(longListSummary(12)).toBe('12 books suggested · like as many as you want')
   })
 
   it('labels votes', () => {
-    expect(voteLabel(1)).toBe('1 vote')
-    expect(voteLabel(0)).toBe('0 votes')
+    expect(likeLabel(1)).toBe('1 like')
+    expect(likeLabel(0)).toBe('0 likes')
   })
 })
 

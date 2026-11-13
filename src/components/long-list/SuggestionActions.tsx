@@ -93,7 +93,7 @@ export function SuggestionActions({
             <AlertDialogHeader color="parchment">{isOwner ? 'Delete my suggestion' : 'Delete'}</AlertDialogHeader>
             <AlertDialogBody>
               <Text>
-                Remove <em>{book.title}</em> from The Long List? Its votes will be removed too.
+                Remove <em>{book.title}</em> from The Long List? Its likes will be removed too.
               </Text>
               {error && (
                 <Text color="danger" role="alert" fontSize="sm" mt={3}>

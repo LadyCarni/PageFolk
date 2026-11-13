@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Box, Flex, Heading, Text, VStack, Wrap, WrapItem } from '@chakra-ui/react'
 import { UserAvatar } from '@/components/UserAvatar'
 import { CoverMark } from '@/components/CoverMark'
-import { voteLabel, type LongListEntry } from '@/lib/long-list-view'
+import { likeLabel, type LongListEntry } from '@/lib/long-list-view'
 import { SuggestionDate } from './SuggestionDate'
 import { GenrePill } from './LongListRow'
 import { LongListVoteButton } from './LongListVoteButton'
@@ -47,7 +47,7 @@ export function LongListDetails({
       <Text color="parchment">{book.synopsis}</Text>
       <Box>
         <Text {...LABEL_PROPS} color="mist">
-          {voteLabel(book.votes)}
+          {likeLabel(book.votes)}
         </Text>
         {book.voters.length > 0 && (
           <Wrap as="ul" spacing={2} mt={2} m={0} p={0} listStyleType="none">

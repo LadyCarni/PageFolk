@@ -51,11 +51,11 @@ export function sortLongList<T extends Pick<LongListEntry, 'title' | 'createdAt'
 
 export function longListSummary(count: number): string {
   if (count === 0) return 'No books suggested yet'
-  return `${count} ${count === 1 ? 'book' : 'books'} suggested · vote for as many as you like`
+  return `${count} ${count === 1 ? 'book' : 'books'} suggested · like as many as you want`
 }
 
-export function voteLabel(count: number): string {
-  return `${count} ${count === 1 ? 'vote' : 'votes'}`
+export function likeLabel(count: number): string {
+  return `${count} ${count === 1 ? 'like' : 'likes'}`
 }
 
 // Where a "See it" / post-create link should go. The details panel only exists on wide
